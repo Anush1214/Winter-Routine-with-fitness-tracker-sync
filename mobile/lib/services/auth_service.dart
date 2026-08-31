@@ -53,9 +53,7 @@ class AuthService extends ChangeNotifier {
   bool _isFirebaseAvailable = false;
   bool get isFirebaseAvailable => _isFirebaseAvailable;
 
-  // Web Client ID used for Google Sign In token verification across platforms
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    serverClientId: '37819138819-5ntotmdejvs65uscip3pgh39coh4ldh0.apps.googleusercontent.com',
     scopes: ['email', 'profile'],
   );
 
@@ -218,23 +216,38 @@ class AuthService extends ChangeNotifier {
       return;
     }
 
-    // Native Mobile Google Sign In with Adaptive Fallback
+    // Native Mobile Google Sign In with Multi-Strategy Fallback
     GoogleSignInAccount? googleUser;
     try {
       googleUser = await _googleSignIn.signIn();
     } catch (e) {
-      debugPrint("Primary Google Sign-In error: $e, attempting standard native fallback...");
-      try {
-        final fallbackGoogleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
-        googleUser = await fallbackGoogleSignIn.signIn();
-      } catch (fallbackError) {
-        debugPrint("Fallback Google Sign-In error: $fallbackError");
-        throw AuthException('Google Sign-In failed ($e). Please verify Support Email and SHA-1 in Firebase Console.');
+      debugPrint("Native GoogleSignIn error: $e, launching Firebase Web/Browser Auth Provider fallback...");
+      if (_isFirebaseAvailable) {
+        try {
+          final googleProvider = fb.GoogleAuthProvider();
+          final userCredential = await fb.FirebaseAuth.instance.signInWithProvider(googleProvider);
+          if (userCredential.user != null) {
+            final user = userCredential.user!;
+            await _saveUserSession(
+              uid: user.uid,
+              email: user.email ?? 'hunter@gmail.com',
+              name: user.displayName ?? 'Google Hunter',
+              photoUrl: user.photoURL,
+              provider: 'google',
+              createdAt: user.metadata.creationTime,
+            );
+            return;
+          }
+        } catch (providerError) {
+          debugPrint("Firebase Google Provider fallback error: $providerError");
+          throw AuthException('Google Sign-In failed: $e');
+        }
       }
+      throw AuthException('Google Sign-In error: $e');
     }
 
     if (googleUser == null) {
-      // User dismissed the Google dialog — stay on screen cleanly
+      // User dismissed dialog — stay cleanly on screen
       return;
     }
 
