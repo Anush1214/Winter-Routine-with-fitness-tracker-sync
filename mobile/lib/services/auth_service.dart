@@ -218,17 +218,23 @@ class AuthService extends ChangeNotifier {
       return;
     }
 
-    // Native Mobile Google Sign In
+    // Native Mobile Google Sign In with Adaptive Fallback
     GoogleSignInAccount? googleUser;
     try {
       googleUser = await _googleSignIn.signIn();
     } catch (e) {
-      debugPrint("Native Google Sign-In error: $e");
-      throw AuthException('Google Sign-In failed ($e). Check your internet or Google account settings.');
+      debugPrint("Primary Google Sign-In error: $e, attempting standard native fallback...");
+      try {
+        final fallbackGoogleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+        googleUser = await fallbackGoogleSignIn.signIn();
+      } catch (fallbackError) {
+        debugPrint("Fallback Google Sign-In error: $fallbackError");
+        throw AuthException('Google Sign-In failed ($e). Please verify Support Email and SHA-1 in Firebase Console.');
+      }
     }
 
     if (googleUser == null) {
-      // User dismissed the Google dialog — do nothing, no error, no guest fallback!
+      // User dismissed the Google dialog — stay on screen cleanly
       return;
     }
 
@@ -256,7 +262,6 @@ class AuthService extends ChangeNotifier {
         }
       } catch (e) {
         debugPrint("Firebase credential token exchange note: $e");
-        // Proceed with the verified Google account information
       }
     }
 
@@ -310,10 +315,11 @@ class AuthService extends ChangeNotifier {
           return;
         }
       } catch (e) {
-        throw AuthException('GitHub authentication failed: $e');
+        debugPrint("Native GitHub Provider error: $e");
+        throw AuthException('GitHub Sign-In error ($e). Make sure GitHub Provider is enabled with Client Secret in Firebase.');
       }
     } else {
-      throw AuthException('GitHub authentication is currently unavailable.');
+      throw AuthException('Firebase is initializing. Please try again.');
     }
   }
 
