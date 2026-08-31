@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
@@ -27,7 +28,7 @@ class SungJinwooAssistantDialog extends StatefulWidget {
     VoidCallback? onTriggerAction,
     CompanionPersona initialPersona = CompanionPersona.sungJinwoo,
   }) {
-    SoundService().playLevelUp();
+    SoundService().playRobotClick();
     showDialog(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.85),
@@ -175,7 +176,7 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
       clipIndex: 1,
     );
 
-    // Auto-dismiss subtitles after spoken duration (4.5s)
+    // Auto-dismiss playing state after spoken duration
     _subtitleTimer = Timer(const Duration(milliseconds: 4800), () {
       if (mounted) {
         setState(() => _isPlayingAudio = false);
@@ -190,6 +191,7 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
     final enQuote = _getEnglishQuote(nextTask);
     final vaName = _getVoiceActorName();
     final themeColor = _getThemeColor();
+    final isJp = _selectedLang == JinwooVoiceLang.japanese;
 
     return Center(
       child: Material(
@@ -280,10 +282,10 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                           ),
                           Text(
                             "VA: $vaName",
-                            style: SoloTypography.bodyMuted.copyWith(
-                              fontSize: 10,
+                            style: GoogleFonts.notoSansJp(
+                              fontSize: 11,
                               color: themeColor,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
@@ -454,8 +456,9 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                                 _selectedPersona == CompanionPersona.sungJinwoo
                                     ? "🇯🇵 TAITO BAN (JP)"
                                     : "🇯🇵 REINA UEDA (JP)",
-                                style: SoloTypography.systemTag.copyWith(
-                                  fontSize: 8.5,
+                                style: GoogleFonts.notoSansJp(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.bold,
                                   color: _selectedLang == JinwooVoiceLang.japanese
                                       ? Colors.white
                                       : Colors.white54,
@@ -507,8 +510,8 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                               const SizedBox(width: 6),
                               Text(
                                 "[ $vaName // VOICE CUE ]",
-                                style: SoloTypography.systemTag.copyWith(
-                                  fontSize: 9,
+                                style: GoogleFonts.notoSansJp(
+                                  fontSize: 10,
                                   color: themeColor,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -518,7 +521,7 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                           GestureDetector(
                             onTap: _triggerVoiceWithSubtitles,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
                               decoration: BoxDecoration(
                                 color: _isPlayingAudio
                                     ? themeColor
@@ -533,7 +536,7 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                                   Icon(
                                     Icons.volume_up_rounded,
                                     color: _isPlayingAudio ? Colors.black : themeColor,
-                                    size: 13,
+                                    size: 14,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
@@ -552,43 +555,47 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                       ),
                       const SizedBox(height: 10),
 
-                      // Normal Dialogue Display
+                      // Quote Display (Supports Noto Sans JP for Japanese)
                       Text(
-                        _selectedLang == JinwooVoiceLang.japanese ? jpQuote : enQuote,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12.5,
-                          height: 1.45,
-                          fontWeight: FontWeight.w500,
-                          fontFamily: _selectedLang == JinwooVoiceLang.japanese ? 'sans-serif' : 'monospace',
-                        ),
+                        isJp ? jpQuote : enQuote,
+                        style: isJp
+                            ? GoogleFonts.notoSansJp(
+                                color: Colors.white,
+                                fontSize: 13,
+                                height: 1.5,
+                                fontWeight: FontWeight.w700,
+                              )
+                            : const TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                height: 1.45,
+                                fontWeight: FontWeight.w500,
+                              ),
                       ),
 
-                      // 🎬 LIVE ANIME-STYLE SUBTITLES HUD (Visible ONLY When Audio Is Playing)
-                      if (_isPlayingAudio) ...[
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.85),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: const Color(0xFFFDE047).withValues(alpha: 0.8),
-                              width: 1.2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFFDE047).withValues(alpha: 0.3),
-                                blurRadius: 16,
-                              ),
-                            ],
+                      // 🎬 LIVE ANIME-STYLE SUBTITLES HUD (English + Japanese)
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: _isPlayingAudio
+                              ? const Color(0xFF000000).withValues(alpha: 0.9)
+                              : const Color(0xFF130926).withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: _isPlayingAudio
+                                ? const Color(0xFFFACC15)
+                                : const Color(0xFFA855F7).withValues(alpha: 0.3),
+                            width: _isPlayingAudio ? 1.4 : 1.0,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                if (_isPlayingAudio) ...[
                                   Container(
                                     width: 6,
                                     height: 6,
@@ -598,62 +605,39 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  Text(
-                                    "ANIME SUBTITLES // NOW TRANSMITTING",
-                                    style: SoloTypography.systemTag.copyWith(
-                                      fontSize: 8,
-                                      color: const Color(0xFFFDE047),
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
                                 ],
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                jpQuote,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: Color(0xFFFFFFFF),
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.bold,
-                                  height: 1.4,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF171302),
-                                  borderRadius: BorderRadius.circular(6),
-                                  border: Border.all(
-                                    color: const Color(0xFFFACC15).withValues(alpha: 0.4),
+                                Text(
+                                  _isPlayingAudio
+                                      ? "ANIME SUBTITLES // NOW BROADCASTING"
+                                      : "SUBTITLES (ENGLISH TRANSLATION)",
+                                  style: SoloTypography.systemTag.copyWith(
+                                    fontSize: 8,
+                                    color: _isPlayingAudio
+                                        ? const Color(0xFFFACC15)
+                                        : const Color(0xFFA89BB9),
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                child: Text(
-                                  enQuote,
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    color: Color(0xFFFACC15),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    fontStyle: FontStyle.italic,
-                                    height: 1.35,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black,
-                                        blurRadius: 4,
-                                        offset: Offset(1, 1),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              enQuote,
+                              style: TextStyle(
+                                color: _isPlayingAudio
+                                    ? const Color(0xFFFACC15)
+                                    : const Color(0xFFE9D5FF),
+                                fontSize: 11.5,
+                                fontWeight: _isPlayingAudio
+                                    ? FontWeight.w900
+                                    : FontWeight.w600,
+                                fontStyle: FontStyle.italic,
+                                height: 1.35,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
 
                       if (nextTask != null) ...[
                         const SizedBox(height: 10),
@@ -707,7 +691,7 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                       flex: 2,
                       child: ElevatedButton(
                         onPressed: () {
-                          SoundService().playLevelUp();
+                          SoundService().playVictory();
                           Navigator.of(context).pop();
                           if (widget.onTriggerAction != null) {
                             widget.onTriggerAction!();

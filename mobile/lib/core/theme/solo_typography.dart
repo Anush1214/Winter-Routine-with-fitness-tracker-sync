@@ -3,6 +3,14 @@ import 'package:google_fonts/google_fonts.dart';
 import 'solo_colors.dart';
 
 class SoloTypography {
+  static const List<String> _cjkFallback = [
+    'Noto Sans JP',
+    'Hiragino Sans',
+    'Yu Gothic',
+    'Meiryo',
+    'sans-serif',
+  ];
+
   static TextStyle get systemTitle => GoogleFonts.outfit(
         fontSize: 22,
         fontWeight: FontWeight.w900,
@@ -52,5 +60,29 @@ class SoloTypography {
         fontSize: 11,
         fontWeight: FontWeight.bold,
         color: SoloColors.penaltyCrimson,
+      );
+
+  static TextStyle japaneseQuote({double fontSize = 13, Color color = Colors.white}) =>
+      GoogleFonts.notoSansJp(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w700,
+        color: color,
+        height: 1.45,
+      );
+
+  static TextStyle englishSubtitle({double fontSize = 12, Color color = const Color(0xFFFACC15)}) =>
+      GoogleFonts.outfit(
+        fontSize: fontSize,
+        fontWeight: FontWeight.w800,
+        fontStyle: FontStyle.italic,
+        color: color,
+        height: 1.35,
+        shadows: const [
+          Shadow(
+            color: Colors.black,
+            blurRadius: 4,
+            offset: Offset(1, 1),
+          ),
+        ],
       );
 }
