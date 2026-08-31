@@ -55,7 +55,7 @@ export async function getTasksAndHealth(dateParam: string, userId: string = "def
     }
 
     return {
-      tasks: tasks.length > 0 ? tasks : localStore.getTasksByDate(dateParam),
+      tasks: tasks.length > 0 ? tasks : localStore.getTasksByDate(dateParam, userId),
       healthLog: healthLog || {
         logDate: dateParam,
         userId,
@@ -68,8 +68,8 @@ export async function getTasksAndHealth(dateParam: string, userId: string = "def
   }
 
   return {
-    tasks: localStore.getTasksByDate(dateParam),
-    healthLog: localStore.getHealthLog(dateParam),
+    tasks: localStore.getTasksByDate(dateParam, userId),
+    healthLog: localStore.getHealthLog(dateParam, userId),
   };
 }
 
@@ -141,6 +141,7 @@ export async function createTask(data: {
   // Fallback local store
   if (applyScope === "today") {
     const task = localStore.createTask({
+      userId,
       title,
       category,
       targetDate,
@@ -157,6 +158,7 @@ export async function createTask(data: {
   while (current <= endDate) {
     const dateKey = current.toISOString().split("T")[0];
     localStore.createTask({
+      userId,
       title,
       category,
       targetDate: dateKey,

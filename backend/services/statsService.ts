@@ -68,8 +68,8 @@ export async function getHeatmapMatrix(userId: string = "default_hunter") {
   }
 
   // Fallback
-  const allTasks = localStore.getAllTasks();
-  const allLogs = localStore.getAllHealthLogs();
+  const allTasks = localStore.getAllTasks(userId);
+  const allLogs = localStore.getAllHealthLogs(userId);
 
   const taskMap = new Map<string, { total: number; completed: number }>();
   allTasks.forEach((t) => {

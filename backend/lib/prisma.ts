@@ -7,6 +7,7 @@ declare global {
 
 export interface InMemoryTask {
   id: string;
+  userId: string;
   title: string;
   category: string;
   targetDate: string; // YYYY-MM-DD
@@ -17,6 +18,7 @@ export interface InMemoryTask {
 }
 
 export interface InMemoryHealthLog {
+  userId: string;
   logDate: string; // YYYY-MM-DD
   steps: number;
   sleepMinutes: number;
@@ -66,30 +68,12 @@ const GYM_TASK = {
 class LocalDataStore {
   private tasks: Map<string, InMemoryTask> = new Map();
   private healthLogs: Map<string, InMemoryHealthLog> = new Map();
-  private settings: InMemoryUserSettings = {
-    id: "default",
-    ntfyTopic: "winter-arc-routine",
-    ntfyServer: "https://ntfy.sh",
-    morningTime: "07:00",
-    morningEnabled: true,
-    eveningTime: "18:30",
-    eveningEnabled: true,
-    nightTime: "22:30",
-    nightEnabled: true,
-    waterGoalMl: 4500,
-    stepsGoal: 10000,
-    sleepGoalMinutes: 420,
-    customSlots: JSON.stringify([
-      { id: "midday_sync", name: "Midday Hydration & Step Check", time: "13:30", enabled: true }
-    ]),
-    updatedAt: new Date().toISOString(),
-  };
+  private settings: Map<string, InMemoryUserSettings> = new Map();
+  private initializedUsers: Set<string> = new Set();
 
-  private initialized = false;
-
-  public init() {
-    if (this.initialized) return;
-    this.initialized = true;
+  public initUser(userId: string = "default_hunter") {
+    if (this.initializedUsers.has(userId)) return;
+    this.initializedUsers.add(userId);
 
     const year = new Date().getFullYear();
     const startDate = new Date(Date.UTC(year, 8, 1)); // Sept 1
@@ -101,9 +85,10 @@ class LocalDataStore {
       const dateKey = current.toISOString().split("T")[0];
 
       BASE_DAILY_TASKS.forEach((t, index) => {
-        const id = `${dateKey}-task-${index}`;
+        const id = `${userId}-${dateKey}-task-${index}`;
         this.tasks.set(id, {
           id,
+          userId,
           title: t.title,
           category: t.category,
           targetDate: dateKey,
@@ -115,9 +100,10 @@ class LocalDataStore {
       });
 
       if (current >= gymStartDate) {
-        const gymId = `${dateKey}-task-gym`;
+        const gymId = `${userId}-${dateKey}-task-gym`;
         this.tasks.set(gymId, {
           id: gymId,
+          userId,
           title: GYM_TASK.title,
           category: GYM_TASK.category,
           targetDate: dateKey,
@@ -128,7 +114,9 @@ class LocalDataStore {
         });
       }
 
-      this.healthLogs.set(dateKey, {
+      const logKey = `${userId}-${dateKey}`;
+      this.healthLogs.set(logKey, {
+        userId,
         logDate: dateKey,
         steps: 0,
         sleepMinutes: 0,
@@ -141,27 +129,30 @@ class LocalDataStore {
     }
   }
 
-  public getTasksByDate(dateKey: string): InMemoryTask[] {
-    this.init();
-    return Array.from(this.tasks.values()).filter((t) => t.targetDate === dateKey);
+  public getTasksByDate(dateKey: string, userId: string = "default_hunter"): InMemoryTask[] {
+    this.initUser(userId);
+    return Array.from(this.tasks.values()).filter(
+      (t) => t.userId === userId && t.targetDate === dateKey
+    );
   }
 
-  public getAllTasks(): InMemoryTask[] {
-    this.init();
-    return Array.from(this.tasks.values());
+  public getAllTasks(userId: string = "default_hunter"): InMemoryTask[] {
+    this.initUser(userId);
+    return Array.from(this.tasks.values()).filter((t) => t.userId === userId);
   }
 
   public getTaskById(id: string): InMemoryTask | undefined {
-    this.init();
     return this.tasks.get(id);
   }
 
   public createTask(data: Omit<InMemoryTask, "id" | "createdAt">): InMemoryTask {
-    this.init();
+    const userId = data.userId || "default_hunter";
+    this.initUser(userId);
     const id = `task-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
     const task: InMemoryTask = {
       ...data,
       id,
+      userId,
       createdAt: new Date().toISOString(),
     };
     this.tasks.set(id, task);
@@ -169,7 +160,6 @@ class LocalDataStore {
   }
 
   public updateTask(id: string, updates: Partial<InMemoryTask>): InMemoryTask | null {
-    this.init();
     const existing = this.tasks.get(id);
     if (!existing) return null;
     const updated = { ...existing, ...updates };
@@ -178,15 +168,14 @@ class LocalDataStore {
   }
 
   public deleteTask(id: string): boolean {
-    this.init();
     return this.tasks.delete(id);
   }
 
-  public deleteTasksByTitle(title: string, fromDate?: string): number {
-    this.init();
+  public deleteTasksByTitle(title: string, fromDate?: string, userId: string = "default_hunter"): number {
+    this.initUser(userId);
     let count = 0;
     this.tasks.forEach((task, id) => {
-      if (task.title.toLowerCase() === title.toLowerCase()) {
+      if (task.userId === userId && task.title.toLowerCase() === title.toLowerCase()) {
         if (!fromDate || task.targetDate >= fromDate) {
           this.tasks.delete(id);
           count++;
@@ -196,11 +185,13 @@ class LocalDataStore {
     return count;
   }
 
-  public getHealthLog(dateKey: string): InMemoryHealthLog {
-    this.init();
-    let log = this.healthLogs.get(dateKey);
+  public getHealthLog(dateKey: string, userId: string = "default_hunter"): InMemoryHealthLog {
+    this.initUser(userId);
+    const logKey = `${userId}-${dateKey}`;
+    let log = this.healthLogs.get(logKey);
     if (!log) {
       log = {
+        userId,
         logDate: dateKey,
         steps: 0,
         sleepMinutes: 0,
@@ -208,39 +199,69 @@ class LocalDataStore {
         gymWorkoutDone: false,
         syncedAt: new Date().toISOString(),
       };
-      this.healthLogs.set(dateKey, log);
+      this.healthLogs.set(logKey, log);
     }
     return log;
   }
 
-  public getAllHealthLogs(): InMemoryHealthLog[] {
-    this.init();
-    return Array.from(this.healthLogs.values());
+  public getAllHealthLogs(userId: string = "default_hunter"): InMemoryHealthLog[] {
+    this.initUser(userId);
+    return Array.from(this.healthLogs.values()).filter((l) => l.userId === userId);
   }
 
-  public upsertHealthLog(dateKey: string, updates: Partial<InMemoryHealthLog>): InMemoryHealthLog {
-    this.init();
-    const existing = this.getHealthLog(dateKey);
+  public upsertHealthLog(
+    dateKey: string,
+    updates: Partial<InMemoryHealthLog>,
+    userId: string = "default_hunter"
+  ): InMemoryHealthLog {
+    this.initUser(userId);
+    const logKey = `${userId}-${dateKey}`;
+    const existing = this.getHealthLog(dateKey, userId);
     const updated = {
       ...existing,
       ...updates,
+      userId,
       syncedAt: new Date().toISOString(),
     };
-    this.healthLogs.set(dateKey, updated);
+    this.healthLogs.set(logKey, updated);
     return updated;
   }
 
-  public getSettings(): InMemoryUserSettings {
-    return this.settings;
+  public getSettings(userId: string = "default_hunter"): InMemoryUserSettings {
+    let settings = this.settings.get(userId);
+    if (!settings) {
+      settings = {
+        id: userId,
+        ntfyTopic: "winter-arc-routine",
+        ntfyServer: "https://ntfy.sh",
+        morningTime: "07:00",
+        morningEnabled: true,
+        eveningTime: "18:30",
+        eveningEnabled: true,
+        nightTime: "22:30",
+        nightEnabled: true,
+        waterGoalMl: 4500,
+        stepsGoal: 10000,
+        sleepGoalMinutes: 420,
+        customSlots: JSON.stringify([
+          { id: "midday_sync", name: "Midday Hydration & Step Check", time: "13:30", enabled: true }
+        ]),
+        updatedAt: new Date().toISOString(),
+      };
+      this.settings.set(userId, settings);
+    }
+    return settings;
   }
 
-  public updateSettings(updates: Partial<InMemoryUserSettings>): InMemoryUserSettings {
-    this.settings = {
-      ...this.settings,
+  public updateSettings(updates: Partial<InMemoryUserSettings>, userId: string = "default_hunter"): InMemoryUserSettings {
+    const existing = this.getSettings(userId);
+    const updated = {
+      ...existing,
       ...updates,
       updatedAt: new Date().toISOString(),
     };
-    return this.settings;
+    this.settings.set(userId, updated);
+    return updated;
   }
 }
 

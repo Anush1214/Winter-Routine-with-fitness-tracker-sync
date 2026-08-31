@@ -94,18 +94,22 @@ export async function processHealthSync(payload: {
   }
 
   // Fallback
-  const settings = localStore.getSettings();
+  const settings = localStore.getSettings(userId);
   const stepsGoal = settings.stepsGoal || 10000;
   const sleepGoal = settings.sleepGoalMinutes || 420;
 
-  const healthLog = localStore.upsertHealthLog(date, {
-    steps: parsedSteps,
-    sleepMinutes: parsedSleep,
-    gymWorkoutDone: parsedGym,
-    ...(parsedWater > 0 ? { waterIntakeMl: parsedWater } : {}),
-  });
+  const healthLog = localStore.upsertHealthLog(
+    date,
+    {
+      steps: parsedSteps,
+      sleepMinutes: parsedSleep,
+      gymWorkoutDone: parsedGym,
+      ...(parsedWater > 0 ? { waterIntakeMl: parsedWater } : {}),
+    },
+    userId
+  );
 
-  const dayTasks = localStore.getTasksByDate(date);
+  const dayTasks = localStore.getTasksByDate(date, userId);
   for (const task of dayTasks) {
     if (task.autoMetric === "steps_10k" && parsedSteps >= stepsGoal) {
       localStore.updateTask(task.id, { isCompleted: true });
@@ -131,6 +135,6 @@ export async function processHealthSync(payload: {
   return {
     healthLog,
     autoCheckedTasks,
-    tasks: localStore.getTasksByDate(date),
+    tasks: localStore.getTasksByDate(date, userId),
   };
 }

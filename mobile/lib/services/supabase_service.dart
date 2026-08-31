@@ -30,6 +30,9 @@ class SupabaseService extends ChangeNotifier {
 
   SupabaseService() {
     _selectedDate = TimelineUtils.formatDateKey(DateTime.now());
+    AuthService().authStateChanges.listen((user) {
+      loadDateData(_selectedDate);
+    });
   }
 
   void setBaseUrl(String url) {

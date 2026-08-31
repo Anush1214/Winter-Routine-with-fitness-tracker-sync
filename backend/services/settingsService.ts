@@ -1,15 +1,16 @@
 import { prisma, localStore, isDbConnected } from "../lib/prisma";
 
-export async function getUserSettings() {
+export async function getUserSettings(userId: string = "default_hunter") {
   if (isDbConnected && prisma) {
     let settings = await prisma.userSettings.findUnique({
-      where: { id: "default" },
+      where: { userId },
     });
 
     if (!settings) {
       settings = await prisma.userSettings.create({
         data: {
-          id: "default",
+          id: userId,
+          userId,
           ntfyTopic: "winter-arc-routine",
           ntfyServer: "https://ntfy.sh",
           morningTime: "07:00",
@@ -31,20 +32,21 @@ export async function getUserSettings() {
     return settings;
   }
 
-  return localStore.getSettings();
+  return localStore.getSettings(userId);
 }
 
-export async function updateUserSettings(updates: Record<string, unknown>) {
+export async function updateUserSettings(updates: Record<string, unknown>, userId: string = "default_hunter") {
   if (isDbConnected && prisma) {
     return await prisma.userSettings.upsert({
-      where: { id: "default" },
+      where: { userId },
       update: updates,
       create: {
-        id: "default",
+        id: userId,
+        userId,
         ...updates,
       },
     });
   }
 
-  return localStore.updateSettings(updates);
+  return localStore.updateSettings(updates, userId);
 }

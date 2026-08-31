@@ -67,17 +67,21 @@ export async function processWaterIntake(payload: {
   }
 
   // Fallback
-  const existing = localStore.getHealthLog(date);
+  const existing = localStore.getHealthLog(date, userId);
   const currentWater = existing.waterIntakeMl || 0;
   const newWater = mode === "set" ? Math.max(0, parsedAmount) : Math.max(0, currentWater + parsedAmount);
 
-  const healthLog = localStore.upsertHealthLog(date, {
-    waterIntakeMl: newWater,
-  });
+  const healthLog = localStore.upsertHealthLog(
+    date,
+    {
+      waterIntakeMl: newWater,
+    },
+    userId
+  );
 
   let autoChecked = false;
   if (newWater >= 4000) {
-    const dayTasks = localStore.getTasksByDate(date);
+    const dayTasks = localStore.getTasksByDate(date, userId);
     for (const t of dayTasks) {
       if (t.title.toLowerCase().includes("4-5l water") || t.autoMetric === "water_4l") {
         localStore.updateTask(t.id, { isCompleted: true });
@@ -90,6 +94,6 @@ export async function processWaterIntake(payload: {
     healthLog,
     waterIntakeMl: newWater,
     autoChecked,
-    tasks: localStore.getTasksByDate(date),
+    tasks: localStore.getTasksByDate(date, userId),
   };
 }

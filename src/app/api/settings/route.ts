@@ -3,9 +3,11 @@ import { getUserSettings, updateUserSettings } from "@/backend/services/settings
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const settings = await getUserSettings();
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId") || "default_hunter";
+    const settings = await getUserSettings(userId);
     return NextResponse.json({ success: true, settings });
   } catch (error: unknown) {
     console.error("GET /api/settings error:", error);
@@ -32,6 +34,7 @@ export async function PATCH(request: NextRequest) {
       stepsGoal,
       sleepGoalMinutes,
       customSlots,
+      userId = "default_hunter",
     } = body;
 
     const updates: Record<string, unknown> = {};
@@ -50,7 +53,7 @@ export async function PATCH(request: NextRequest) {
       updates.customSlots = typeof customSlots === "string" ? customSlots : JSON.stringify(customSlots);
     }
 
-    const updated = await updateUserSettings(updates);
+    const updated = await updateUserSettings(updates, userId);
     return NextResponse.json({ success: true, settings: updated });
   } catch (error: unknown) {
     console.error("PATCH /api/settings error:", error);
