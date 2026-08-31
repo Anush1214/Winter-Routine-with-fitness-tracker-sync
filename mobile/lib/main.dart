@@ -5,6 +5,7 @@ import 'core/theme/solo_colors.dart';
 import 'services/supabase_service.dart';
 import 'services/notification_service.dart';
 import 'services/auth_service.dart';
+import 'firebase_options.dart';
 import 'presentation/screens/arise_splash_screen.dart';
 import 'presentation/screens/home_quest_screen.dart';
 import 'presentation/screens/auth_screen.dart';
@@ -12,12 +13,13 @@ import 'presentation/screens/auth_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase (required for OAuth)
+  // Initialize Firebase (required for OAuth across Web, Android, iOS)
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
   } catch (e) {
-    debugPrint('⚠️ Firebase initialization failed: $e');
-    debugPrint('OAuth features will be unavailable. Guest mode still works.');
+    debugPrint('⚠️ Firebase initialization info: $e');
   }
   
   // Initialize native on-device notifications
