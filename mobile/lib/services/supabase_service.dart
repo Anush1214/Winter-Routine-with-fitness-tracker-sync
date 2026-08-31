@@ -1,136 +1,193 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../models/task_model.dart';
 import '../models/health_log_model.dart';
 import '../core/utils/timeline_utils.dart';
 
 class SupabaseService extends ChangeNotifier {
-  String _baseUrl = "http://localhost:3000"; // Can be pointed to your Vercel URL
-  String _selectedDate = TimelineUtils.formatDateKey(DateTime.now());
+  // Point to Next.js API or direct Supabase
+  String _baseUrl = "http://localhost:3000";
 
   List<TaskModel> _tasks = [];
-  HealthLogModel _healthLog = HealthLogModel(date: TimelineUtils.formatDateKey(DateTime.now()));
+  HealthLogModel _healthLog = HealthLogModel.empty('2026-08-31');
   Map<String, double> _heatmapRates = {};
   int _currentStreak = 0;
-  int _bestStreak = 0;
+  String _selectedDate = '2026-08-31';
   bool _isLoading = false;
+  String? _error;
 
-  String get selectedDate => _selectedDate;
   List<TaskModel> get tasks => _tasks;
   HealthLogModel get healthLog => _healthLog;
   Map<String, double> get heatmapRates => _heatmapRates;
   int get currentStreak => _currentStreak;
-  int get bestStreak => _bestStreak;
+  String get selectedDate => _selectedDate;
   bool get isLoading => _isLoading;
+  String? get error => _error;
 
-  void setBaseUrl(String url) {
-    _baseUrl = url.endsWith('/') ? url.substring(0, url.length - 1) : url;
-    loadDateData(_selectedDate);
+  SupabaseService() {
+    _selectedDate = TimelineUtils.formatDateKey(DateTime.now());
   }
 
-  void selectDate(String date) {
+  void setBaseUrl(String url) {
+    _baseUrl = url;
+    notifyListeners();
+  }
+
+  Future<void> selectDate(String date) async {
     _selectedDate = date;
-    loadDateData(date);
+    notifyListeners();
+    await loadDateData(date);
   }
 
   Future<void> loadDateData(String date) async {
     _isLoading = true;
+    _error = null;
     notifyListeners();
 
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/api/tasks?date=$date'));
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['success'] == true) {
-          final rawTasks = (data['tasks'] as List? ?? []);
-          _tasks = rawTasks.map((t) => TaskModel.fromJson(t)).toList();
-          
-          if (data['healthLog'] != null) {
-            _healthLog = HealthLogModel.fromJson(data['healthLog']);
-          } else {
-            _healthLog = HealthLogModel(date: date);
-          }
-        }
-      }
-    } catch (e) {
-      debugPrint("Error loading tasks from server, using local defaults: $e");
-      _loadOfflineDefaults(date);
-    }
-
-    _isLoading = false;
-    notifyListeners();
-    loadStats();
-  }
-
-  Future<void> loadStats() async {
-    try {
-      final summaryRes = await http.get(Uri.parse('$_baseUrl/api/stats/summary'));
-      if (summaryRes.statusCode == 200) {
-        final data = jsonDecode(summaryRes.body);
-        _currentStreak = data['currentStreak'] ?? 0;
-        _bestStreak = data['bestStreak'] ?? 0;
-      }
-
-      final heatRes = await http.get(Uri.parse('$_baseUrl/api/stats/heatmap'));
-      if (heatRes.statusCode == 200) {
-        final data = jsonDecode(heatRes.body);
-        final days = (data['days'] as List? ?? []);
-        final map = <String, double>{};
-        for (final d in days) {
-          map[d['date']] = (d['completionRate'] as num? ?? 0).toDouble();
-        }
-        _heatmapRates = map;
-      }
-      notifyListeners();
-    } catch (e) {
-      debugPrint("Error loading stats: $e");
-    }
-  }
-
-  Future<void> toggleTask(String id, bool currentStatus) async {
-    final newStatus = !currentStatus;
-    _tasks = _tasks.map((t) => t.id == id ? t.copyWith(isCompleted: newStatus) : t).toList();
-    notifyListeners();
-
-    try {
-      await http.patch(
-        Uri.parse('$_baseUrl/api/tasks/$id'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'isCompleted': newStatus}),
-      );
-      loadStats();
-    } catch (e) {
-      debugPrint("Toggle task error: $e");
-    }
-  }
-
-  Future<void> updateWater(int deltaOrAmount, {String mode = 'increment'}) async {
-    final currentWater = _healthLog.waterIntakeMl;
-    final nextWater = mode == 'set' ? deltaOrAmount : (currentWater + deltaOrAmount).clamp(0, 10000);
-    _healthLog = _healthLog.copyWith(waterIntakeMl: nextWater);
-    notifyListeners();
-
-    try {
-      final res = await http.post(
-        Uri.parse('$_baseUrl/api/water-intake'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'date': _selectedDate,
-          'amountMl': deltaOrAmount,
-          'mode': mode,
-        }),
-      );
+      final res = await http.get(Uri.parse("$_baseUrl/api/tasks?date=$date"));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['tasks'] != null) {
           _tasks = (data['tasks'] as List).map((t) => TaskModel.fromJson(t)).toList();
         }
-        loadStats();
+      } else {
+        _useLocalDefaultTasks(date);
+      }
+
+      // Fetch health log
+      final healthRes = await http.get(Uri.parse("$_baseUrl/api/sync-health?date=$date"));
+      if (healthRes.statusCode == 200) {
+        final data = jsonDecode(healthRes.body);
+        if (data['log'] != null) {
+          _healthLog = HealthLogModel.fromJson(data['log']);
+        }
+      }
+
+      // Fetch stats
+      final statsRes = await http.get(Uri.parse("$_baseUrl/api/stats/summary"));
+      if (statsRes.statusCode == 200) {
+        final data = jsonDecode(statsRes.body);
+        _currentStreak = data['streak'] ?? 0;
+        if (data['heatmap'] != null) {
+          final Map<String, dynamic> rawHeatmap = data['heatmap'];
+          _heatmapRates = rawHeatmap.map((k, v) => MapEntry(k, (v as num).toDouble()));
+        }
       }
     } catch (e) {
-      debugPrint("Update water error: $e");
+      // Local graceful fallback
+      _useLocalDefaultTasks(date);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
+  }
+
+  void _useLocalDefaultTasks(String date) {
+    if (_tasks.isEmpty) {
+      _tasks = [
+        TaskModel(id: '1', title: 'Wake Up & Morning Protocol', category: 'routine', targetDate: date, startTime: '07:00', isCompleted: false),
+        TaskModel(id: '2', title: 'Hydration Goal: 4-5L Water', category: 'health', targetDate: date, autoMetric: 'water_4l', isCompleted: false),
+        TaskModel(id: '3', title: 'Sleep Recovery: 7-8 Hours', category: 'health', targetDate: date, autoMetric: 'sleep_7h', isCompleted: false),
+        TaskModel(id: '4', title: 'Daily Movement: 10,000 Steps', category: 'fitness', targetDate: date, autoMetric: 'steps_10k', isCompleted: false),
+        TaskModel(id: '5', title: 'Office Work Shift', category: 'routine', targetDate: date, startTime: '09:00', isCompleted: false),
+        TaskModel(id: '6', title: 'Self-Study & Revision (If Time Permits)', category: 'study', targetDate: date, isCompleted: false),
+        TaskModel(id: '7', title: 'Evening Fresh Up & Transition', category: 'routine', targetDate: date, startTime: '18:30', isCompleted: false),
+        TaskModel(id: '8', title: 'DSA & Placement Preparation Shift', category: 'career', targetDate: date, startTime: '19:00', isCompleted: false),
+        TaskModel(id: '9', title: 'DSA Practice & Japanese Language', category: 'career', targetDate: date, isCompleted: false),
+        TaskModel(id: '10', title: 'Major Project Development', category: 'career', targetDate: date, isCompleted: false),
+        TaskModel(id: '11', title: 'Night Protocol & Sleep by 11:00 PM', category: 'routine', targetDate: date, startTime: '23:00', isCompleted: false),
+      ];
+    }
+  }
+
+  Future<void> toggleTask(String taskId, bool currentStatus) async {
+    final idx = _tasks.indexWhere((t) => t.id == taskId);
+    if (idx != -1) {
+      _tasks[idx] = _tasks[idx].copyWith(isCompleted: !currentStatus);
+      _recalculateStats();
+      notifyListeners();
+
+      try {
+        await http.patch(
+          Uri.parse("$_baseUrl/api/tasks/$taskId"),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'isCompleted': !currentStatus}),
+        );
+      } catch (_) {}
+    }
+  }
+
+  Future<void> saveTask(TaskModel task, String scope) async {
+    final idx = _tasks.indexWhere((t) => t.id == task.id);
+    if (idx != -1) {
+      _tasks[idx] = task;
+    } else {
+      _tasks.add(task);
+    }
+    _recalculateStats();
+    notifyListeners();
+
+    try {
+      await http.post(
+        Uri.parse("$_baseUrl/api/tasks"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'title': task.title,
+          'category': task.category,
+          'targetDate': task.targetDate,
+          'startTime': task.startTime,
+          'autoMetric': task.autoMetric,
+          'scope': scope,
+        }),
+      );
+    } catch (_) {}
+  }
+
+  Future<void> deleteTask(String taskId) async {
+    _tasks.removeWhere((t) => t.id == taskId);
+    _recalculateStats();
+    notifyListeners();
+
+    try {
+      await http.delete(Uri.parse("$_baseUrl/api/tasks/$taskId"));
+    } catch (_) {}
+  }
+
+  Future<void> updateWater(int delta, String mode) async {
+    int newWater = _healthLog.waterIntakeMl;
+    if (mode == 'set') {
+      newWater = delta;
+    } else {
+      newWater = (newWater + delta).clamp(0, 10000);
+    }
+
+    _healthLog = _healthLog.copyWith(waterIntakeMl: newWater);
+
+    // Auto-check water task if threshold reached
+    if (newWater >= 4000) {
+      final waterIdx = _tasks.indexWhere((t) => t.autoMetric == 'water_4l');
+      if (waterIdx != -1 && !_tasks[waterIdx].isCompleted) {
+        _tasks[waterIdx] = _tasks[waterIdx].copyWith(isCompleted: true);
+      }
+    }
+    _recalculateStats();
+    notifyListeners();
+
+    try {
+      await http.post(
+        Uri.parse("$_baseUrl/api/sync-health"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'date': _selectedDate,
+          'waterIntakeMl': newWater,
+          'steps': _healthLog.steps,
+          'sleepMinutes': _healthLog.sleepMinutes,
+          'gymWorkoutDone': _healthLog.gymWorkoutDone,
+        }),
+      );
+    } catch (_) {}
   }
 
   Future<void> syncHealth({
@@ -139,9 +196,34 @@ class SupabaseService extends ChangeNotifier {
     required bool gymWorkoutDone,
     required int waterIntakeMl,
   }) async {
+    _healthLog = HealthLogModel(
+      date: _selectedDate,
+      steps: steps,
+      sleepMinutes: sleepMinutes,
+      gymWorkoutDone: gymWorkoutDone,
+      waterIntakeMl: waterIntakeMl,
+    );
+
+    // Auto-complete tasks based on thresholds
+    for (int i = 0; i < _tasks.length; i++) {
+      final t = _tasks[i];
+      if (t.autoMetric == 'steps_10k' && steps >= 10000) {
+        _tasks[i] = t.copyWith(isCompleted: true);
+      } else if (t.autoMetric == 'sleep_7h' && sleepMinutes >= 420) {
+        _tasks[i] = t.copyWith(isCompleted: true);
+      } else if (t.autoMetric == 'water_4l' && waterIntakeMl >= 4000) {
+        _tasks[i] = t.copyWith(isCompleted: true);
+      } else if (t.autoMetric == 'gym_workout' && gymWorkoutDone) {
+        _tasks[i] = t.copyWith(isCompleted: true);
+      }
+    }
+
+    _recalculateStats();
+    notifyListeners();
+
     try {
-      final res = await http.post(
-        Uri.parse('$_baseUrl/api/sync-health'),
+      await http.post(
+        Uri.parse("$_baseUrl/api/sync-health"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'date': _selectedDate,
@@ -151,35 +233,27 @@ class SupabaseService extends ChangeNotifier {
           'waterIntakeMl': waterIntakeMl,
         }),
       );
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        if (data['healthLog'] != null) {
-          _healthLog = HealthLogModel.fromJson(data['healthLog']);
-        }
-        if (data['tasks'] != null) {
-          _tasks = (data['tasks'] as List).map((t) => TaskModel.fromJson(t)).toList();
-        }
-        notifyListeners();
-        loadStats();
-      }
-    } catch (e) {
-      debugPrint("Sync health error: $e");
-    }
+    } catch (_) {}
   }
 
-  void _loadOfflineDefaults(String date) {
-    _tasks = [
-      TaskModel(id: "1", title: "Wake Up & Morning Protocol", category: "routine", targetDate: date, startTime: "07:00", isCompleted: false),
-      TaskModel(id: "2", title: "Hydration Goal: 4-5L Water", category: "health", targetDate: date, isCompleted: false, autoMetric: "water_4l"),
-      TaskModel(id: "3", title: "Sleep Recovery: 7-8 Hours", category: "health", targetDate: date, isCompleted: false, autoMetric: "sleep_7h"),
-      TaskModel(id: "4", title: "Daily Movement: 10,000 Steps", category: "fitness", targetDate: date, isCompleted: false, autoMetric: "steps_10k"),
-      TaskModel(id: "5", title: "Office Work Shift", category: "routine", targetDate: date, startTime: "09:00", isCompleted: false),
-      TaskModel(id: "6", title: "Self-Study & Revision (If Time Permits)", category: "study", targetDate: date, isCompleted: false),
-      TaskModel(id: "7", title: "Evening Fresh Up & Transition", category: "routine", targetDate: date, startTime: "18:30", isCompleted: false),
-      TaskModel(id: "8", title: "DSA & Placement Preparation Shift", category: "career", targetDate: date, startTime: "19:00", isCompleted: false),
-      TaskModel(id: "9", title: "DSA Practice & Japanese Language", category: "career", targetDate: date, isCompleted: false),
-      TaskModel(id: "10", title: "Major Project Development", category: "career", targetDate: date, isCompleted: false),
-      TaskModel(id: "11", title: "Night Protocol & Sleep by 11:00 PM", category: "routine", targetDate: date, startTime: "23:00", isCompleted: false),
-    ];
+  Future<void> sendTestAlert(String topic) async {
+    try {
+      await http.post(
+        Uri.parse("$_baseUrl/api/notifications/trigger"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'type': 'test',
+          'topic': topic,
+        }),
+      );
+    } catch (_) {}
+  }
+
+  void _recalculateStats() {
+    if (_tasks.isNotEmpty) {
+      final completed = _tasks.where((t) => t.isCompleted).length;
+      final rate = (completed / _tasks.length) * 100;
+      _heatmapRates[_selectedDate] = rate;
+    }
   }
 }
