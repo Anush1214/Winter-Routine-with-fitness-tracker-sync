@@ -27,9 +27,17 @@ import {
   type Firestore,
 } from "firebase/firestore";
 
+// Compute custom reverse-proxy authDomain to prevent browser cross-origin drops
+const getAuthDomain = () => {
+  if (typeof window !== "undefined" && window.location.hostname && window.location.hostname !== "localhost") {
+    return window.location.host;
+  }
+  return process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "winter-arc-protocol.firebaseapp.com";
+};
+
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC6X1Yfn-sHCGauiznJJYicQmmraTSNdiw",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "winter-arc-protocol.firebaseapp.com",
+  authDomain: getAuthDomain(),
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "winter-arc-protocol",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "winter-arc-protocol.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "37819138819",
