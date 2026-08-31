@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/supabase_service.dart';
+import '../../models/task_model.dart';
 
 class NotificationSettingsModal extends StatefulWidget {
-  final Function(String topic) onTestAlert;
+  final Function(String topic)? onTestAlert;
 
   const NotificationSettingsModal({
     super.key,
-    required this.onTestAlert,
+    this.onTestAlert,
   });
 
   @override
@@ -17,154 +20,288 @@ class NotificationSettingsModal extends StatefulWidget {
 }
 
 class _NotificationSettingsModalState extends State<NotificationSettingsModal> {
-  final TextEditingController _topicController = TextEditingController(text: 'winter-arc-routine');
   bool _isSending = false;
   String? _statusMsg;
 
   @override
-  void dispose() {
-    _topicController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final supabase = context.watch<SupabaseService>();
+    final allTasks = supabase.tasks;
+    final scheduledTasks = allTasks.where((t) => t.startTime != null && t.startTime!.isNotEmpty).toList();
+
+    // Sort by startTime
+    scheduledTasks.sort((a, b) => (a.startTime ?? '').compareTo(b.startTime ?? ''));
+
     return Container(
-      padding: EdgeInsets.only(
-        top: 20,
-        left: 20,
-        right: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      decoration: const BoxDecoration(
-        color: SoloColors.obsidianCard,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0F0826).withValues(alpha: 0.95),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
-          top: BorderSide(color: SoloColors.neonCyan, width: 1.5),
+          top: BorderSide(color: const Color(0xFFA855F7).withValues(alpha: 0.5), width: 1.5),
         ),
       ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.notifications_active_outlined, color: SoloColors.neonCyan, size: 20),
-                    const SizedBox(width: 8),
-                    Text("[ NATIVE ALERTS ENGINE ]", style: SoloTypography.systemTag),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white70),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              "Your app is configured with built-in native Android/iOS alarm notifications that trigger daily even when the app is completely closed or offline.",
-              style: SoloTypography.bodyMuted,
-            ),
-            const SizedBox(height: 16),
-
-            // Schedule Info
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: SoloColors.obsidianVoid,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: SoloColors.neonCyan.withOpacity(0.2)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
                 children: [
-                  Text("BUILT-IN DAILY NATIVE PROTOCOL SCHEDULE", style: SoloTypography.systemTag.copyWith(fontSize: 9)),
-                  const SizedBox(height: 8),
-                  _buildScheduleRow("07:00 AM IST", "Morning Awakening Protocol"),
-                  _buildScheduleRow("06:30 PM IST", "Placement & DSA Shift"),
-                  _buildScheduleRow("10:30 PM IST", "Night Check-In & Penalty Warning"),
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF581C87).withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFA855F7)),
+                    ),
+                    child: const Icon(Icons.notifications_active_rounded, color: Color(0xFFC084FC), size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "LIVE SYSTEM ALERTS ENGINE",
+                        style: SoloTypography.systemTitle.copyWith(fontSize: 16),
+                      ),
+                      Text(
+                        "${scheduledTasks.length} Active Real-Time Protocol Alarms",
+                        style: SoloTypography.bodyMuted.copyWith(fontSize: 10, color: const Color(0xFFC084FC)),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            ),
-
-            if (_statusMsg != null) ...[
-              const SizedBox(height: 12),
-              Text(_statusMsg!, style: SoloTypography.bodyMuted.copyWith(color: SoloColors.rankEmerald)),
+              if (Navigator.canPop(context))
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                  onPressed: () => Navigator.pop(context),
+                ),
             ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Every scheduled routine objective is synchronized with your phone's native alarm clock in real time. Alarms trigger automatically even when the app is completely closed or offline.",
+            style: SoloTypography.bodyMuted.copyWith(fontSize: 11, height: 1.4),
+          ),
+          const SizedBox(height: 16),
 
-            const SizedBox(height: 20),
-            // Send Test Button
-            GestureDetector(
-              onTap: () async {
-                SoundService().playChime();
-                setState(() {
-                  _isSending = true;
-                  _statusMsg = null;
-                });
-                
-                // 1. Show instant native on-device notification
-                await NotificationService().showInstantNotification(
-                  title: "⚡ [ SYSTEM NOTIFICATION : QUEST READY ]",
-                  body: "Winter Arc Protocol active. Your daily quest objectives are ready for execution!",
-                );
-                
-                // 2. Also dispatch to server if connected
-                await widget.onTestAlert(_topicController.text.trim());
-
-                setState(() {
-                  _isSending = false;
-                  _statusMsg = "Native system alert triggered on your device!";
-                });
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  gradient: SoloColors.buttonCyanGradient,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: SoloColors.neonCyan.withOpacity(0.4),
-                      blurRadius: 12,
+          // Real-time Dynamic Schedule List
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF090414),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFA855F7).withValues(alpha: 0.35)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "SYNCHRONIZED DAILY PROTOCOLS",
+                      style: SoloTypography.systemTag.copyWith(fontSize: 9, color: const Color(0xFFC084FC)),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF064E3B),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: const Color(0xFF34D399)),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF34D399),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            "REAL-TIME ACTIVE",
+                            style: SoloTypography.systemTag.copyWith(fontSize: 8, color: const Color(0xFF34D399)),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-                child: Center(
-                  child: _isSending
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(color: SoloColors.obsidianVoid, strokeWidth: 2),
-                        )
-                      : Text(
-                          "TEST NATIVE NOTIFICATION NOW",
-                          style: SoloTypography.systemTag.copyWith(
-                            color: SoloColors.obsidianVoid,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                ),
+                const SizedBox(height: 12),
+
+                if (scheduledTasks.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Center(
+                      child: Text(
+                        "No routine alarms detected. Add tasks with scheduled times to register live alarms.",
+                        style: SoloTypography.bodyMuted.copyWith(fontSize: 11),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
+                else
+                  ...scheduledTasks.map((task) => _buildLiveAlarmTile(task)),
+              ],
+            ),
+          ),
+
+          if (_statusMsg != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF064E3B).withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF34D399)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_outline, color: Color(0xFF34D399), size: 16),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      _statusMsg!,
+                      style: SoloTypography.bodyMuted.copyWith(fontSize: 11, color: const Color(0xFF34D399)),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-        ),
+
+          const SizedBox(height: 16),
+
+          // Send Test Instant Notification Button
+          SizedBox(
+            width: double.infinity,
+            height: 46,
+            child: ElevatedButton.icon(
+              onPressed: _isSending
+                  ? null
+                  : () async {
+                      SoundService().playChime();
+                      setState(() {
+                        _isSending = true;
+                        _statusMsg = null;
+                      });
+
+                      await NotificationService().showInstantNotification(
+                        title: "⚡ [ SYSTEM PROTOCOL : REAL-TIME TEST ]",
+                        body: "Awakening alert engine verified! All ${scheduledTasks.length} daily routine alarms are active.",
+                      );
+
+                      if (widget.onTestAlert != null) {
+                        await widget.onTestAlert!('winter-arc-routine');
+                      }
+
+                      if (mounted) {
+                        setState(() {
+                          _isSending = false;
+                          _statusMsg = "System alarm test transmitted successfully!";
+                        });
+                      }
+                    },
+              icon: _isSending
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : const Icon(Icons.flash_on, color: Colors.white, size: 18),
+              label: Text(
+                _isSending ? "TRANSMITTING ALARM..." : "TEST NATIVE PHONE NOTIFICATION NOW",
+                style: SoloTypography.systemTag.copyWith(
+                  fontSize: 11,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF9333EA),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                elevation: 6,
+                shadowColor: const Color(0xFFA855F7).withValues(alpha: 0.5),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildScheduleRow(String time, String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+  Widget _buildLiveAlarmTile(TaskModel task) {
+    final isDone = task.isCompleted;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: const Color(0xFF130926),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isDone
+              ? const Color(0xFF34D399).withValues(alpha: 0.4)
+              : const Color(0xFFA855F7).withValues(alpha: 0.25),
+        ),
+      ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(time, style: SoloTypography.systemTag.copyWith(fontSize: 10, color: SoloColors.electricSky)),
-          Text(label, style: SoloTypography.bodyMuted.copyWith(fontSize: 10)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFF581C87).withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFC084FC).withValues(alpha: 0.4)),
+            ),
+            child: Text(
+              task.startTime ?? '--:--',
+              style: SoloTypography.systemTag.copyWith(
+                fontSize: 10,
+                color: const Color(0xFFE9D5FF),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isDone ? Colors.white60 : Colors.white,
+                    decoration: isDone ? TextDecoration.lineThrough : null,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  isDone ? "Cleared today" : "Armed for execution",
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    color: isDone ? const Color(0xFF34D399) : const Color(0xFFA89BB9),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Icon(
+            isDone ? Icons.check_circle : Icons.alarm_on_rounded,
+            color: isDone ? const Color(0xFF34D399) : const Color(0xFFC084FC),
+            size: 18,
+          ),
         ],
       ),
     );
