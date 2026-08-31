@@ -28,12 +28,13 @@ import {
 } from "firebase/firestore";
 
 export const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "YOUR_API_KEY",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyC6X1Yfn-sHCGauiznJJYicQmmraTSNdiw",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "winter-arc-protocol.firebaseapp.com",
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "winter-arc-protocol",
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "winter-arc-protocol.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "37819138819",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "YOUR_APP_ID",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:37819138819:web:6f5fb1969209b043bb5f36",
+  measurementId: "G-FJHLL5V1VN",
 };
 
 // Initialize Firebase client safely (prevent duplicate initialization in Next.js SSR / HMR)
