@@ -8,6 +8,7 @@ import '../../core/utils/timeline_utils.dart';
 import '../../services/auth_service.dart';
 import 'hunter_rank_badge.dart';
 import 'holographic_frame.dart';
+import '../screens/profile_screen.dart';
 
 class HeaderWidget extends StatefulWidget {
   final String currentDate;
@@ -153,14 +154,46 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   ],
                 ),
               ),
-              // Logout / Switch User Trigger
-              IconButton(
-                icon: const Icon(Icons.logout, color: SoloColors.textDim, size: 18),
-                tooltip: "Sign Out Hunter",
-                onPressed: () async {
+              // Profile Avatar → Navigate to Profile Screen
+              GestureDetector(
+                onTap: () {
                   SoundService().playClick();
-                  await AuthService().signOut();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ProfileScreen(streakDays: widget.activeStreak),
+                    ),
+                  );
                 },
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.6), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: SoloColors.neonCyan.withValues(alpha: 0.2),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 17,
+                    backgroundColor: const Color(0xFF1E293B),
+                    backgroundImage: hunter?.photoUrl != null
+                        ? NetworkImage(hunter!.photoUrl!)
+                        : null,
+                    child: hunter?.photoUrl == null
+                        ? Text(
+                            hunterName.isNotEmpty ? hunterName[0].toUpperCase() : '?',
+                            style: SoloTypography.systemTag.copyWith(
+                              fontSize: 14,
+                              color: SoloColors.neonCyan,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
               ),
             ],
           ),

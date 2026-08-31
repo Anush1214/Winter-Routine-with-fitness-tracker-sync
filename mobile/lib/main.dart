@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'core/theme/solo_colors.dart';
 import 'services/supabase_service.dart';
 import 'services/notification_service.dart';
@@ -9,6 +10,14 @@ import 'presentation/screens/auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase (required for OAuth)
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('⚠️ Firebase initialization failed: $e');
+    debugPrint('OAuth features will be unavailable. Guest mode still works.');
+  }
   
   // Initialize native on-device notifications
   await NotificationService().init();

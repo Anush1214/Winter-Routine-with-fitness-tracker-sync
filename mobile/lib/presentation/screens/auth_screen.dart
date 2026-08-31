@@ -17,8 +17,16 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isLoading = false;
-  String? _errorMsg;
+  
+  // Per-button loading states
+  bool _isEmailLoading = false;
+  bool _isGoogleLoading = false;
+  bool _isGitHubLoading = false;
+  bool _isGuestLoading = false;
+  bool _obscurePassword = true;
+
+  bool get _anyLoading =>
+      _isEmailLoading || _isGoogleLoading || _isGitHubLoading || _isGuestLoading;
 
   @override
   void dispose() {
@@ -28,21 +36,47 @@ class _AuthScreenState extends State<AuthScreen> {
     super.dispose();
   }
 
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(fontSize: 12, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: SoloColors.penaltyCrimson,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        duration: const Duration(seconds: 5),
+      ),
+    );
+  }
+
   Future<void> _submit() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
     final name = _nameController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      setState(() => _errorMsg = "Please provide email and password.");
+      _showError('Please provide both email and password.');
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-      _errorMsg = null;
-    });
+    if (_isSignUp && password.length < 6) {
+      _showError('Password must be at least 6 characters.');
+      return;
+    }
 
+    setState(() => _isEmailLoading = true);
     SoundService().playChime();
 
     try {
@@ -52,31 +86,49 @@ class _AuthScreenState extends State<AuthScreen> {
         await AuthService().signInWithEmail(email, password);
       }
     } catch (e) {
-      setState(() => _errorMsg = "Authentication failed: $e");
+      _showError('$e');
     } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) setState(() => _isEmailLoading = false);
     }
   }
 
   Future<void> _googleLogin() async {
-    setState(() => _isLoading = true);
+    setState(() => _isGoogleLoading = true);
     SoundService().playChime();
-    await AuthService().signInWithGoogle();
-    if (mounted) setState(() => _isLoading = false);
+
+    try {
+      await AuthService().signInWithGoogle();
+    } catch (e) {
+      _showError('$e');
+    } finally {
+      if (mounted) setState(() => _isGoogleLoading = false);
+    }
   }
 
   Future<void> _githubLogin() async {
-    setState(() => _isLoading = true);
+    setState(() => _isGitHubLoading = true);
     SoundService().playChime();
-    await AuthService().signInWithGitHub();
-    if (mounted) setState(() => _isLoading = false);
+
+    try {
+      await AuthService().signInWithGitHub();
+    } catch (e) {
+      _showError('$e');
+    } finally {
+      if (mounted) setState(() => _isGitHubLoading = false);
+    }
   }
 
   Future<void> _guestLogin() async {
-    setState(() => _isLoading = true);
+    setState(() => _isGuestLoading = true);
     SoundService().playClick();
-    await AuthService().signInAsGuest();
-    if (mounted) setState(() => _isLoading = false);
+
+    try {
+      await AuthService().signInAsGuest();
+    } catch (e) {
+      _showError('$e');
+    } finally {
+      if (mounted) setState(() => _isGuestLoading = false);
+    }
   }
 
   @override
@@ -130,6 +182,35 @@ class _AuthScreenState extends State<AuthScreen> {
                   textAlign: TextAlign.center,
                   style: SoloTypography.bodyMuted.copyWith(fontSize: 11),
                 ),
+
+                // Firebase status indicator
+                if (!AuthService().isFirebaseAvailable) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: SoloColors.penaltyCrimson.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: SoloColors.penaltyCrimson.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.warning_amber, color: SoloColors.penaltyCrimson, size: 14),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            'Firebase not configured — only Guest mode available',
+                            style: SoloTypography.bodyMuted.copyWith(
+                              fontSize: 9,
+                              color: SoloColors.penaltyCrimson,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 24),
 
                 // Main Holographic Login Box
@@ -142,52 +223,24 @@ class _AuthScreenState extends State<AuthScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: GestureDetector(
-                              onTap: _isLoading ? null : _googleLogin,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF1E293B),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: const Color(0xFFEA4335).withValues(alpha: 0.6)),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.g_mobiledata, color: Color(0xFFEA4335), size: 20),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      "GMAIL / GOOGLE",
-                                      style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            child: _SocialButton(
+                              onTap: _anyLoading ? null : _googleLogin,
+                              isLoading: _isGoogleLoading,
+                              icon: Icons.g_mobiledata,
+                              iconColor: const Color(0xFFEA4335),
+                              label: 'GMAIL / GOOGLE',
+                              borderColor: const Color(0xFFEA4335).withValues(alpha: 0.6),
                             ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
-                            child: GestureDetector(
-                              onTap: _isLoading ? null : _githubLogin,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF1E293B),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.5)),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.code, color: SoloColors.neonCyan, size: 16),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      "GITHUB",
-                                      style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                              ),
+                            child: _SocialButton(
+                              onTap: _anyLoading ? null : _githubLogin,
+                              isLoading: _isGitHubLoading,
+                              icon: Icons.code,
+                              iconColor: SoloColors.neonCyan,
+                              label: 'GITHUB',
+                              borderColor: SoloColors.neonCyan.withValues(alpha: 0.5),
                             ),
                           ),
                         ],
@@ -263,114 +316,72 @@ class _AuthScreenState extends State<AuthScreen> {
                       const SizedBox(height: 16),
 
                       if (_isSignUp) ...[
-                        TextField(
+                        _buildTextField(
                           controller: _nameController,
-                          style: const TextStyle(color: Colors.white, fontSize: 13),
-                          decoration: InputDecoration(
-                            labelText: "HUNTER CODENAME",
-                            labelStyle: SoloTypography.systemTag.copyWith(fontSize: 10),
-                            hintText: "e.g., Jin-Woo",
-                            hintStyle: SoloTypography.bodyMuted.copyWith(fontSize: 11),
-                            filled: true,
-                            fillColor: SoloColors.obsidianVoid,
-                            prefixIcon: const Icon(Icons.person_outline, color: SoloColors.neonCyan, size: 16),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10),
-                              borderSide: const BorderSide(color: SoloColors.neonCyan),
-                            ),
-                          ),
+                          label: "HUNTER CODENAME",
+                          hint: "e.g., Jin-Woo",
+                          icon: Icons.person_outline,
                         ),
                         const SizedBox(height: 12),
                       ],
 
-                      TextField(
+                      _buildTextField(
                         controller: _emailController,
+                        label: "PLAYER EMAIL IDENTIFIER",
+                        hint: "hunter@winterarc.com",
+                        icon: Icons.email_outlined,
                         keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: Colors.white, fontSize: 13),
-                        decoration: InputDecoration(
-                          labelText: "PLAYER EMAIL IDENTIFIER",
-                          labelStyle: SoloTypography.systemTag.copyWith(fontSize: 10),
-                          hintText: "hunter@winterarc.com",
-                          hintStyle: SoloTypography.bodyMuted.copyWith(fontSize: 11),
-                          filled: true,
-                          fillColor: SoloColors.obsidianVoid,
-                          prefixIcon: const Icon(Icons.email_outlined, color: SoloColors.neonCyan, size: 16),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: SoloColors.neonCyan),
-                          ),
-                        ),
                       ),
                       const SizedBox(height: 12),
 
-                      TextField(
+                      _buildTextField(
                         controller: _passwordController,
-                        obscureText: true,
-                        style: const TextStyle(color: Colors.white, fontSize: 13),
-                        decoration: InputDecoration(
-                          labelText: "SECRET SECURITY KEY",
-                          labelStyle: SoloTypography.systemTag.copyWith(fontSize: 10),
-                          hintText: "••••••••••••",
-                          hintStyle: SoloTypography.bodyMuted.copyWith(fontSize: 11),
-                          filled: true,
-                          fillColor: SoloColors.obsidianVoid,
-                          prefixIcon: const Icon(Icons.lock_outline, color: SoloColors.neonCyan, size: 16),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                            borderSide: const BorderSide(color: SoloColors.neonCyan),
+                        label: "SECRET SECURITY KEY",
+                        hint: "••••••••••••",
+                        icon: Icons.lock_outline,
+                        obscureText: _obscurePassword,
+                        suffixIcon: GestureDetector(
+                          onTap: () => setState(() => _obscurePassword = !_obscurePassword),
+                          child: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                            color: SoloColors.textDim,
+                            size: 18,
                           ),
                         ),
                       ),
-
-                      if (_errorMsg != null) ...[
-                        const SizedBox(height: 10),
-                        Text(
-                          _errorMsg!,
-                          style: SoloTypography.warningText.copyWith(fontSize: 11),
-                        ),
-                      ],
 
                       const SizedBox(height: 18),
 
                       // Submit Button
                       GestureDetector(
-                        onTap: _isLoading ? null : _submit,
+                        onTap: _anyLoading ? null : _submit,
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
-                            gradient: SoloColors.buttonCyanGradient,
+                            gradient: _anyLoading ? null : SoloColors.buttonCyanGradient,
+                            color: _anyLoading ? const Color(0xFF1E293B) : null,
                             borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: SoloColors.neonCyan.withValues(alpha: 0.4),
-                                blurRadius: 15,
-                              ),
-                            ],
+                            boxShadow: _anyLoading
+                                ? null
+                                : [
+                                    BoxShadow(
+                                      color: SoloColors.neonCyan.withValues(alpha: 0.4),
+                                      blurRadius: 15,
+                                    ),
+                                  ],
                           ),
                           child: Center(
-                            child: _isLoading
+                            child: _isEmailLoading
                                 ? const SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(color: SoloColors.obsidianVoid, strokeWidth: 2),
+                                    child: CircularProgressIndicator(color: SoloColors.neonCyan, strokeWidth: 2),
                                   )
                                 : Text(
                                     _isSignUp ? "INITIATE AWAKENING" : "ACCESS SYSTEM PROTOCOL",
                                     style: SoloTypography.systemTag.copyWith(
-                                      color: SoloColors.obsidianVoid,
+                                      color: _anyLoading ? SoloColors.textMuted : SoloColors.obsidianVoid,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w900,
                                     ),
@@ -385,7 +396,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
                 // Guest Mode Trigger
                 GestureDetector(
-                  onTap: _isLoading ? null : _guestLogin,
+                  onTap: _anyLoading ? null : _guestLogin,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
@@ -393,26 +404,124 @@ class _AuthScreenState extends State<AuthScreen> {
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(color: SoloColors.manaViolet.withValues(alpha: 0.5)),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.flash_on, color: SoloColors.manaViolet, size: 14),
-                        const SizedBox(width: 6),
-                        Text(
-                          "CONTINUE AS GUEST SHADOW HUNTER",
-                          style: SoloTypography.systemTag.copyWith(
-                            color: SoloColors.manaViolet,
-                            fontSize: 10,
+                    child: _isGuestLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(color: SoloColors.manaViolet, strokeWidth: 2),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.flash_on, color: SoloColors.manaViolet, size: 14),
+                              const SizedBox(width: 6),
+                              Text(
+                                "CONTINUE AS GUEST SHADOW HUNTER",
+                                style: SoloTypography.systemTag.copyWith(
+                                  color: SoloColors.manaViolet,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+    bool obscureText = false,
+    Widget? suffixIcon,
+  }) {
+    return TextField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      style: const TextStyle(color: Colors.white, fontSize: 13),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: SoloTypography.systemTag.copyWith(fontSize: 10),
+        hintText: hint,
+        hintStyle: SoloTypography.bodyMuted.copyWith(fontSize: 11),
+        filled: true,
+        fillColor: SoloColors.obsidianVoid,
+        prefixIcon: Icon(icon, color: SoloColors.neonCyan, size: 16),
+        suffixIcon: suffixIcon,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: SoloColors.neonCyan),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: SoloColors.neonCyan.withValues(alpha: 0.3)),
+        ),
+      ),
+    );
+  }
+}
+
+// Reusable Social OAuth Button Widget
+class _SocialButton extends StatelessWidget {
+  final VoidCallback? onTap;
+  final bool isLoading;
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final Color borderColor;
+
+  const _SocialButton({
+    required this.onTap,
+    required this.isLoading,
+    required this.icon,
+    required this.iconColor,
+    required this.label,
+    required this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: borderColor),
+        ),
+        child: isLoading
+            ? Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(color: iconColor, strokeWidth: 2),
+                ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, color: iconColor, size: 20),
+                  const SizedBox(width: 4),
+                  Text(
+                    label,
+                    style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white),
+                  ),
+                ],
+              ),
       ),
     );
   }
