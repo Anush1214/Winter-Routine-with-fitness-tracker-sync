@@ -28,6 +28,10 @@ class SoundService {
     HapticFeedback.heavyImpact();
   }
 
+  void playLevelUp() {
+    HapticFeedback.heavyImpact();
+  }
+
   void playPenaltyWarning() {
     HapticFeedback.vibrate();
   }

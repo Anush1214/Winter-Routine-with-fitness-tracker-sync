@@ -14,6 +14,7 @@ class NotificationService {
   bool _isInitialized = false;
 
   Future<void> init() async {
+    if (kIsWeb) return;
     if (_isInitialized) return;
 
     // Initialize Timezones
