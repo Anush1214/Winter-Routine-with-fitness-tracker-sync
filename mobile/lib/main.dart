@@ -2,10 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'core/theme/solo_colors.dart';
 import 'services/supabase_service.dart';
+import 'services/notification_service.dart';
 import 'presentation/screens/home_quest_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize native on-device notifications
+  await NotificationService().init();
+  
   runApp(const WinterArcMobileApp());
 }
 
@@ -29,7 +34,6 @@ class WinterArcMobileApp extends StatelessWidget {
             primary: SoloColors.neonCyan,
             secondary: SoloColors.manaBlue,
             surface: SoloColors.obsidianGlass,
-            background: SoloColors.obsidianVoid,
           ),
           useMaterial3: true,
         ),

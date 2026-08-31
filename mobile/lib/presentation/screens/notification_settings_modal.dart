@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
+import '../../services/notification_service.dart';
 
 class NotificationSettingsModal extends StatefulWidget {
   final Function(String topic) onTestAlert;
@@ -54,7 +55,7 @@ class _NotificationSettingsModalState extends State<NotificationSettingsModal> {
                   children: [
                     const Icon(Icons.notifications_active_outlined, color: SoloColors.neonCyan, size: 20),
                     const SizedBox(width: 8),
-                    Text("[ ALERTS ENGINE : NTFY HUB ]", style: SoloTypography.systemTag),
+                    Text("[ NATIVE ALERTS ENGINE ]", style: SoloTypography.systemTag),
                   ],
                 ),
                 IconButton(
@@ -65,29 +66,8 @@ class _NotificationSettingsModalState extends State<NotificationSettingsModal> {
             ),
             const SizedBox(height: 12),
             Text(
-              "Receive instant Solo Leveling system push notifications on your phone, watch, and browser.",
+              "Your app is configured with built-in native Android/iOS alarm notifications that trigger daily even when the app is completely closed or offline.",
               style: SoloTypography.bodyMuted,
-            ),
-            const SizedBox(height: 16),
-
-            // Topic field
-            TextField(
-              controller: _topicController,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
-              decoration: InputDecoration(
-                labelText: "NTFY TOPIC IDENTIFIER",
-                labelStyle: SoloTypography.systemTag.copyWith(fontSize: 10),
-                filled: true,
-                fillColor: SoloColors.obsidianVoid,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide(color: SoloColors.neonCyan.withOpacity(0.4)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: SoloColors.neonCyan),
-                ),
-              ),
             ),
             const SizedBox(height: 16),
 
@@ -102,11 +82,11 @@ class _NotificationSettingsModalState extends State<NotificationSettingsModal> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("AUTOMATED DAILY PROTOCOL SCHEDULE", style: SoloTypography.systemTag.copyWith(fontSize: 9)),
+                  Text("BUILT-IN DAILY NATIVE PROTOCOL SCHEDULE", style: SoloTypography.systemTag.copyWith(fontSize: 9)),
                   const SizedBox(height: 8),
-                  _buildScheduleRow("07:00 AM IST", "Morning Awakening Alert"),
+                  _buildScheduleRow("07:00 AM IST", "Morning Awakening Protocol"),
                   _buildScheduleRow("06:30 PM IST", "Placement & DSA Shift"),
-                  _buildScheduleRow("10:30 PM IST", "Night Check-In & Warning"),
+                  _buildScheduleRow("10:30 PM IST", "Night Check-In & Penalty Warning"),
                 ],
               ),
             ),
@@ -125,10 +105,19 @@ class _NotificationSettingsModalState extends State<NotificationSettingsModal> {
                   _isSending = true;
                   _statusMsg = null;
                 });
+                
+                // 1. Show instant native on-device notification
+                await NotificationService().showInstantNotification(
+                  title: "⚡ [ SYSTEM NOTIFICATION : QUEST READY ]",
+                  body: "Winter Arc Protocol active. Your daily quest objectives are ready for execution!",
+                );
+                
+                // 2. Also dispatch to server if connected
                 await widget.onTestAlert(_topicController.text.trim());
+
                 setState(() {
                   _isSending = false;
-                  _statusMsg = "System alert dispatched to ntfy.sh/${_topicController.text.trim()}!";
+                  _statusMsg = "Native system alert triggered on your device!";
                 });
               },
               child: Container(
@@ -152,7 +141,7 @@ class _NotificationSettingsModalState extends State<NotificationSettingsModal> {
                           child: CircularProgressIndicator(color: SoloColors.obsidianVoid, strokeWidth: 2),
                         )
                       : Text(
-                          "DISPATCH TEST SYSTEM ALERT",
+                          "TEST NATIVE NOTIFICATION NOW",
                           style: SoloTypography.systemTag.copyWith(
                             color: SoloColors.obsidianVoid,
                             fontSize: 12,
