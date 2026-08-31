@@ -5,6 +5,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -42,3 +45,21 @@ jobs:
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish Direct APK Download Release
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main'
+        with:
+          tag_name: v1.0.0
+          name: "Solo Leveling Winter Arc Protocol v1.0.0"
+          body: |
+            ## ❄️ Solo Leveling Winter Arc Mobile APK
+            
+            Direct Download for Android Phone:
+            - **Filename:** `app-release.apk`
+            - **Includes:** Solo Leveling Holographic UI, Smartwatch Health Auto-Sync, and Built-In Offline Native Alarms & Push Notifications.
+          files: mobile/build/app/outputs/flutter-apk/app-release.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

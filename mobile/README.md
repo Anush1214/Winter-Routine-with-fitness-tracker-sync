@@ -4,28 +4,34 @@
 
 ---
 
-## 📱 How to Download & Install the Mobile APK on Your Android Phone
+## 📥 Direct APK Download for Android
 
-### ⚡ Step-by-Step APK Download Guide (GitHub Actions):
+[![Download APK](https://img.shields.io/badge/📲_Direct_Download-Solo_Leveling_APK-00F0FF?style=for-the-badge&logo=android&logoColor=02050E)](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk)
 
-1. **Open GitHub Actions on Your Phone or PC**:  
-   👉 **[GitHub Actions Workflows](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions)**
+* **Direct 1-Tap APK Download Link:**  
+  👉 **[https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk)**
 
-2. **Select the Latest Successful Run**:  
-   Tap on the top workflow run that has a **green checkmark (✅)**.
+* **Alternative (GitHub Actions Artifacts):**  
+  👉 **[https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions)**
 
-3. **Download the APK Artifact**:  
-   Scroll down to the **Artifacts** section at the bottom:  
-   👉 Tap **`Winter-Arc-Solo-Leveling-App`** to download the `.zip`.
+---
 
-4. **Install on Your Phone**:
-   - Extract the `.zip` file in your Downloads folder.
-   - Tap on **`app-release.apk`** $\rightarrow$ Tap **Install**.
-   - If prompted with *"Install from unknown sources"*, tap **Settings $\rightarrow$ Allow from this source**.
-   - If Google Play Protect shows a prompt, tap **Install anyway**.
+## 📱 How to Install the APK on Your Android Phone
 
-5. **Open the App**:
-   - Open the **Winter Arc Protocol** app and allow notifications to receive daily quest alerts!
+1. **Download the File**: Tap the [Direct APK Download Link](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk) on your phone.
+2. **Install**: Tap `app-release.apk` in your Downloads folder $\rightarrow$ Tap **Install**.
+   - *If prompted with "Install unknown apps", tap **Settings $\rightarrow$ Allow from this source** $\rightarrow$ Tap **Install**.*
+   - *If Google Play Protect shows a notice, tap **Install anyway**.*
+3. **Launch & Authorize**: Open **Winter Arc Protocol** and allow notifications to receive daily quest alerts and smartwatch vibrations!
+
+---
+
+## 🔔 Built-In Offline Native Notifications
+
+The app does **not require any 3rd party apps**. It schedules native OS alarms directly with Android `AlarmManager`:
+- **07:00 AM IST:** `⚡ [ SYSTEM NOTIFICATION : DAILY QUEST ISSUED ]`
+- **06:30 PM IST:** `⚔️ [ SYSTEM QUEST : PLACEMENT & DSA SHIFT ]`
+- **10:30 PM IST:** `⚠️ [ CAUTION : PENALTY QUEST WARNING ]`
 
 ---
 
@@ -36,17 +42,7 @@ cd mobile
 flutter pub get
 flutter build apk --release --no-tree-shake-icons
 ```
-The compiled APK is generated at:  
-📁 `mobile/build/app/outputs/flutter-apk/app-release.apk`
-
----
-
-## 🔔 Built-In Offline Native Notifications
-
-The app does **not require any 3rd party apps**. It schedules native OS alarms directly with Android `AlarmManager`:
-- **07:00 AM IST:** `⚡ [ SYSTEM NOTIFICATION : DAILY QUEST ISSUED ]`
-- **06:30 PM IST:** `⚔️ [ SYSTEM QUEST : PLACEMENT & DSA SHIFT ]`
-- **10:30 PM IST:** `⚠️ [ CAUTION : PENALTY QUEST WARNING ]`
+Output: `mobile/build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 

@@ -4,55 +4,28 @@
 
 ---
 
-## 📱 How to Download & Install the Mobile APK on Your Android Phone
+## 📥 Direct APK Download for Android
 
-You can download and install the ready-to-use Android APK directly onto your phone in **under 1 minute** without installing Flutter or Android Studio on your PC!
+[![Download APK](https://img.shields.io/badge/📲_Direct_Download-Solo_Leveling_APK-00F0FF?style=for-the-badge&logo=android&logoColor=02050E)](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk)
 
----
+* **Direct 1-Tap APK Download Link:**  
+  👉 **[https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk)**
 
-### ⚡ Step-by-Step APK Download Guide (GitHub Actions):
-
-1. **Open the GitHub Actions Tab on Your Phone or PC**:  
-   👉 **[Click Here to Open GitHub Actions Artifacts](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions)**
-
-2. **Select the Latest Successful Run**:  
-   Tap on the top workflow run that has a **green checkmark (✅)** (e.g., `fix(android): bump compileSdk to 36...`).
-
-3. **Download the APK Artifact**:  
-   Scroll down to the bottom of the page to the **Artifacts** section:  
-   👉 Click **`Winter-Arc-Solo-Leveling-App`** to download the `.zip` file.
-
-4. **Install on Your Phone**:
-   - Open your phone's **Files** or **Downloads** app.
-   - Extract the downloaded `.zip` file $\rightarrow$ Tap on **`app-release.apk`**.
-   - If Android prompts with *"For your security, your phone is not allowed to install unknown apps from this source"*:
-     - Tap **Settings** $\rightarrow$ Toggle **Allow from this source** to **ON** $\rightarrow$ Tap **Install**.
-   - If Google Play Protect shows a popup, tap **Install anyway**.
-
-5. **Launch the Solo Leveling System**:
-   - Open the **Winter Arc Protocol** app from your app drawer.
-   - Allow the notification permission prompt when asked to enable daily quest alerts!
+* **Alternative (GitHub Actions Artifacts):**  
+  👉 **[https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions)**
 
 ---
 
-### 💻 Alternative: Building the APK Locally on Your PC
+## 📱 How to Install the APK on Your Android Phone
 
-If you have Flutter installed on your laptop and want to build manually:
-
-```powershell
-# 1. Navigate to mobile directory
-cd mobile
-
-# 2. Get dependencies
-flutter pub get
-
-# 3. Build release APK
-flutter build apk --release --no-tree-shake-icons
-```
-
-Your compiled APK will be located at:  
-📁 `mobile/build/app/outputs/flutter-apk/app-release.apk`  
-*(Transfer this file to your phone via USB cable, WhatsApp, Telegram, or Google Drive and tap to install).*
+1. **Tap the Download Link**:  
+   Click the **[Direct APK Download Link](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk)** above directly on your phone.
+2. **Install the App**:  
+   Open your phone's **Downloads** notification / Files app $\rightarrow$ Tap **`app-release.apk`** $\rightarrow$ Tap **Install**.
+   - *If prompted with "Install unknown apps", tap **Settings $\rightarrow$ Allow from this source** $\rightarrow$ Tap **Install**.*
+   - *If Google Play Protect shows a notice, tap **Install anyway**.*
+3. **Launch the Solo Leveling System**:  
+   Open **Winter Arc Protocol** and grant notification permissions to enable daily quest alerts and smartwatch vibrations!
 
 ---
 
@@ -66,6 +39,17 @@ The mobile app includes a **Native On-Device Alarm & Notification Engine** (`flu
   - **⚔️ 06:30 PM IST:** `⚔️ [ SYSTEM QUEST : PLACEMENT & DSA SHIFT ]` (DSA & Japanese Practice)
   - **⚠️ 10:30 PM IST:** `⚠️ [ CAUTION : PENALTY QUEST WARNING ]` (Night Protocol & Penalty Alert)
 - **Instant Testing**: Open the app $\rightarrow$ Tap **Alerts** in the top bar $\rightarrow$ Tap **`TEST NATIVE NOTIFICATION NOW`** to test instant vibration.
+
+---
+
+### 💻 Alternative: Building the APK Locally on Your PC
+
+```powershell
+cd mobile
+flutter pub get
+flutter build apk --release --no-tree-shake-icons
+```
+Output: `mobile/build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 
