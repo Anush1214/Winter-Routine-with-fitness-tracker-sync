@@ -1,4 +1,4 @@
-// frontend/lib/audio.ts - Web Audio API Synthesizer
+// frontend/lib/audio.ts - Demonic Shadow Monarch Aura Audio Engine
 
 class AudioManager {
   private ctx: AudioContext | null = null;
@@ -15,7 +15,9 @@ class AudioManager {
 
   private initCtx() {
     if (!this.ctx && typeof window !== "undefined") {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
       }
@@ -40,54 +42,87 @@ class AudioManager {
     return this.soundEnabled;
   }
 
+  /// Demonic Shadow Click - Deep Sub-Bass Mana Drop
   public playClick() {
     if (!this.soundEnabled) return;
     try {
       this.initCtx();
       if (!this.ctx) return;
 
+      const now = this.ctx.currentTime;
       const osc = this.ctx.createOscillator();
+      const subOsc = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
       const gain = this.ctx.createGain();
 
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(880, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1320, this.ctx.currentTime + 0.08);
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(800, now);
+      filter.frequency.exponentialRampToValueAtTime(120, now + 0.12);
 
-      gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(180, now);
+      osc.frequency.exponentialRampToValueAtTime(45, now + 0.12);
 
-      osc.connect(gain);
+      subOsc.type = "sine";
+      subOsc.frequency.setValueAtTime(90, now);
+      subOsc.frequency.exponentialRampToValueAtTime(30, now + 0.12);
+
+      gain.gain.setValueAtTime(0.28, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+      osc.connect(filter);
+      subOsc.connect(filter);
+      filter.connect(gain);
       gain.connect(this.ctx.destination);
 
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.08);
+      osc.start(now);
+      subOsc.start(now);
+      osc.stop(now + 0.12);
+      subOsc.stop(now + 0.12);
     } catch {}
   }
 
+  /// Demonic Water Mana Hydration Drop
   public playWaterDrop() {
     if (!this.soundEnabled) return;
     try {
       this.initCtx();
       if (!this.ctx) return;
 
+      const now = this.ctx.currentTime;
       const osc = this.ctx.createOscillator();
+      const subOsc = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
       const gain = this.ctx.createGain();
 
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1000, now);
+      filter.frequency.exponentialRampToValueAtTime(200, now + 0.15);
+
       osc.type = "sine";
-      osc.frequency.setValueAtTime(600, this.ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1800, this.ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(380, now);
+      osc.frequency.exponentialRampToValueAtTime(90, now + 0.15);
 
-      gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+      subOsc.type = "triangle";
+      subOsc.frequency.setValueAtTime(120, now);
+      subOsc.frequency.exponentialRampToValueAtTime(45, now + 0.15);
 
-      osc.connect(gain);
+      gain.gain.setValueAtTime(0.22, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+
+      osc.connect(filter);
+      subOsc.connect(filter);
+      filter.connect(gain);
       gain.connect(this.ctx.destination);
 
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.12);
+      osc.start(now);
+      subOsc.start(now);
+      osc.stop(now + 0.15);
+      subOsc.stop(now + 0.15);
     } catch {}
   }
 
+  /// Demonic Mana Pulse Chime
   public playChime() {
     if (!this.soundEnabled) return;
     try {
@@ -95,68 +130,102 @@ class AudioManager {
       if (!this.ctx) return;
 
       const now = this.ctx.currentTime;
-      const notes = [523.25, 659.25, 783.99, 1046.5];
+      const osc = this.ctx.createOscillator();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
 
-      notes.forEach((freq, i) => {
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(1200, now);
+      filter.frequency.exponentialRampToValueAtTime(180, now + 0.22);
 
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(freq, now + i * 0.06);
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(240, now);
+      osc.frequency.exponentialRampToValueAtTime(60, now + 0.22);
 
-        gain.gain.setValueAtTime(0, now + i * 0.06);
-        gain.gain.linearRampToValueAtTime(0.1, now + i * 0.06 + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.06 + 0.35);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
 
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
 
-        osc.start(now + i * 0.06);
-        osc.stop(now + i * 0.06 + 0.35);
-      });
+      osc.start(now);
+      osc.stop(now + 0.22);
     } catch {}
   }
 
-  public playLevelUp() {
-    this.playVictory();
+  /// Demonic "ARISE" Extraction & Victory Chord
+  public playVictory() {
+    this.playLevelUp();
   }
 
-  public playVictory() {
+  /// Demonic Awakening / Arise (Level Up & S-Rank)
+  public playLevelUp() {
     if (!this.soundEnabled) return;
     try {
       this.initCtx();
       if (!this.ctx) return;
 
       const now = this.ctx.currentTime;
-      const fanfare = [
-        { f: 523.25, d: 0.12 },
-        { f: 659.25, d: 0.12 },
-        { f: 783.99, d: 0.12 },
-        { f: 1046.5, d: 0.35 },
-        { f: 1318.51, d: 0.5 },
-      ];
+      const freqs = [65.41, 130.81, 196.0, 392.0];
+      const duration = 0.55;
 
-      let delay = 0;
-      fanfare.forEach((note) => {
+      freqs.forEach((f, i) => {
         if (!this.ctx) return;
         const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
         const gain = this.ctx.createGain();
 
-        osc.type = "triangle";
-        osc.frequency.setValueAtTime(note.f, now + delay);
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(1200, now);
+        filter.frequency.exponentialRampToValueAtTime(200, now + duration);
 
-        gain.gain.setValueAtTime(0.15, now + delay);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + note.d);
+        osc.type = i === 0 ? "sawtooth" : "triangle";
+        osc.frequency.setValueAtTime(f, now);
+        osc.frequency.exponentialRampToValueAtTime(f * 1.5, now + duration);
 
-        osc.connect(gain);
+        gain.gain.setValueAtTime(0.18 / (i + 1), now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc.connect(filter);
+        filter.connect(gain);
         gain.connect(this.ctx.destination);
 
-        osc.start(now + delay);
-        osc.stop(now + delay + note.d);
-
-        delay += note.d * 0.75;
+        osc.start(now);
+        osc.stop(now + duration);
       });
+    } catch {}
+  }
+
+  /// Demonic Penalty Warhorn
+  public playPenaltyWarning() {
+    if (!this.soundEnabled) return;
+    try {
+      this.initCtx();
+      if (!this.ctx) return;
+
+      const now = this.ctx.currentTime;
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const duration = 0.6;
+
+      osc1.type = "sawtooth";
+      osc1.frequency.setValueAtTime(55, now);
+      osc2.type = "sawtooth";
+      osc2.frequency.setValueAtTime(58.5, now);
+
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + duration);
+      osc2.stop(now + duration);
     } catch {}
   }
 }

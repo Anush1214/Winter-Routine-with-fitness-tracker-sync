@@ -16,21 +16,21 @@ class SoundService {
     _isSoundEnabled = !_isSoundEnabled;
   }
 
-  /// Synthesize real character voice using Web Speech API (Jin-Woo / Hinata)
+  /// Synthesize character voice dialogue using Web Speech API (Jin-Woo / Cha Hae-In)
   void speakCharacter({
     required String text,
     required bool isJapanese,
     required bool isJinwoo,
   }) {
     if (!_isSoundEnabled) return;
-    playSynthTone(freq: isJinwoo ? 220 : 440, duration: 0.15);
+    playDemonicExtraction();
 
     if (kIsWeb) {
       try {
         final cleanText = text.replaceAll(RegExp(r'''[「」“”"']'''), '');
         final lang = isJapanese ? 'ja-JP' : 'en-US';
-        final pitch = isJinwoo ? 0.85 : 1.25;
-        final rate = isJinwoo ? 0.95 : 1.05;
+        final pitch = isJinwoo ? 0.82 : 1.18;
+        final rate = isJinwoo ? 0.92 : 1.02;
 
         js.context.callMethod('eval', [
           '''
@@ -50,9 +50,55 @@ class SoundService {
     }
   }
 
-  /// Synthesize Sci-Fi Solo Leveling Tone using Web Audio Context
-  void playSynthTone({double freq = 587.33, double duration = 0.2}) {
+  /// Demonic Shadow Click - Deep Sub-Bass & Mana Resonance
+  void playClick() {
     if (!_isSoundEnabled) return;
+    _playDemonicSubTone(startFreq: 180, endFreq: 45, duration: 0.12, type: 'sawtooth');
+    HapticFeedback.lightImpact();
+  }
+
+  /// Demonic Mana Chime - Sharp Shadow Pulse
+  void playChime() {
+    if (!_isSoundEnabled) return;
+    _playDemonicSubTone(startFreq: 240, endFreq: 60, duration: 0.18, type: 'triangle');
+    HapticFeedback.mediumImpact();
+  }
+
+  /// Demonic Water Mana Drop - Resonant Dark Hydration
+  void playWaterDrop() {
+    if (!_isSoundEnabled) return;
+    _playDemonicSubTone(startFreq: 380, endFreq: 90, duration: 0.15, type: 'sine');
+    HapticFeedback.selectionClick();
+  }
+
+  /// Demonic Shadow Extraction (Quest Checked / Objective Succeeded)
+  void playVictory() {
+    if (!_isSoundEnabled) return;
+    _playDemonicAriseChord();
+    HapticFeedback.heavyImpact();
+  }
+
+  /// Demonic Awakening / Arise (Level Up & S-Rank Promotion)
+  void playLevelUp() {
+    if (!_isSoundEnabled) return;
+    _playDemonicAriseChord();
+    HapticFeedback.heavyImpact();
+  }
+
+  /// Demonic Penalty Warhorn (Warning & Danger Zone)
+  void playPenaltyWarning() {
+    if (!_isSoundEnabled) return;
+    _playDemonicWarhorn();
+    HapticFeedback.vibrate();
+  }
+
+  /// Custom Demonic Shadow Frequency Synth (Web Audio API)
+  void _playDemonicSubTone({
+    required double startFreq,
+    required double endFreq,
+    required double duration,
+    required String type,
+  }) {
     if (kIsWeb) {
       try {
         js.context.callMethod('eval', [
@@ -60,15 +106,34 @@ class SoundService {
           try {
             var ctx = new (window.AudioContext || window.webkitAudioContext)();
             var osc = ctx.createOscillator();
+            var subOsc = ctx.createOscillator();
             var gain = ctx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime($freq, ctx.currentTime);
-            gain.gain.setValueAtTime(0.18, ctx.currentTime);
+            var filter = ctx.createBiquadFilter();
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(800, ctx.currentTime);
+            filter.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + $duration);
+
+            osc.type = '$type';
+            osc.frequency.setValueAtTime($startFreq, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime($endFreq, ctx.currentTime + $duration);
+
+            subOsc.type = 'sine';
+            subOsc.frequency.setValueAtTime(${startFreq / 2}, ctx.currentTime);
+            subOsc.frequency.exponentialRampToValueAtTime(${endFreq / 2}, ctx.currentTime + $duration);
+
+            gain.gain.setValueAtTime(0.28, ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + $duration);
-            osc.connect(gain);
+
+            osc.connect(filter);
+            subOsc.connect(filter);
+            filter.connect(gain);
             gain.connect(ctx.destination);
+
             osc.start();
+            subOsc.start();
             osc.stop(ctx.currentTime + $duration);
+            subOsc.stop(ctx.currentTime + $duration);
           } catch(e){}
           '''
         ]);
@@ -76,45 +141,84 @@ class SoundService {
     }
   }
 
-  void playClick() {
-    if (!_isSoundEnabled) return;
-    playSynthTone(freq: 880, duration: 0.08);
-    SystemSound.play(SystemSoundType.click);
-    HapticFeedback.lightImpact();
+  /// Demonic "ARISE" Multi-Harmonic Shadow Chord Synth
+  void _playDemonicAriseChord() {
+    if (kIsWeb) {
+      try {
+        js.context.callMethod('eval', [
+          '''
+          try {
+            var ctx = new (window.AudioContext || window.webkitAudioContext)();
+            var freqs = [65.41, 130.81, 196.00, 392.00];
+            var duration = 0.55;
+
+            freqs.forEach(function(f, i) {
+              var osc = ctx.createOscillator();
+              var gain = ctx.createGain();
+              var filter = ctx.createBiquadFilter();
+
+              filter.type = 'lowpass';
+              filter.frequency.setValueAtTime(1200, ctx.currentTime);
+              filter.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + duration);
+
+              osc.type = i === 0 ? 'sawtooth' : 'triangle';
+              osc.frequency.setValueAtTime(f, ctx.currentTime);
+              osc.frequency.exponentialRampToValueAtTime(f * 1.5, ctx.currentTime + duration);
+
+              gain.gain.setValueAtTime(0.18 / (i + 1), ctx.currentTime);
+              gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+              osc.connect(filter);
+              filter.connect(gain);
+              gain.connect(ctx.destination);
+
+              osc.start();
+              osc.stop(ctx.currentTime + duration);
+            });
+          } catch(e){}
+          '''
+        ]);
+      } catch (_) {}
+    }
   }
 
-  void playChime() {
-    if (!_isSoundEnabled) return;
-    playSynthTone(freq: 587.33, duration: 0.18);
-    SystemSound.play(SystemSoundType.click);
-    HapticFeedback.mediumImpact();
+  /// Demonic Low Warhorn Rumble
+  void _playDemonicWarhorn() {
+    if (kIsWeb) {
+      try {
+        js.context.callMethod('eval', [
+          '''
+          try {
+            var ctx = new (window.AudioContext || window.webkitAudioContext)();
+            var osc1 = ctx.createOscillator();
+            var osc2 = ctx.createOscillator();
+            var gain = ctx.createGain();
+            var duration = 0.6;
+
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(55, ctx.currentTime);
+            osc2.type = 'sawtooth';
+            osc2.frequency.setValueAtTime(58.5, ctx.currentTime); // Ominous detune beat
+
+            gain.gain.setValueAtTime(0.25, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc1.start();
+            osc2.start();
+            osc1.stop(ctx.currentTime + duration);
+            osc2.stop(ctx.currentTime + duration);
+          } catch(e){}
+          '''
+        ]);
+      } catch (_) {}
+    }
   }
 
-  void playWaterDrop() {
-    if (!_isSoundEnabled) return;
-    playSynthTone(freq: 1046.50, duration: 0.12);
-    SystemSound.play(SystemSoundType.click);
-    HapticFeedback.selectionClick();
-  }
-
-  void playVictory() {
-    if (!_isSoundEnabled) return;
-    playSynthTone(freq: 523.25, duration: 0.3);
-    SystemSound.play(SystemSoundType.alert);
-    HapticFeedback.heavyImpact();
-  }
-
-  void playLevelUp() {
-    if (!_isSoundEnabled) return;
-    playSynthTone(freq: 659.25, duration: 0.35);
-    SystemSound.play(SystemSoundType.alert);
-    HapticFeedback.heavyImpact();
-  }
-
-  void playPenaltyWarning() {
-    if (!_isSoundEnabled) return;
-    playSynthTone(freq: 180, duration: 0.45);
-    SystemSound.play(SystemSoundType.alert);
-    HapticFeedback.vibrate();
+  void playDemonicExtraction() {
+    _playDemonicSubTone(startFreq: 220, endFreq: 55, duration: 0.25, type: 'sawtooth');
   }
 }
