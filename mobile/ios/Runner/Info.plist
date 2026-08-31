@@ -51,8 +51,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<!-- Replace with your REVERSED_CLIENT_ID from GoogleService-Info.plist if custom -->
-				<string>com.googleusercontent.apps.37819138819-placeholder</string>
+				<string>com.googleusercontent.apps.37819138819-5mga06gbk05jsgkqa77f623c4ppr2dl9</string>
 			</array>
 		</dict>
 	</array>

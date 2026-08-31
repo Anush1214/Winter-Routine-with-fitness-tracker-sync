@@ -1,4 +1,4 @@
-// File configured with official Firebase credentials for winter-arc-protocol
+// File configured with official Firebase credentials for winter-arc-protocol (Web, Android, iOS)
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
@@ -38,8 +38,8 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyC6X1Yfn-sHCGauiznJJYicQmmraTSNdiw',
-    appId: '1:37819138819:ios:a1b2c3d4e5f6g7h8i9j0k1',
+    apiKey: 'AIzaSyBm7RRopoOiEfFOKvI4oqZwt758Jw34SJU',
+    appId: '1:37819138819:ios:13922b1506866872bb5f36',
     messagingSenderId: '37819138819',
     projectId: 'winter-arc-protocol',
     storageBucket: 'winter-arc-protocol.firebasestorage.app',
