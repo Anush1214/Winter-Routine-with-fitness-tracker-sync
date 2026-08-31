@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
       sleepMinutes = 0,
       gymWorkoutDone = false,
       waterIntakeMl = 0,
+      userId = "default_hunter",
     } = body;
 
     const result = await processHealthSync({
@@ -21,10 +22,12 @@ export async function POST(request: NextRequest) {
       sleepMinutes,
       gymWorkoutDone,
       waterIntakeMl,
+      userId,
     });
 
     return NextResponse.json({
       success: true,
+      userId,
       message: "Smartwatch health metrics synced & tasks updated",
       ...result,
     });

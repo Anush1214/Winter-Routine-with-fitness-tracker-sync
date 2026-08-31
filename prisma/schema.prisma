@@ -10,6 +10,7 @@ datasource db {
 
 model Task {
   id          String   @id @default(uuid())
+  userId      String   @default("default_hunter")
   title       String
   category    String   // 'fitness', 'career', 'routine', 'health', 'study', etc.
   targetDate  DateTime @db.Date
@@ -18,22 +19,28 @@ model Task {
   autoMetric  String?  // 'steps_10k', 'sleep_7h', 'gym_workout', etc.
   createdAt   DateTime @default(now())
 
-  @@index([targetDate])
+  @@index([userId, targetDate])
   @@index([category])
   @@index([autoMetric])
 }
 
 model HealthLog {
-  logDate        DateTime @id @db.Date
+  id             String   @id @default(uuid())
+  userId         String   @default("default_hunter")
+  logDate        DateTime @db.Date
   steps          Int      @default(0)
   sleepMinutes   Int      @default(0)
   waterIntakeMl  Int      @default(0)
   gymWorkoutDone Boolean  @default(false)
   syncedAt       DateTime @default(now())
+
+  @@unique([userId, logDate])
+  @@index([userId, logDate])
 }
 
 model UserSettings {
   id               String   @id @default("default")
+  userId           String   @unique @default("default_hunter")
   ntfyTopic        String   @default("winter-arc-routine")
   ntfyServer       String   @default("https://ntfy.sh")
   morningTime      String   @default("07:00")
@@ -45,6 +52,6 @@ model UserSettings {
   waterGoalMl      Int      @default(4500)
   stepsGoal        Int      @default(10000)
   sleepGoalMinutes Int      @default(420)
-  customSlots      String?  // JSON string of custom slots: [{ "id": "1", "name": "Deep Work", "time": "14:00", "enabled": true }]
+  customSlots      String?  // JSON string of custom slots
   updatedAt        DateTime @updatedAt
 }

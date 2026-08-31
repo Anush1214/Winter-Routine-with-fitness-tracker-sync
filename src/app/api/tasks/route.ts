@@ -8,11 +8,13 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const dateParam = searchParams.get("date") || formatDateKey(new Date());
+    const userId = searchParams.get("userId") || "default_hunter";
 
-    const result = await getTasksAndHealth(dateParam);
+    const result = await getTasksAndHealth(dateParam, userId);
     return NextResponse.json({
       success: true,
       date: dateParam,
+      userId,
       tasks: result.tasks,
       healthLog: result.healthLog,
     });
@@ -35,6 +37,7 @@ export async function POST(request: NextRequest) {
       startTime = null,
       autoMetric = null,
       applyScope = "today",
+      userId = "default_hunter",
     } = body;
 
     if (!title || typeof title !== "string") {
@@ -51,11 +54,13 @@ export async function POST(request: NextRequest) {
       startTime,
       autoMetric,
       applyScope,
+      userId,
     });
 
     return NextResponse.json({
       success: true,
       ...result,
+      userId,
       message: `Task applied with scope: ${applyScope}`,
     });
   } catch (error: unknown) {

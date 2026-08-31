@@ -11,16 +11,20 @@ export async function POST(request: NextRequest) {
       date = formatDateKey(new Date()),
       amountMl = 250,
       mode = "increment",
+      userId = "default_hunter",
     } = body;
 
     const result = await processWaterIntake({
       date,
-      amountMl,
+      amountMl: Number(amountMl),
       mode,
+      userId,
     });
 
     return NextResponse.json({
       success: true,
+      userId,
+      message: `Water intake updated: ${result.waterIntakeMl} ml`,
       ...result,
     });
   } catch (error: unknown) {

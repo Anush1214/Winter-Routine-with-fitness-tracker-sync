@@ -6,8 +6,9 @@ export async function processHealthSync(payload: {
   sleepMinutes: number;
   gymWorkoutDone: boolean;
   waterIntakeMl: number;
+  userId?: string;
 }) {
-  const { date, steps = 0, sleepMinutes = 0, gymWorkoutDone = false, waterIntakeMl = 0 } = payload;
+  const { date, steps = 0, sleepMinutes = 0, gymWorkoutDone = false, waterIntakeMl = 0, userId = "default_hunter" } = payload;
   const parsedSteps = Number(steps) || 0;
   const parsedSleep = Number(sleepMinutes) || 0;
   const parsedWater = Number(waterIntakeMl) || 0;
@@ -16,12 +17,17 @@ export async function processHealthSync(payload: {
 
   if (isDbConnected && prisma) {
     const targetDate = new Date(`${date}T00:00:00Z`);
-    const settings = await prisma.userSettings.findUnique({ where: { id: "default" } });
+    const settings = await prisma.userSettings.findUnique({ where: { userId } });
     const stepsGoal = settings?.stepsGoal || 10000;
     const sleepGoal = settings?.sleepGoalMinutes || 420;
 
     const healthLog = await prisma.healthLog.upsert({
-      where: { logDate: targetDate },
+      where: {
+        userId_logDate: {
+          userId,
+          logDate: targetDate,
+        },
+      },
       update: {
         steps: parsedSteps,
         sleepMinutes: parsedSleep,
@@ -30,6 +36,7 @@ export async function processHealthSync(payload: {
         syncedAt: new Date(),
       },
       create: {
+        userId,
         logDate: targetDate,
         steps: parsedSteps,
         sleepMinutes: parsedSleep,
@@ -41,7 +48,7 @@ export async function processHealthSync(payload: {
 
     if (parsedSteps >= stepsGoal) {
       await prisma.task.updateMany({
-        where: { targetDate, autoMetric: "steps_10k" },
+        where: { targetDate, userId, autoMetric: "steps_10k" },
         data: { isCompleted: true },
       });
       autoCheckedTasks.push("10k steps");
@@ -49,7 +56,7 @@ export async function processHealthSync(payload: {
 
     if (parsedSleep >= sleepGoal) {
       await prisma.task.updateMany({
-        where: { targetDate, autoMetric: "sleep_7h" },
+        where: { targetDate, userId, autoMetric: "sleep_7h" },
         data: { isCompleted: true },
       });
       autoCheckedTasks.push("7-8hr Sleep");
@@ -57,7 +64,7 @@ export async function processHealthSync(payload: {
 
     if (parsedGym) {
       await prisma.task.updateMany({
-        where: { targetDate, autoMetric: "gym_workout" },
+        where: { targetDate, userId, autoMetric: "gym_workout" },
         data: { isCompleted: true },
       });
       autoCheckedTasks.push("Gym Workout");
@@ -67,6 +74,7 @@ export async function processHealthSync(payload: {
       await prisma.task.updateMany({
         where: {
           targetDate,
+          userId,
           OR: [
             { title: { contains: "4-5l water", mode: "insensitive" } },
             { autoMetric: "water_4l" },
@@ -78,7 +86,7 @@ export async function processHealthSync(payload: {
     }
 
     const tasks = await prisma.task.findMany({
-      where: { targetDate },
+      where: { targetDate, userId },
       orderBy: [{ startTime: "asc" }, { createdAt: "asc" }],
     });
 

@@ -1,7 +1,7 @@
 import { prisma, localStore, isDbConnected } from "../lib/prisma";
-import { formatDateKey, getWinterArcDaysRemaining } from "@/lib/utils";
+import { formatDateKey, getWinterArcDaysRemaining } from "@/frontend/lib/utils";
 
-export async function getHeatmapMatrix() {
+export async function getHeatmapMatrix(userId: string = "default_hunter") {
   const year = new Date().getFullYear();
   const startDate = new Date(Date.UTC(year, 8, 1)); // Sept 1
   const endDate = new Date(Date.UTC(year, 11, 31)); // Dec 31
@@ -9,11 +9,11 @@ export async function getHeatmapMatrix() {
   if (isDbConnected && prisma) {
     const [tasks, healthLogs] = await Promise.all([
       prisma.task.findMany({
-        where: { targetDate: { gte: startDate, lte: endDate } },
+        where: { userId, targetDate: { gte: startDate, lte: endDate } },
         select: { targetDate: true, isCompleted: true },
       }),
       prisma.healthLog.findMany({
-        where: { logDate: { gte: startDate, lte: endDate } },
+        where: { userId, logDate: { gte: startDate, lte: endDate } },
       }),
     ]);
 
@@ -119,7 +119,7 @@ export async function getHeatmapMatrix() {
   return days;
 }
 
-export async function getSummaryStats() {
+export async function getSummaryStats(userId: string = "default_hunter") {
   const todayStr = formatDateKey(new Date());
   const timeline = getWinterArcDaysRemaining(new Date());
 
@@ -127,9 +127,11 @@ export async function getSummaryStats() {
   let completedTasksCount = 0;
   let currentStreak = 0;
   let bestStreak = 0;
+  const heatmap: Record<string, number> = {};
 
   if (isDbConnected && prisma) {
     const allTasks = await prisma.task.findMany({
+      where: { userId },
       select: { targetDate: true, isCompleted: true },
       orderBy: { targetDate: "asc" },
     });
@@ -145,6 +147,11 @@ export async function getSummaryStats() {
       if (t.isCompleted) cur.completed += 1;
       dateMap.set(key, cur);
     });
+
+    for (const [dateKey, info] of dateMap.entries()) {
+      const rate = info.total > 0 ? (info.completed / info.total) * 100 : 0;
+      heatmap[dateKey] = rate;
+    }
 
     let tempStreak = 0;
     for (const [dateKey, info] of dateMap.entries()) {
@@ -171,6 +178,11 @@ export async function getSummaryStats() {
       dateMap.set(t.targetDate, cur);
     });
 
+    for (const [dateKey, info] of dateMap.entries()) {
+      const rate = info.total > 0 ? (info.completed / info.total) * 100 : 0;
+      heatmap[dateKey] = rate;
+    }
+
     let tempStreak = 0;
     for (const [dateKey, info] of dateMap.entries()) {
       if (dateKey > todayStr) break;
@@ -194,5 +206,6 @@ export async function getSummaryStats() {
     totalTasksCount,
     completedTasksCount,
     overallRate,
+    heatmap,
   };
 }

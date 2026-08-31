@@ -1,15 +1,20 @@
 import { prisma, localStore, isDbConnected } from "../lib/prisma";
 
-export async function getTasksAndHealth(dateParam: string) {
+export async function getTasksAndHealth(dateParam: string, userId: string = "default_hunter") {
   if (isDbConnected && prisma) {
     const targetDate = new Date(`${dateParam}T00:00:00Z`);
     const [tasks, healthLog] = await Promise.all([
       prisma.task.findMany({
-        where: { targetDate },
+        where: { targetDate, userId },
         orderBy: [{ startTime: "asc" }, { createdAt: "asc" }],
       }),
       prisma.healthLog.findUnique({
-        where: { logDate: targetDate },
+        where: {
+          userId_logDate: {
+            userId,
+            logDate: targetDate,
+          },
+        },
       }),
     ]);
 
@@ -17,6 +22,7 @@ export async function getTasksAndHealth(dateParam: string) {
       tasks,
       healthLog: healthLog || {
         logDate: dateParam,
+        userId,
         steps: 0,
         sleepMinutes: 0,
         waterIntakeMl: 0,
@@ -38,6 +44,7 @@ export async function createTask(data: {
   startTime?: string | null;
   autoMetric?: string | null;
   applyScope?: "today" | "future" | "all";
+  userId?: string;
 }) {
   const {
     title,
@@ -46,6 +53,7 @@ export async function createTask(data: {
     startTime = null,
     autoMetric = null,
     applyScope = "today",
+    userId = "default_hunter",
   } = data;
 
   const year = new Date().getFullYear();
@@ -61,6 +69,7 @@ export async function createTask(data: {
           targetDate: new Date(`${targetDate}T00:00:00Z`),
           startTime,
           autoMetric,
+          userId,
         },
       });
       return { task: newTask, count: 1 };
@@ -72,6 +81,7 @@ export async function createTask(data: {
       targetDate: Date;
       startTime: string | null;
       autoMetric: string | null;
+      userId: string;
     }> = [];
 
     let current = applyScope === "all" ? new Date(startDate) : new Date(`${targetDate}T00:00:00Z`);
@@ -83,6 +93,7 @@ export async function createTask(data: {
         targetDate: new Date(current),
         startTime,
         autoMetric,
+        userId,
       });
       current.setUTCDate(current.getUTCDate() + 1);
     }
@@ -130,24 +141,27 @@ export async function updateTask(id: string, updates: {
   category?: string;
   startTime?: string | null;
   autoMetric?: string | null;
+  userId?: string;
 }) {
+  const { userId, ...data } = updates;
   if (isDbConnected && prisma) {
     return await prisma.task.update({
       where: { id },
-      data: updates,
+      data,
     });
   }
 
-  return localStore.updateTask(id, updates);
+  return localStore.updateTask(id, data);
 }
 
-export async function deleteTask(id: string, deleteAllRecurring = false, fromDate?: string) {
+export async function deleteTask(id: string, deleteAllRecurring = false, fromDate?: string, userId?: string) {
   if (isDbConnected && prisma) {
     if (deleteAllRecurring) {
       const existing = await prisma.task.findUnique({ where: { id } });
       if (existing) {
         const deleteQuery: Record<string, unknown> = {
           title: { equals: existing.title, mode: "insensitive" },
+          userId: existing.userId,
         };
         if (fromDate) {
           deleteQuery.targetDate = { gte: new Date(`${fromDate}T00:00:00Z`) };
