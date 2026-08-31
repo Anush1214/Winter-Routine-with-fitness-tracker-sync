@@ -16,21 +16,21 @@ jobs:
       - name: Set up Java JDK
         uses: actions/setup-java@v4
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: '17'
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.47.2'
           channel: 'stable'
+          cache: true
 
       - name: Install Dependencies
         run: |
           cd mobile
           flutter pub get
 
-      - name: Build APK (Release)
+      - name: Build Release APK
         run: |
           cd mobile
           flutter build apk --release --no-tree-shake-icons
@@ -40,4 +40,5 @@ jobs:
         with:
           name: Winter-Arc-Solo-Leveling-App
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
           retention-days: 30
