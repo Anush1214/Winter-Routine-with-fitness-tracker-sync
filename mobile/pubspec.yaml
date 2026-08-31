@@ -10,9 +10,10 @@ dependencies:
   flutter:
     sdk: flutter
   
-  # Firebase Multi-User Authentication
+  # Firebase Multi-User Authentication & Social Providers (Gmail / Google / GitHub)
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
+  google_sign_in: ^6.2.1
   
   # Native Local On-Device Push Notifications & Alarms
   flutter_local_notifications: ^17.2.1

@@ -58,6 +58,20 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  Future<void> _googleLogin() async {
+    setState(() => _isLoading = true);
+    SoundService().playChime();
+    await AuthService().signInWithGoogle();
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _githubLogin() async {
+    setState(() => _isLoading = true);
+    SoundService().playChime();
+    await AuthService().signInWithGitHub();
+    if (mounted) setState(() => _isLoading = false);
+  }
+
   Future<void> _guestLogin() async {
     setState(() => _isLoading = true);
     SoundService().playClick();
@@ -90,7 +104,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     border: Border.all(color: SoloColors.neonCyan, width: 1.8),
                     boxShadow: [
                       BoxShadow(
-                        color: SoloColors.neonCyan.withOpacity(0.4),
+                        color: SoloColors.neonCyan.withValues(alpha: 0.4),
                         blurRadius: 20,
                       ),
                     ],
@@ -107,7 +121,7 @@ class _AuthScreenState extends State<AuthScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "WINTER ARC PROTOCOL",
+                  "HUNTER AWAKENING PORTAL",
                   style: SoloTypography.systemTitle.copyWith(fontSize: 22),
                 ),
                 const SizedBox(height: 6),
@@ -124,6 +138,74 @@ class _AuthScreenState extends State<AuthScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Social OAuth Providers (Google & GitHub)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: _isLoading ? null : _googleLogin,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1E293B),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFFEA4335).withValues(alpha: 0.6)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.g_mobiledata, color: Color(0xFFEA4335), size: 20),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      "GMAIL / GOOGLE",
+                                      style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: _isLoading ? null : _githubLogin,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF1E293B),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.5)),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.code, color: SoloColors.neonCyan, size: 16),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      "GITHUB",
+                                      style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: SoloColors.textDim.withValues(alpha: 0.3))),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text("OR USE EMAIL", style: SoloTypography.bodyMuted.copyWith(fontSize: 9)),
+                          ),
+                          Expanded(child: Divider(color: SoloColors.textDim.withValues(alpha: 0.3))),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+
                       // Mode Selector (Sign In / Sign Up)
                       Row(
                         children: [
@@ -131,12 +213,12 @@ class _AuthScreenState extends State<AuthScreen> {
                             child: GestureDetector(
                               onTap: () => setState(() => _isSignUp = false),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding: const EdgeInsets.symmetric(vertical: 9),
                                 decoration: BoxDecoration(
                                   color: !_isSignUp ? const Color(0xFF042F2E) : SoloColors.obsidianVoid,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: !_isSignUp ? SoloColors.neonCyan : SoloColors.textDim.withOpacity(0.3),
+                                    color: !_isSignUp ? SoloColors.neonCyan : SoloColors.textDim.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: Center(
@@ -156,12 +238,12 @@ class _AuthScreenState extends State<AuthScreen> {
                             child: GestureDetector(
                               onTap: () => setState(() => _isSignUp = true),
                               child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding: const EdgeInsets.symmetric(vertical: 9),
                                 decoration: BoxDecoration(
                                   color: _isSignUp ? const Color(0xFF042F2E) : SoloColors.obsidianVoid,
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: _isSignUp ? SoloColors.neonCyan : SoloColors.textDim.withOpacity(0.3),
+                                    color: _isSignUp ? SoloColors.neonCyan : SoloColors.textDim.withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: Center(
@@ -178,7 +260,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 16),
 
                       if (_isSignUp) ...[
                         TextField(
@@ -194,7 +276,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             prefixIcon: const Icon(Icons.person_outline, color: SoloColors.neonCyan, size: 16),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
-                              borderSide: BorderSide(color: SoloColors.neonCyan.withOpacity(0.4)),
+                              borderSide: BorderSide(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10),
@@ -219,7 +301,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           prefixIcon: const Icon(Icons.email_outlined, color: SoloColors.neonCyan, size: 16),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: SoloColors.neonCyan.withOpacity(0.4)),
+                            borderSide: BorderSide(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -243,7 +325,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           prefixIcon: const Icon(Icons.lock_outline, color: SoloColors.neonCyan, size: 16),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
-                            borderSide: BorderSide(color: SoloColors.neonCyan.withOpacity(0.4)),
+                            borderSide: BorderSide(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),
@@ -260,7 +342,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         ),
                       ],
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 18),
 
                       // Submit Button
                       GestureDetector(
@@ -273,7 +355,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
-                                color: SoloColors.neonCyan.withOpacity(0.4),
+                                color: SoloColors.neonCyan.withValues(alpha: 0.4),
                                 blurRadius: 15,
                               ),
                             ],
@@ -309,7 +391,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     decoration: BoxDecoration(
                       color: SoloColors.obsidianVoid,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: SoloColors.manaViolet.withOpacity(0.5)),
+                      border: Border.all(color: SoloColors.manaViolet.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
