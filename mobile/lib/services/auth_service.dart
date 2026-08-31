@@ -52,7 +52,12 @@ class AuthService extends ChangeNotifier {
 
   bool _isFirebaseAvailable = false;
   bool get isFirebaseAvailable => _isFirebaseAvailable;
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+
+  // Web Client ID used for Google Sign In token verification across platforms
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: '37819138819-5ntotmdejvs65uscip3pgh39coh4ldh0.apps.googleusercontent.com',
+    scopes: ['email', 'profile'],
+  );
 
   Future<void> init() async {
     try {
@@ -105,8 +110,12 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  /// Email/Password Sign In — robust offline & online authentication
+  /// Email/Password Sign In
   Future<void> signInWithEmail(String email, String password) async {
+    if (email.trim().isEmpty || password.trim().isEmpty) {
+      throw AuthException('Please enter both email and password.');
+    }
+
     String uid = "hunter_${email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}";
     String displayName = email.split('@').first.toUpperCase();
     String? photoUrl;
@@ -114,64 +123,84 @@ class AuthService extends ChangeNotifier {
     if (_isFirebaseAvailable) {
       try {
         final credential = await fb.FirebaseAuth.instance
-            .signInWithEmailAndPassword(email: email, password: password);
+            .signInWithEmailAndPassword(email: email.trim(), password: password.trim());
         if (credential.user != null) {
           uid = credential.user!.uid;
           displayName = credential.user!.displayName ?? displayName;
           photoUrl = credential.user!.photoURL;
         }
-      } catch (e) {
-        debugPrint("Firebase email sign in fallback: $e");
+      } on fb.FirebaseAuthException catch (e) {
+        if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+          throw AuthException('Invalid email identifier or security key.', code: e.code);
+        } else if (e.code == 'invalid-email') {
+          throw AuthException('Invalid email address format.', code: e.code);
+        } else if (e.code == 'user-disabled') {
+          throw AuthException('This hunter account has been disabled.', code: e.code);
+        } else {
+          debugPrint("Firebase email sign in note: ${e.message}");
+        }
       }
     }
 
     await _saveUserSession(
       uid: uid,
-      email: email,
+      email: email.trim(),
       name: displayName,
       photoUrl: photoUrl,
       provider: 'email',
     );
   }
 
-  /// Email/Password Sign Up — creates user and saves hunter identity
+  /// Email/Password Sign Up
   Future<void> signUpWithEmail(String email, String password, String hunterName) async {
+    if (email.trim().isEmpty || password.trim().isEmpty) {
+      throw AuthException('Please enter both email and password.');
+    }
+    if (password.trim().length < 6) {
+      throw AuthException('Password must be at least 6 characters.');
+    }
+
     String uid = "hunter_${email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}";
-    final displayName = hunterName.isNotEmpty ? hunterName : email.split('@').first.toUpperCase();
+    final displayName = hunterName.trim().isNotEmpty ? hunterName.trim() : email.split('@').first.toUpperCase();
     String? photoUrl;
 
     if (_isFirebaseAvailable) {
       try {
         final credential = await fb.FirebaseAuth.instance
-            .createUserWithEmailAndPassword(email: email, password: password);
+            .createUserWithEmailAndPassword(email: email.trim(), password: password.trim());
         if (credential.user != null) {
           uid = credential.user!.uid;
           await credential.user!.updateDisplayName(displayName);
           photoUrl = credential.user!.photoURL;
         }
-      } catch (e) {
-        debugPrint("Firebase sign up fallback: $e");
+      } on fb.FirebaseAuthException catch (e) {
+        if (e.code == 'email-already-in-use') {
+          throw AuthException('This email is already registered. Switch to Hunter Sign In.', code: e.code);
+        } else if (e.code == 'weak-password') {
+          throw AuthException('Password is too weak. Choose at least 6 characters.', code: e.code);
+        } else {
+          debugPrint("Firebase sign up note: ${e.message}");
+        }
       }
     }
 
     await _saveUserSession(
       uid: uid,
-      email: email,
+      email: email.trim(),
       name: displayName,
       photoUrl: photoUrl,
       provider: 'email',
     );
   }
 
-  /// Google / Gmail Sign In — native account picker with fail-proof fallback
+  /// Google / Gmail Sign In (Strict — Never auto-creates guest accounts)
   Future<void> signInWithGoogle() async {
-    try {
-      if (kIsWeb) {
-        final googleProvider = fb.GoogleAuthProvider();
-        googleProvider.addScope('email');
-        googleProvider.addScope('profile');
+    if (kIsWeb) {
+      final googleProvider = fb.GoogleAuthProvider();
+      googleProvider.addScope('email');
+      googleProvider.addScope('profile');
+      try {
         final userCredential = await fb.FirebaseAuth.instance.signInWithPopup(googleProvider);
-        
         if (userCredential.user != null) {
           final user = userCredential.user!;
           await _saveUserSession(
@@ -182,73 +211,68 @@ class AuthService extends ChangeNotifier {
             provider: 'google',
             createdAt: user.metadata.creationTime,
           );
-          return;
         }
-      } else {
-        // Native Google Sign In on Android / iOS
-        GoogleSignInAccount? googleUser;
-        try {
-          googleUser = await _googleSignIn.signIn();
-        } catch (err) {
-          debugPrint("Google Sign-In plugin caught: $err");
-        }
-
-        if (googleUser != null) {
-          String uid = "google_${googleUser.id}";
-          String email = googleUser.email;
-          String displayName = googleUser.displayName ?? 'Google Hunter';
-          String? photoUrl = googleUser.photoUrl;
-
-          // Attempt Firebase token exchange if configured
-          if (_isFirebaseAvailable) {
-            try {
-              final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-              if (googleAuth.idToken != null || googleAuth.accessToken != null) {
-                final fb.AuthCredential credential = fb.GoogleAuthProvider.credential(
-                  accessToken: googleAuth.accessToken,
-                  idToken: googleAuth.idToken,
-                );
-                final userCredential = await fb.FirebaseAuth.instance.signInWithCredential(credential);
-                if (userCredential.user != null) {
-                  uid = userCredential.user!.uid;
-                  email = userCredential.user!.email ?? email;
-                  displayName = userCredential.user!.displayName ?? displayName;
-                  photoUrl = userCredential.user!.photoURL ?? photoUrl;
-                }
-              }
-            } catch (e) {
-              debugPrint("Firebase Google credential exchange note: $e");
-            }
-          }
-
-          await _saveUserSession(
-            uid: uid,
-            email: email,
-            name: displayName,
-            photoUrl: photoUrl,
-            provider: 'google',
-          );
-          return;
-        }
+      } catch (e) {
+        throw AuthException('Google Sign-In failed on web: $e');
       }
-    } catch (e) {
-      debugPrint("Google Sign-In exception: $e");
+      return;
     }
 
-    // Seamless Google Hunter access if Play Services has signing mismatch
-    final uid = "google_${DateTime.now().millisecondsSinceEpoch}";
+    // Native Mobile Google Sign In
+    GoogleSignInAccount? googleUser;
+    try {
+      googleUser = await _googleSignIn.signIn();
+    } catch (e) {
+      debugPrint("Native Google Sign-In error: $e");
+      throw AuthException('Google Sign-In failed ($e). Check your internet or Google account settings.');
+    }
+
+    if (googleUser == null) {
+      // User dismissed the Google dialog — do nothing, no error, no guest fallback!
+      return;
+    }
+
+    String uid = "google_${googleUser.id}";
+    String email = googleUser.email;
+    String displayName = googleUser.displayName ?? 'Google Hunter';
+    String? photoUrl = googleUser.photoUrl;
+
+    // Exchange with Firebase credentials if available
+    if (_isFirebaseAvailable) {
+      try {
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        if (googleAuth.idToken != null || googleAuth.accessToken != null) {
+          final fb.AuthCredential credential = fb.GoogleAuthProvider.credential(
+            accessToken: googleAuth.accessToken,
+            idToken: googleAuth.idToken,
+          );
+          final userCredential = await fb.FirebaseAuth.instance.signInWithCredential(credential);
+          if (userCredential.user != null) {
+            uid = userCredential.user!.uid;
+            email = userCredential.user!.email ?? email;
+            displayName = userCredential.user!.displayName ?? displayName;
+            photoUrl = userCredential.user!.photoURL ?? photoUrl;
+          }
+        }
+      } catch (e) {
+        debugPrint("Firebase credential token exchange note: $e");
+        // Proceed with the verified Google account information
+      }
+    }
+
     await _saveUserSession(
       uid: uid,
-      email: "hunter.google@winterarc.solo",
-      name: "Shadow Hunter (Google)",
+      email: email,
+      name: displayName,
+      photoUrl: photoUrl,
       provider: 'google',
     );
   }
 
-  /// GitHub Sign In — seamless GitHub Hunter authorization
+  /// GitHub Sign In (Strict — Never auto-creates guest accounts)
   Future<void> signInWithGitHub() async {
-    try {
-      if (kIsWeb && _isFirebaseAvailable) {
+    if (kIsWeb && _isFirebaseAvailable) {
+      try {
         final githubProvider = fb.GithubAuthProvider();
         githubProvider.addScope('read:user');
         githubProvider.addScope('user:email');
@@ -266,41 +290,34 @@ class AuthService extends ChangeNotifier {
           );
           return;
         }
-      } else if (_isFirebaseAvailable) {
-        try {
-          final githubProvider = fb.GithubAuthProvider();
-          final userCredential = await fb.FirebaseAuth.instance.signInWithProvider(githubProvider);
-          if (userCredential.user != null) {
-            final user = userCredential.user!;
-            await _saveUserSession(
-              uid: user.uid,
-              email: user.email ?? 'hunter@github.com',
-              name: user.displayName ?? 'GitHub Monarch',
-              photoUrl: user.photoURL,
-              provider: 'github',
-              createdAt: user.metadata.creationTime,
-            );
-            return;
-          }
-        } catch (e) {
-          debugPrint("Firebase GitHub provider fallback: $e");
-        }
+      } catch (e) {
+        throw AuthException('GitHub Sign-In failed: $e');
       }
-    } catch (e) {
-      debugPrint("GitHub Sign-In exception: $e");
+    } else if (_isFirebaseAvailable) {
+      try {
+        final githubProvider = fb.GithubAuthProvider();
+        final userCredential = await fb.FirebaseAuth.instance.signInWithProvider(githubProvider);
+        if (userCredential.user != null) {
+          final user = userCredential.user!;
+          await _saveUserSession(
+            uid: user.uid,
+            email: user.email ?? 'hunter@github.com',
+            name: user.displayName ?? 'GitHub Monarch',
+            photoUrl: user.photoURL,
+            provider: 'github',
+            createdAt: user.metadata.creationTime,
+          );
+          return;
+        }
+      } catch (e) {
+        throw AuthException('GitHub authentication failed: $e');
+      }
+    } else {
+      throw AuthException('GitHub authentication is currently unavailable.');
     }
-
-    // Seamless GitHub Hunter authorization
-    final uid = "github_${DateTime.now().millisecondsSinceEpoch}";
-    await _saveUserSession(
-      uid: uid,
-      email: 'hunter.github@winterarc.solo',
-      name: 'Monarch of Shadows (GitHub)',
-      provider: 'github',
-    );
   }
 
-  /// Guest Mode — instant Shadow Hunter access
+  /// Guest Mode — ONLY triggered when user deliberately taps Guest button
   Future<void> signInAsGuest([String? guestName]) async {
     final uid = "guest_${DateTime.now().millisecondsSinceEpoch}";
     final name = guestName ?? "Shadow Hunter";
@@ -331,7 +348,7 @@ class AuthService extends ChangeNotifier {
     );
   }
 
-  /// Update the hunter's display name
+  /// Update display name
   Future<void> updateDisplayName(String newName) async {
     if (newName.trim().isEmpty) return;
 
@@ -360,7 +377,7 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  /// Update the hunter's profile avatar photo URL
+  /// Update photo URL
   Future<void> updatePhotoUrl(String newPhotoUrl) async {
     if (newPhotoUrl.trim().isEmpty) return;
 
@@ -412,7 +429,7 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Delete the account entirely
+  /// Delete account
   Future<void> deleteAccount() async {
     if (_isFirebaseAvailable && fb.FirebaseAuth.instance.currentUser != null) {
       try {

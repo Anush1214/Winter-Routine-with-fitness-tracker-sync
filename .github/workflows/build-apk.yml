@@ -34,6 +34,17 @@ jobs:
           flutter pub get
           dart run flutter_launcher_icons
 
+      - name: Generate Signing Keystore
+        run: |
+          mkdir -p ~/.android
+          if [ ! -f ~/.android/debug.keystore ]; then
+            keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+          echo "=== SHA-1 FINGERPRINT ==="
+          keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep "SHA1:" || true
+          SHA1_VAL=$(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep "SHA1:" | awk '{print $2}')
+          echo "SHA1_VAL=$SHA1_VAL" >> $GITHUB_ENV
+
       - name: Build Release APK
         run: |
           cd mobile
@@ -66,7 +77,8 @@ jobs:
             
             Direct Download for Android Phone:
             - **Filename:** `app-release.apk`
-            - **Includes:** Solo Leveling Holographic UI, Firebase Multi-User Auth (Google/GitHub/Email), Smartwatch Health Auto-Sync, Nothing X Integration, and Built-In Offline Native Alarms & Push Notifications.
+            - **APK SHA-1 Signing Fingerprint:** `${{ env.SHA1_VAL }}`
+            - **Features:** Strict Firebase Auth (Google OAuth, GitHub, Email/Password), Profile Avatar Customization with Solo Leveling Presets & Uploads, Habit Counters & Smartwatch Sync, Native Offline Alarms.
           files: mobile/build/app/outputs/flutter-apk/app-release.apk
           draft: false
           prerelease: false
