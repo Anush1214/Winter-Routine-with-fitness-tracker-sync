@@ -30,9 +30,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const userId = body.userId || "default_hunter";
+
     const tasks = isDbConnected && prisma
       ? await prisma.task.findMany({
-          where: { targetDate: new Date(`${date}T00:00:00Z`) },
+          where: { userId, targetDate: new Date(`${date}T00:00:00Z`) },
           orderBy: [{ startTime: "asc" }, { createdAt: "asc" }],
         })
       : localStore.getTasksByDate(date);
@@ -42,7 +44,7 @@ export async function POST(request: NextRequest) {
     const timeline = getWinterArcDaysRemaining(new Date(`${date}T12:00:00`));
 
     const healthLog = isDbConnected && prisma
-      ? await prisma.healthLog.findUnique({ where: { logDate: new Date(`${date}T00:00:00Z`) } })
+      ? await prisma.healthLog.findFirst({ where: { userId, logDate: new Date(`${date}T00:00:00Z`) } })
       : localStore.getHealthLog(date);
 
     const result = await sendNtfyNotification({

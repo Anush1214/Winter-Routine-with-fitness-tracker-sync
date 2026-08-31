@@ -35,15 +35,17 @@ export async function triggerScheduledNotification(slot: string, targetDateParam
   let steps = 0;
   let waterIntakeMl = 0;
 
+  const userId = "default_hunter";
+
   if (isDbConnected && prisma) {
     const targetDate = new Date(`${targetDateParam}T00:00:00Z`);
     const [dbTasks, healthLog] = await Promise.all([
       prisma.task.findMany({
-        where: { targetDate },
+        where: { userId, targetDate },
         orderBy: [{ startTime: "asc" }, { createdAt: "asc" }],
       }),
-      prisma.healthLog.findUnique({
-        where: { logDate: targetDate },
+      prisma.healthLog.findFirst({
+        where: { userId, logDate: targetDate },
       }),
     ]);
     tasks = dbTasks;
