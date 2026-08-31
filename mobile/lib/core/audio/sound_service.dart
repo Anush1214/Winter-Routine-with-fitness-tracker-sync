@@ -16,32 +16,62 @@ class SoundService {
     _isSoundEnabled = !_isSoundEnabled;
   }
 
-  /// Synthesize character voice dialogue using Web Speech API (Jin-Woo / Cha Hae-In)
+  /// Synthesize character voice dialogue with anime audio clips and Web Speech API
   void speakCharacter({
     required String text,
     required bool isJapanese,
     required bool isJinwoo,
+    int clipIndex = 1,
+    VoidCallback? onStart,
+    VoidCallback? onComplete,
   }) {
     if (!_isSoundEnabled) return;
     playDemonicExtraction();
+    if (onStart != null) onStart();
 
     if (kIsWeb) {
       try {
         final cleanText = text.replaceAll(RegExp(r'''[「」“”"']'''), '');
         final lang = isJapanese ? 'ja-JP' : 'en-US';
-        final pitch = isJinwoo ? 0.82 : 1.18;
-        final rate = isJinwoo ? 0.92 : 1.02;
+        final pitch = isJinwoo ? 0.82 : 1.15;
+        final rate = isJinwoo ? 0.90 : 1.02;
+        final clipUrl = '/audio/sung_jinwoo_voice$clipIndex.mp3';
 
         js.context.callMethod('eval', [
           '''
-          if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            var msg = new SpeechSynthesisUtterance(${jsonEncode(cleanText)});
-            msg.lang = "$lang";
-            msg.pitch = $pitch;
-            msg.rate = $rate;
-            window.speechSynthesis.speak(msg);
-          }
+          (function() {
+            var isJp = $isJapanese;
+            var isJin = $isJinwoo;
+
+            if (isJp && isJin && typeof Audio !== 'undefined') {
+              try {
+                var audio = new Audio("$clipUrl");
+                audio.volume = 0.9;
+                audio.onended = function() {
+                  // Fallback completion
+                };
+                audio.play().catch(function() {
+                  _fallbackSpeech();
+                });
+                return;
+              } catch(e) {
+                _fallbackSpeech();
+              }
+            } else {
+              _fallbackSpeech();
+            }
+
+            function _fallbackSpeech() {
+              if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                var msg = new SpeechSynthesisUtterance(${jsonEncode(cleanText)});
+                msg.lang = "$lang";
+                msg.pitch = $pitch;
+                msg.rate = $rate;
+                window.speechSynthesis.speak(msg);
+              }
+            }
+          })();
           '''
         ]);
       } catch (e) {

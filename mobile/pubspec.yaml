@@ -62,6 +62,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/sounds/
+    - assets/audio/
     - assets/app_logo.jpg
     - assets/arise_scene.jpg
 

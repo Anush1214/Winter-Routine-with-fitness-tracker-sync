@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
@@ -48,6 +49,8 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
   JinwooVoiceLang _selectedLang = JinwooVoiceLang.english;
   late AnimationController _pulseController;
   late Animation<double> _glowAnimation;
+  bool _isPlayingAudio = false;
+  Timer? _subtitleTimer;
 
   @override
   void initState() {
@@ -55,7 +58,7 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
     _selectedPersona = widget.initialPersona;
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
 
     _glowAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
@@ -65,6 +68,7 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
 
   @override
   void dispose() {
+    _subtitleTimer?.cancel();
     _pulseController.dispose();
     super.dispose();
   }
@@ -87,127 +91,112 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
     }
   }
 
-  String _getQuote(TaskModel? nextTask) {
-    final now = DateTime.now();
-    final hour = now.hour;
-
+  // Dual Quotes (Japanese & English)
+  String _getJapaneseQuote(TaskModel? nextTask) {
     if (_selectedPersona == CompanionPersona.sungJinwoo) {
-      // SUNG JIN-WOO (MALE)
-      if (_selectedLang == JinwooVoiceLang.japanese) {
-        if (nextTask != null) {
-          final title = nextTask.title;
-          if (title.toLowerCase().contains('wake') || title.toLowerCase().contains('gym')) {
-            return "「日課クエストを開始せよ。朝の鍛錬を怠るな。目を覚ませ、影の軍団よ。」";
-          } else if (title.toLowerCase().contains('dsa') || title.toLowerCase().contains('japanese')) {
-            return "「ここからは試練のダンジョンだ。DSAと集中力を極限まで研ぎ澄ませ。」";
-          } else if (title.toLowerCase().contains('night') || title.toLowerCase().contains('sleep')) {
-            return "「夜の規律を守れ。ペナルティを回避し、明日へ備えよ。起きろ (Okiro)。」";
-          }
-          return "「目標 『$title』 を確認した。立ち止まるな、一人でレベルアップせよ。」";
+      if (nextTask != null) {
+        final title = nextTask.title.toLowerCase();
+        if (title.contains('wake') || title.contains('gym')) {
+          return "「日課クエストを開始せよ。朝の鍛錬を怠るな。目を覚ませ、影の軍団よ。」";
+        } else if (title.contains('dsa') || title.contains('japanese')) {
+          return "「ここからは試練のダンジョンだ。DSAと集中力を極限まで研ぎ澄ませ。」";
+        } else if (title.contains('night') || title.contains('sleep')) {
+          return "「夜の規律を守れ。ペナルティを回避し、明日へ備えよ。起きろ (Okiro)。」";
         }
-
-        if (hour >= 6 && hour < 12) {
-          return "「今日も一歩ずつ強くなる。朝のクエストを全てクリアしろ。」";
-        } else if (hour >= 18 && hour < 22) {
-          return "「夕方の修練を開始する。限界を超えろ、立ち向かえ。」";
-        } else {
-          return "「休息もまた力の一部だ。体を癒し、明日再び立ち上がれ。起きろ。」";
-        }
-      } else {
-        // English (Aleks Le)
-        if (nextTask != null) {
-          final title = nextTask.title;
-          if (title.toLowerCase().contains('wake') || title.toLowerCase().contains('gym')) {
-            return "“The morning trial has begun, Hunter. Hydrate, initiate your protocol, and conquer the workout dungeon.”";
-          } else if (title.toLowerCase().contains('dsa') || title.toLowerCase().contains('japanese')) {
-            return "“Placement & DSA dungeon is active. Focus your mind, write clean algorithms, and master your skills.”";
-          } else if (title.toLowerCase().contains('night') || title.toLowerCase().contains('sleep')) {
-            return "“Penalty zone approaches at 11:00 PM. Wrap up all objectives, recover your mana, and Arise.”";
-          }
-          return "“Next objective detected: ‘$title’. If you don’t fight, you don’t survive. Complete it now.”";
-        }
-
-        if (hour >= 6 && hour < 12) {
-          return "“The system chose you for a reason. Clear your morning quests and seize the day.”";
-        } else if (hour >= 18 && hour < 22) {
-          return "“Evening dungeon is in progress. Push through your placement shift and level up.”";
-        } else {
-          return "“All daily quests cleared. Recover your stamina, sleep early, and prepare to Arise tomorrow.”";
-        }
+        return "「目標 『${nextTask.title}』 を確認した。立ち止まるな、一人でレベルアップせよ。」";
       }
+      return "「今日も一歩ずつ強くなる。朝のクエストを全てクリアしろ。起きろ。」";
     } else {
-      // CHA HAE-IN (FEMALE / S-RANK DANCER - GOLD THEME)
-      if (_selectedLang == JinwooVoiceLang.japanese) {
-        if (nextTask != null) {
-          final title = nextTask.title;
-          if (title.toLowerCase().contains('wake') || title.toLowerCase().contains('gym')) {
-            return "「私の剣は決して鈍りません。朝の鍛錬、一緒に全力を尽くしましょう。」";
-          } else if (title.toLowerCase().contains('dsa') || title.toLowerCase().contains('japanese')) {
-            return "「DSAと修練のダンジョンですね。集中力を極限まで研ぎ澄ませて、共に勝利を掴みましょう。」";
-          } else if (title.toLowerCase().contains('night') || title.toLowerCase().contains('sleep')) {
-            return "「今日も素晴らしい一日でした。体をしっかり休めて、明日に備えてくださいね。」";
-          }
-          return "「次の目標 『$title』 を確認しました。Sランクの誇りを持って、堂々と挑みましょう！」";
+      // Cha Hae-In
+      if (nextTask != null) {
+        final title = nextTask.title.toLowerCase();
+        if (title.contains('wake') || title.contains('gym')) {
+          return "「私の剣は決して鈍りません。朝の鍛錬、一緒に全力を尽くしましょう。」";
+        } else if (title.contains('dsa') || title.contains('japanese')) {
+          return "「DSAと修練のダンジョンですね。集中力を極限まで研ぎ澄ませて、共に勝利を掴みましょう。」";
+        } else if (title.contains('night') || title.contains('sleep')) {
+          return "「今日も素晴らしい一日でした。体をしっかり休めて、明日に備えてくださいね。」";
         }
-
-        if (hour >= 6 && hour < 12) {
-          return "「おはようございます！ 今日も光り輝く一日を、一歩ずつ歩んでいきましょう。」";
-        } else if (hour >= 18 && hour < 22) {
-          return "「夕方の修練時間です。剣筋を乱さず、最後までやり遂げましょう！」";
-        } else {
-          return "「本日のデイリークエスト、見事な達成でした。ゆっくりお休みくださいね。」";
-        }
-      } else {
-        // English (Michelle Rojas)
-        if (nextTask != null) {
-          final title = nextTask.title;
-          if (title.toLowerCase().contains('wake') || title.toLowerCase().contains('gym')) {
-            return "“A true S-Rank Hunter never hesitates. Hydrate, initiate your morning routine, and conquer the workout dungeon.”";
-          } else if (title.toLowerCase().contains('dsa') || title.toLowerCase().contains('japanese')) {
-            return "“Placement & DSA training is active. Keep your focus razor-sharp and execute every algorithm with precision.”";
-          } else if (title.toLowerCase().contains('night') || title.toLowerCase().contains('sleep')) {
-            return "“You demonstrated true S-Rank discipline today. Rest your body, recover your strength, and prepare for tomorrow.”";
-          }
-          return "“Target objective locked: ‘$title’. Believe in your training and clear it with absolute mastery.”";
-        }
-
-        if (hour >= 6 && hour < 12) {
-          return "“Good morning! A new day awaits. Let's make every single minute count with golden determination.”";
-        } else if (hour >= 18 && hour < 22) {
-          return "“Evening training shift is underway. Stay centered, maintain your stance, and push forward!”";
-        } else {
-          return "“All daily protocol quests cleared with flying colors! Sleep well and restore your mana tonight.”";
-        }
+        return "「次の目標 『${nextTask.title}』 を確認しました。Sランクの誇りを持って挑みましょう！」";
       }
+      return "「おはようございます！ 今日も光り輝く一日を、一歩ずつ歩んでいきましょう。」";
+    }
+  }
+
+  String _getEnglishQuote(TaskModel? nextTask) {
+    if (_selectedPersona == CompanionPersona.sungJinwoo) {
+      if (nextTask != null) {
+        final title = nextTask.title.toLowerCase();
+        if (title.contains('wake') || title.contains('gym')) {
+          return "“The morning trial has begun, Hunter. Hydrate, initiate your protocol, and conquer the workout dungeon.”";
+        } else if (title.contains('dsa') || title.contains('japanese')) {
+          return "“Placement & DSA dungeon is active. Focus your mind, write clean algorithms, and master your skills.”";
+        } else if (title.contains('night') || title.contains('sleep')) {
+          return "“Penalty zone approaches at 11:00 PM. Wrap up all objectives, recover your mana, and Arise.”";
+        }
+        return "“Next objective detected: ‘${nextTask.title}’. If you don’t fight, you don’t survive. Complete it now.”";
+      }
+      return "“The system chose you for a reason. Clear your daily quests and prepare to Arise tomorrow.”";
+    } else {
+      // Cha Hae-In
+      if (nextTask != null) {
+        final title = nextTask.title.toLowerCase();
+        if (title.contains('wake') || title.contains('gym')) {
+          return "“A true S-Rank Hunter never hesitates. Hydrate, initiate your morning routine, and conquer the workout dungeon.”";
+        } else if (title.contains('dsa') || title.contains('japanese')) {
+          return "“Placement & DSA training is active. Keep your focus razor-sharp and execute every algorithm with precision.”";
+        } else if (title.contains('night') || title.contains('sleep')) {
+          return "“You demonstrated true S-Rank discipline today. Rest your body, recover your strength, and prepare for tomorrow.”";
+        }
+        return "“Target objective locked: ‘${nextTask.title}’. Believe in your training and clear it with absolute mastery.”";
+      }
+      return "“Good morning! A new day awaits. Let's make every single minute count with golden determination.”";
     }
   }
 
   Color _getThemeColor() {
     return _selectedPersona == CompanionPersona.sungJinwoo
         ? const Color(0xFFC084FC) // Purple Mana
-        : const Color(0xFFFBBF24); // Cha Hae-In Radiant Gold / Amber
+        : const Color(0xFFFBBF24); // Cha Hae-In Radiant Gold
   }
 
-  Color _getSecondaryColor() {
-    return _selectedPersona == CompanionPersona.sungJinwoo
-        ? const Color(0xFFA855F7)
-        : const Color(0xFFF59E0B); // Deep Amber Gold
+  void _triggerVoiceWithSubtitles() {
+    final nextTask = _getNextPendingTask();
+    final isJp = _selectedLang == JinwooVoiceLang.japanese;
+    final primaryQuote = isJp ? _getJapaneseQuote(nextTask) : _getEnglishQuote(nextTask);
+
+    _subtitleTimer?.cancel();
+    setState(() => _isPlayingAudio = true);
+
+    SoundService().speakCharacter(
+      text: primaryQuote,
+      isJapanese: isJp,
+      isJinwoo: _selectedPersona == CompanionPersona.sungJinwoo,
+      clipIndex: 1,
+    );
+
+    // Auto-dismiss subtitles after spoken duration (4.5s)
+    _subtitleTimer = Timer(const Duration(milliseconds: 4800), () {
+      if (mounted) {
+        setState(() => _isPlayingAudio = false);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final nextTask = _getNextPendingTask();
-    final quote = _getQuote(nextTask);
+    final jpQuote = _getJapaneseQuote(nextTask);
+    final enQuote = _getEnglishQuote(nextTask);
     final vaName = _getVoiceActorName();
     final themeColor = _getThemeColor();
-    final secondaryColor = _getSecondaryColor();
 
     return Center(
       child: Material(
         color: Colors.transparent,
         child: Container(
           width: MediaQuery.of(context).size.width * 0.92,
-          constraints: const BoxConstraints(maxWidth: 440),
+          constraints: const BoxConstraints(maxWidth: 450),
           margin: const EdgeInsets.symmetric(horizontal: 16),
           child: HolographicFrame(
             padding: const EdgeInsets.all(20),
@@ -215,7 +204,7 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Top Header with Persona Avatar & VA Attribution
+                // Top Header with Persona Avatar & Attribution
                 Row(
                   children: [
                     AnimatedBuilder(
@@ -311,7 +300,7 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                 ),
                 const SizedBox(height: 14),
 
-                // Persona Switcher: Sung Jin-Woo (Male Purple) vs Cha Hae-In (Female Gold)
+                // Persona Switcher: Jin-Woo (Male Purple) vs Cha Hae-In (Female Gold)
                 Container(
                   padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
@@ -453,11 +442,11 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                             padding: const EdgeInsets.symmetric(vertical: 6),
                             decoration: BoxDecoration(
                               color: _selectedLang == JinwooVoiceLang.japanese
-                                  ? secondaryColor.withValues(alpha: 0.3)
+                                  ? themeColor.withValues(alpha: 0.25)
                                   : Colors.transparent,
                               borderRadius: BorderRadius.circular(7),
                               border: _selectedLang == JinwooVoiceLang.japanese
-                                  ? Border.all(color: secondaryColor, width: 1.2)
+                                  ? Border.all(color: themeColor, width: 1.2)
                                   : null,
                             ),
                             child: Center(
@@ -481,7 +470,7 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                 ),
                 const SizedBox(height: 14),
 
-                // Holographic Dialogue Quote Box (Gold / Purple)
+                // Holographic Dialogue Quote Box with PLAY AUDIO Trigger
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
@@ -527,31 +516,31 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                             ],
                           ),
                           GestureDetector(
-                            onTap: () {
-                              SoundService().speakCharacter(
-                                text: quote,
-                                isJapanese: _selectedLang == JinwooVoiceLang.japanese,
-                                isJinwoo: _selectedPersona == CompanionPersona.sungJinwoo,
-                              );
-                            },
+                            onTap: _triggerVoiceWithSubtitles,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: const Color(0xFF090414),
+                                color: _isPlayingAudio
+                                    ? themeColor
+                                    : const Color(0xFF090414),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: themeColor.withValues(alpha: 0.5),
+                                  color: themeColor.withValues(alpha: 0.6),
                                 ),
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.volume_up, color: themeColor, size: 12),
+                                  Icon(
+                                    Icons.volume_up_rounded,
+                                    color: _isPlayingAudio ? Colors.black : themeColor,
+                                    size: 13,
+                                  ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    "PLAY AUDIO",
+                                    _isPlayingAudio ? "PLAYING..." : "PLAY AUDIO",
                                     style: SoloTypography.systemTag.copyWith(
                                       fontSize: 8.5,
-                                      color: themeColor,
+                                      color: _isPlayingAudio ? Colors.black : themeColor,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -562,8 +551,10 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                         ],
                       ),
                       const SizedBox(height: 10),
+
+                      // Normal Dialogue Display
                       Text(
-                        quote,
+                        _selectedLang == JinwooVoiceLang.japanese ? jpQuote : enQuote,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 12.5,
@@ -572,6 +563,98 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                           fontFamily: _selectedLang == JinwooVoiceLang.japanese ? 'sans-serif' : 'monospace',
                         ),
                       ),
+
+                      // 🎬 LIVE ANIME-STYLE SUBTITLES HUD (Visible ONLY When Audio Is Playing)
+                      if (_isPlayingAudio) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: const Color(0xFFFDE047).withValues(alpha: 0.8),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFFDE047).withValues(alpha: 0.3),
+                                blurRadius: 16,
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Color(0xFFEF4444),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    "ANIME SUBTITLES // NOW TRANSMITTING",
+                                    style: SoloTypography.systemTag.copyWith(
+                                      fontSize: 8,
+                                      color: const Color(0xFFFDE047),
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                jpQuote,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  color: Color(0xFFFFFFFF),
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.4,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF171302),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFFACC15).withValues(alpha: 0.4),
+                                  ),
+                                ),
+                                child: Text(
+                                  enQuote,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Color(0xFFFACC15),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    fontStyle: FontStyle.italic,
+                                    height: 1.35,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.black,
+                                        blurRadius: 4,
+                                        offset: Offset(1, 1),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+
                       if (nextTask != null) ...[
                         const SizedBox(height: 10),
                         Divider(color: Colors.white.withValues(alpha: 0.1), height: 1),

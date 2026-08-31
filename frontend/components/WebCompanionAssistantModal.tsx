@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { X, Volume2, Sparkles, CheckCircle2, Shield, Sword } from "lucide-react";
 import { audio } from "../lib/audio";
 
@@ -23,6 +23,7 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
   const [persona, setPersona] = useState<CompanionPersona>("jinwoo");
   const [lang, setLang] = useState<CompanionLang>("en");
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   if (!isOpen) return null;
 
@@ -38,91 +39,107 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
     }
   };
 
-  const getQuote = () => {
+  const getJapaneseQuote = () => {
     if (persona === "jinwoo") {
-      if (lang === "ja") {
-        if (nextTask) {
-          const t = nextTask.title.toLowerCase();
-          if (t.includes("wake") || t.includes("gym")) {
-            return "「日課クエストを開始せよ。朝の鍛錬を怠るな。目を覚ませ、影の軍団よ。」";
-          } else if (t.includes("dsa") || t.includes("japanese")) {
-            return "「ここからは試練のダンジョンだ。DSAと集中力を極限まで研ぎ澄ませ。」";
-          } else if (t.includes("night") || t.includes("sleep")) {
-            return "「夜の規律を守れ。ペナルティを回避し、明日へ備えよ。起きろ (Okiro)。」";
-          }
-          return `「目標 『${nextTask.title}』 を確認した。立ち止まるな、一人でレベルアップせよ。」`;
+      if (nextTask) {
+        const t = nextTask.title.toLowerCase();
+        if (t.includes("wake") || t.includes("gym")) {
+          return "「日課クエストを開始せよ。朝の鍛錬を怠るな。目を覚ませ、影の軍団よ。」";
+        } else if (t.includes("dsa") || t.includes("japanese")) {
+          return "「ここからは試練のダンジョンだ。DSAと集中力を極限まで研ぎ澄ませ。」";
+        } else if (t.includes("night") || t.includes("sleep")) {
+          return "「夜の規律を守れ。ペナルティを回避し、明日へ備えよ。起きろ (Okiro)。」";
         }
-        if (hour >= 6 && hour < 12) return "「今日も一歩ずつ強くなる。朝のクエストを全てクリアしろ。」";
-        if (hour >= 18 && hour < 22) return "「夕方の修練を開始する。限界を超えろ、立ち向かえ。」";
-        return "「休息もまた力の一部だ。体を癒し、明日再び立ち上がれ。起きろ。」";
-      } else {
-        if (nextTask) {
-          const t = nextTask.title.toLowerCase();
-          if (t.includes("wake") || t.includes("gym")) {
-            return "“The morning trial has begun, Hunter. Hydrate, initiate your protocol, and conquer the workout dungeon.”";
-          } else if (t.includes("dsa") || t.includes("japanese")) {
-            return "“Placement & DSA dungeon is active. Focus your mind, write clean algorithms, and master your skills.”";
-          } else if (t.includes("night") || t.includes("sleep")) {
-            return "“Penalty zone approaches at 11:00 PM. Wrap up all objectives, recover your mana, and Arise.”";
-          }
-          return `“Next objective detected: ‘${nextTask.title}’. If you don’t fight, you don’t survive. Complete it now.”`;
-        }
-        if (hour >= 6 && hour < 12) return "“The system chose you for a reason. Clear your morning quests and seize the day.”";
-        if (hour >= 18 && hour < 22) return "“Evening dungeon is in progress. Push through your placement shift and level up.”";
-        return "“All daily quests cleared. Recover your stamina, sleep early, and prepare to Arise tomorrow.”";
+        return `「目標 『${nextTask.title}』 を確認した。立ち止まるな、一人でレベルアップせよ。」`;
       }
+      return "「今日も一歩ずつ強くなる。朝のクエストを全てクリアしろ。起きろ。」";
     } else {
-      // CHA HAE-IN (S-RANK DANCER / GOLD THEME)
-      if (lang === "ja") {
-        if (nextTask) {
-          const t = nextTask.title.toLowerCase();
-          if (t.includes("wake") || t.includes("gym")) {
-            return "「私の剣は決して鈍りません。朝の鍛錬、一緒に全力を尽くしましょう。」";
-          } else if (t.includes("dsa") || t.includes("japanese")) {
-            return "「DSAと修練のダンジョンですね。集中力を極限まで研ぎ澄ませて、共に勝利を掴みましょう。」";
-          } else if (t.includes("night") || t.includes("sleep")) {
-            return "「今日も素晴らしい一日でした。体をしっかり休めて、明日に備えてくださいね。」";
-          }
-          return `「次の目標 『${nextTask.title}』 を確認しました。Sランクの誇りを持って挑みましょう！」`;
+      if (nextTask) {
+        const t = nextTask.title.toLowerCase();
+        if (t.includes("wake") || t.includes("gym")) {
+          return "「私の剣は決して鈍りません。朝の鍛錬、一緒に全力を尽くしましょう。」";
+        } else if (t.includes("dsa") || t.includes("japanese")) {
+          return "「DSAと修練のダンジョンですね。集中力を極限まで研ぎ澄ませて、共に勝利を掴みましょう。」";
+        } else if (t.includes("night") || t.includes("sleep")) {
+          return "「今日も素晴らしい一日でした。体をしっかり休めて、明日に備えてくださいね。」";
         }
-        if (hour >= 6 && hour < 12) return "「おはようございます！ 今日も光り輝く一日を、一歩ずつ歩んでいきましょう。」";
-        if (hour >= 18 && hour < 22) return "「夕方の修練時間です。剣筋を乱さず、最後までやり遂げましょう！」";
-        return "「本日のデイリークエスト、見事な達成でした。ゆっくりお休みくださいね。」";
-      } else {
-        if (nextTask) {
-          const t = nextTask.title.toLowerCase();
-          if (t.includes("wake") || t.includes("gym")) {
-            return "“A true S-Rank Hunter never hesitates. Hydrate, initiate your morning routine, and conquer the workout dungeon.”";
-          } else if (t.includes("dsa") || t.includes("japanese")) {
-            return "“Placement & DSA training is active. Keep your focus razor-sharp and execute every algorithm with precision.”";
-          } else if (t.includes("night") || t.includes("sleep")) {
-            return "“You demonstrated true S-Rank discipline today. Rest your body, recover your strength, and prepare for tomorrow.”";
-          }
-          return `“Target objective locked: ‘${nextTask.title}’. Believe in your training and clear it with absolute mastery.”`;
-        }
-        if (hour >= 6 && hour < 12) return "“Good morning! A new day awaits. Let's make every single minute count with golden determination.”";
-        if (hour >= 18 && hour < 22) return "“Evening training shift is underway. Stay centered, maintain your stance, and push forward!”";
-        return "“All daily protocol quests cleared with flying colors! Sleep well and restore your mana tonight.”";
+        return `「次の目標 『${nextTask.title}』 を確認しました。Sランクの誇りを持って挑みましょう！」`;
       }
+      return "「おはようございます！ 今日も光り輝く一日を、一歩ずつ歩んでいきましょう。」";
+    }
+  };
+
+  const getEnglishQuote = () => {
+    if (persona === "jinwoo") {
+      if (nextTask) {
+        const t = nextTask.title.toLowerCase();
+        if (t.includes("wake") || t.includes("gym")) {
+          return "“The morning trial has begun, Hunter. Hydrate, initiate your protocol, and conquer the workout dungeon.”";
+        } else if (t.includes("dsa") || t.includes("japanese")) {
+          return "“Placement & DSA dungeon is active. Focus your mind, write clean algorithms, and master your skills.”";
+        } else if (t.includes("night") || t.includes("sleep")) {
+          return "“Penalty zone approaches at 11:00 PM. Wrap up all objectives, recover your mana, and Arise.”";
+        }
+        return `“Next objective detected: ‘${nextTask.title}’. If you don’t fight, you don’t survive. Complete it now.”`;
+      }
+      return "“The system chose you for a reason. Clear your morning quests and seize the day.”";
+    } else {
+      if (nextTask) {
+        const t = nextTask.title.toLowerCase();
+        if (t.includes("wake") || t.includes("gym")) {
+          return "“A true S-Rank Hunter never hesitates. Hydrate, initiate your morning routine, and conquer the workout dungeon.”";
+        } else if (t.includes("dsa") || t.includes("japanese")) {
+          return "“Placement & DSA training is active. Keep your focus razor-sharp and execute every algorithm with precision.”";
+        } else if (t.includes("night") || t.includes("sleep")) {
+          return "“You demonstrated true S-Rank discipline today. Rest your body, recover your strength, and prepare for tomorrow.”";
+        }
+        return `“Target objective locked: ‘${nextTask.title}’. Believe in your training and clear it with absolute mastery.”`;
+      }
+      return "“Good morning! A new day awaits. Let's make every single minute count with golden determination.”";
     }
   };
 
   const handlePlayVoice = () => {
     audio.playLevelUp();
+    setIsSpeaking(true);
+
+    if (lang === "ja" && persona === "jinwoo") {
+      try {
+        if (audioRef.current) {
+          audioRef.current.pause();
+        }
+        const audioObj = new Audio("/audio/sung_jinwoo_voice1.mp3");
+        audioRef.current = audioObj;
+        audioObj.volume = 0.9;
+        audioObj.onended = () => setIsSpeaking(false);
+        audioObj.onerror = () => _fallbackSpeech();
+        audioObj.play().catch(() => _fallbackSpeech());
+        return;
+      } catch {
+        _fallbackSpeech();
+      }
+    } else {
+      _fallbackSpeech();
+    }
+  };
+
+  const _fallbackSpeech = () => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
-      const quote = getQuote();
+      const quote = lang === "ja" ? getJapaneseQuote() : getEnglishQuote();
       const cleanQuote = quote.replace(/[「」“”"']/g, "");
       const utterance = new SpeechSynthesisUtterance(cleanQuote);
       utterance.lang = lang === "ja" ? "ja-JP" : "en-US";
-      utterance.pitch = persona === "jinwoo" ? 0.85 : 1.18;
-      utterance.rate = persona === "jinwoo" ? 0.95 : 1.02;
+      utterance.pitch = persona === "jinwoo" ? 0.82 : 1.15;
+      utterance.rate = persona === "jinwoo" ? 0.90 : 1.02;
 
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
       utterance.onerror = () => setIsSpeaking(false);
 
       window.speechSynthesis.speak(utterance);
+    } else {
+      setTimeout(() => setIsSpeaking(false), 4500);
     }
   };
 
@@ -150,6 +167,7 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
         {/* Close Button */}
         <button
           onClick={() => {
+            if (audioRef.current) audioRef.current.pause();
             if (typeof window !== "undefined" && "speechSynthesis" in window) {
               window.speechSynthesis.cancel();
             }
@@ -186,7 +204,7 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
               {persona === "jinwoo" ? "SHADOW MONARCH COMPANION" : "S-RANK THE DANCER (GOLD THEME)"}
             </span>
             <h2 className="text-xl font-black font-['Outfit'] uppercase tracking-wider text-white mt-0.5">
-              {persona === "jinwoo" ? "SUNG JIN-WOO" : "CHA HAE-IN (차해イン)"}
+              {persona === "jinwoo" ? "SUNG JIN-WOO" : "CHA HAE-IN (차해인)"}
             </h2>
             <p className="text-[11px] font-mono text-slate-400">
               VA: <span className={persona === "jinwoo" ? "text-purple-300 font-bold" : "text-amber-300 font-bold"}>{getVoiceActorName()}</span>
@@ -284,20 +302,40 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
             </span>
             <button
               onClick={handlePlayVoice}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border ${
-                persona === "jinwoo"
-                  ? "border-purple-500/40 text-purple-300 hover:border-purple-400"
-                  : "border-amber-500/40 text-amber-300 hover:border-amber-400"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${
+                isSpeaking
+                  ? "bg-amber-400 text-black border-amber-300 font-black shadow-[0_0_15px_rgba(251,191,36,0.5)]"
+                  : persona === "jinwoo"
+                  ? "bg-slate-950 border border-purple-500/40 text-purple-300 hover:border-purple-400"
+                  : "bg-slate-950 border border-amber-500/40 text-amber-300 hover:border-amber-400"
               } text-[10px] font-mono font-bold transition-all`}
             >
               <Volume2 className={`w-3.5 h-3.5 ${isSpeaking ? "animate-pulse" : ""}`} />
-              <span>{isSpeaking ? "SPEAKING..." : "PLAY AUDIO"}</span>
+              <span>{isSpeaking ? "TRANSMITTING..." : "PLAY AUDIO"}</span>
             </button>
           </div>
 
           <p className="text-sm sm:text-base text-slate-100 font-medium leading-relaxed my-2">
-            {getQuote()}
+            {lang === "ja" ? getJapaneseQuote() : getEnglishQuote()}
           </p>
+
+          {/* 🎬 LIVE ANIME-STYLE SUBTITLES HUD (Visible ONLY When Audio Is Playing) */}
+          {isSpeaking && (
+            <div className="mt-3 p-3.5 rounded-xl bg-black/95 border-2 border-yellow-400/90 shadow-[0_0_25px_rgba(250,204,21,0.4)] animate-fade-in">
+              <div className="flex items-center justify-center gap-1.5 text-[9px] font-mono font-black text-yellow-400 uppercase tracking-widest mb-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                <span>ANIME SUBTITLES // BROADCASTING NOW</span>
+              </div>
+              <p className="text-xs sm:text-sm text-center text-white font-bold mb-2 leading-relaxed">
+                {getJapaneseQuote()}
+              </p>
+              <div className="p-2 rounded-lg bg-amber-950/40 border border-yellow-400/40">
+                <p className="text-xs sm:text-[13px] text-center text-yellow-300 italic font-black leading-snug drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  {getEnglishQuote()}
+                </p>
+              </div>
+            </div>
+          )}
 
           {nextTask && (
             <div className="mt-3 pt-3 border-t border-slate-800 flex items-center gap-2">
