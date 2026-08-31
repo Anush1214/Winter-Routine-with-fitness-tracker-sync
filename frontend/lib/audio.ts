@@ -118,6 +118,10 @@ class AudioManager {
     } catch {}
   }
 
+  public playLevelUp() {
+    this.playVictory();
+  }
+
   public playVictory() {
     if (!this.soundEnabled) return;
     try {

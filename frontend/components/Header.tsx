@@ -23,6 +23,15 @@ interface HeaderProps {
   onOpenNotificationModal: () => void;
   onOpenSmartwatchModal: () => void;
   activeStreak: number;
+  hunterUser?: {
+    uid: string;
+    email: string;
+    displayName: string;
+    photoUrl?: string;
+    provider: string;
+  } | null;
+  onOpenProfile?: () => void;
+  onOpenAuth?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,6 +40,9 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNotificationModal,
   onOpenSmartwatchModal,
   activeStreak,
+  hunterUser,
+  onOpenProfile,
+  onOpenAuth,
 }) => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [istTimeStr, setIstTimeStr] = useState<string>("");
@@ -115,10 +127,10 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-cyan-400" />
           </div>
 
-          <div>
+            <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-[10px] font-mono font-black uppercase tracking-widest text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/40">
-                [ SYSTEM : ACTIVE ]
+                [ SYSTEM : {hunterUser ? hunterUser.displayName.toUpperCase() : "ACTIVE"} ]
               </span>
               <h1 className="text-xl sm:text-2xl font-black tracking-wider uppercase font-['Outfit'] text-white glow-text-system">
                 WINTER ARC PROTOCOL
@@ -191,6 +203,35 @@ export const Header: React.FC<HeaderProps> = ({
             <Plus className="w-3.5 h-3.5 stroke-[3]" />
             <span>+ Add Quest</span>
           </button>
+
+          {/* Hunter Profile / Login Avatar */}
+          {hunterUser ? (
+            <button
+              onClick={onOpenProfile}
+              title={`Hunter Profile (${hunterUser.displayName})`}
+              className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950 border border-cyan-400/80 shadow-[0_0_12px_rgba(0,240,255,0.3)] hover:scale-105 transition-all"
+            >
+              {hunterUser.photoUrl ? (
+                <img
+                  src={hunterUser.photoUrl}
+                  alt={hunterUser.displayName}
+                  className="w-7 h-7 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-lg bg-cyan-950 flex items-center justify-center text-cyan-300 font-bold font-mono text-xs">
+                  {hunterUser.displayName.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={onOpenAuth}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-cyan-500/50 hover:border-cyan-400 text-cyan-300 text-xs font-mono font-bold hover:shadow-[0_0_12px_rgba(0,240,255,0.4)] transition-all"
+            >
+              <Shield className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Login</span>
+            </button>
+          )}
 
           {/* PWA Install */}
           {deferredPrompt && (

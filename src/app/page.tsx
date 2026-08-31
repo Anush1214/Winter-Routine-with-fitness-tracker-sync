@@ -10,11 +10,25 @@ import { ConsistencyHeatmap, HeatmapDayData } from "@/frontend/components/Consis
 import { TaskModal } from "@/frontend/components/TaskModal";
 import { NotificationSettingsModal } from "@/frontend/components/NotificationSettingsModal";
 import { SmartwatchSyncModal } from "@/frontend/components/SmartwatchSyncModal";
+import { WebAriseSplash } from "@/frontend/components/WebAriseSplash";
+import { WebAuthModal } from "@/frontend/components/WebAuthModal";
+import { WebProfileModal } from "@/frontend/components/WebProfileModal";
 import { TaskData } from "@/frontend/components/TaskItem";
 import { formatDateKey } from "@/frontend/lib/utils";
 import { Loader2 } from "lucide-react";
 
+interface HunterUser {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoUrl?: string;
+  provider: string;
+}
+
 export default function WinterArcDashboard() {
+  const [splashComplete, setSplashComplete] = useState<boolean>(false);
+  const [hunterUser, setHunterUser] = useState<HunterUser | null>(null);
+
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const today = formatDateKey(new Date());
     const year = new Date().getFullYear();
@@ -48,11 +62,25 @@ export default function WinterArcDashboard() {
   const [targetSlotId, setTargetSlotId] = useState<string | undefined>(undefined);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
   const [smartwatchModalOpen, setSmartwatchModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
 
-  // 1. Fetch tasks & health for selected date
-  const loadDateData = useCallback(async (date: string) => {
+  // Restore saved hunter user session from localStorage
+  useEffect(() => {
     try {
-      const res = await fetch(`/api/tasks?date=${date}`);
+      const saved = localStorage.getItem("winter_arc_hunter_user");
+      if (saved) {
+        setHunterUser(JSON.parse(saved));
+      }
+    } catch (_) {}
+  }, []);
+
+  const activeUserId = hunterUser?.uid || "default_hunter";
+
+  // 1. Fetch tasks & health for selected date & user
+  const loadDateData = useCallback(async (date: string, userId: string) => {
+    try {
+      const res = await fetch(`/api/tasks?date=${date}&userId=${userId}`);
       const data = await res.json();
       if (data.success) {
         setTasks(data.tasks || []);
@@ -70,12 +98,12 @@ export default function WinterArcDashboard() {
     }
   }, []);
 
-  // 2. Fetch Heatmap and Summary
-  const loadStats = useCallback(async () => {
+  // 2. Fetch Heatmap and Summary scoped to user
+  const loadStats = useCallback(async (userId: string) => {
     try {
       const [heatRes, sumRes] = await Promise.all([
-        fetch("/api/stats/heatmap"),
-        fetch("/api/stats/summary"),
+        fetch(`/api/stats/heatmap?userId=${userId}`),
+        fetch(`/api/stats/summary?userId=${userId}`),
       ]);
       const heatData = await heatRes.json();
       const sumData = await sumRes.json();
@@ -95,11 +123,35 @@ export default function WinterArcDashboard() {
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
-      await Promise.all([loadDateData(selectedDate), loadStats()]);
+      await Promise.all([loadDateData(selectedDate, activeUserId), loadStats(activeUserId)]);
       setIsLoading(false);
     };
     init();
-  }, [selectedDate, loadDateData, loadStats]);
+  }, [selectedDate, activeUserId, loadDateData, loadStats]);
+
+  const handleAuthSuccess = (user: HunterUser) => {
+    setHunterUser(user);
+    try {
+      localStorage.setItem("winter_arc_hunter_user", JSON.stringify(user));
+    } catch (_) {}
+  };
+
+  const handleSignOut = () => {
+    setHunterUser(null);
+    try {
+      localStorage.removeItem("winter_arc_hunter_user");
+    } catch (_) {}
+    setProfileModalOpen(false);
+  };
+
+  const handleUpdateName = (newName: string) => {
+    if (!hunterUser) return;
+    const updated = { ...hunterUser, displayName: newName };
+    setHunterUser(updated);
+    try {
+      localStorage.setItem("winter_arc_hunter_user", JSON.stringify(updated));
+    } catch (_) {}
+  };
 
   // Toggle task completed
   const handleToggleTask = async (id: string, current: boolean) => {
@@ -123,12 +175,12 @@ export default function WinterArcDashboard() {
       await fetch(`/api/tasks/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isCompleted: newStatus }),
+        body: JSON.stringify({ isCompleted: newStatus, userId: activeUserId }),
       });
-      loadStats();
+      loadStats(activeUserId);
     } catch (err) {
       console.error("Task toggle failed:", err);
-      loadDateData(selectedDate);
+      loadDateData(selectedDate, activeUserId);
     }
   };
 
@@ -141,8 +193,8 @@ export default function WinterArcDashboard() {
 
     try {
       await fetch(`/api/tasks/${id}`, { method: "DELETE" });
-      loadDateData(selectedDate);
-      loadStats();
+      loadDateData(selectedDate, activeUserId);
+      loadStats(activeUserId);
     } catch (err) {
       console.error("Delete task failed:", err);
     }
@@ -176,6 +228,7 @@ export default function WinterArcDashboard() {
           category: taskData.category,
           startTime: taskData.startTime,
           autoMetric: taskData.autoMetric,
+          userId: activeUserId,
         }),
       });
     } else {
@@ -189,11 +242,12 @@ export default function WinterArcDashboard() {
           startTime: taskData.startTime,
           autoMetric: taskData.autoMetric,
           applyScope: taskData.applyScope,
+          userId: activeUserId,
         }),
       });
     }
-    await loadDateData(selectedDate);
-    await loadStats();
+    await loadDateData(selectedDate, activeUserId);
+    await loadStats(activeUserId);
   };
 
   const handleUpdateWater = async (deltaOrAmount: number, mode: "increment" | "set" = "increment") => {
@@ -210,12 +264,13 @@ export default function WinterArcDashboard() {
           date: selectedDate,
           amountMl: deltaOrAmount,
           mode,
+          userId: activeUserId,
         }),
       });
       const data = await res.json();
       if (data.success) {
         if (data.tasks) setTasks(data.tasks);
-        loadStats();
+        loadStats(activeUserId);
       }
     } catch (err) {
       console.error("Water update error:", err);
@@ -234,7 +289,7 @@ export default function WinterArcDashboard() {
     if (data.tasks) {
       setTasks(data.tasks);
     }
-    loadStats();
+    loadStats(activeUserId);
   };
 
   const dayStatsMap = React.useMemo(() => {
@@ -252,9 +307,13 @@ export default function WinterArcDashboard() {
   const completedCount = tasks.filter((t) => t.isCompleted).length;
   const totalCount = tasks.length;
 
+  if (!splashComplete) {
+    return <WebAriseSplash onComplete={() => setSplashComplete(true)} />;
+  }
+
   return (
     <div className="w-full pb-16">
-      {/* 1. Header with Controls */}
+      {/* 1. Header with Controls & Hunter Authentication */}
       <Header
         currentDate={selectedDate}
         onOpenTaskModal={() => {
@@ -265,6 +324,9 @@ export default function WinterArcDashboard() {
         onOpenNotificationModal={() => setNotificationModalOpen(true)}
         onOpenSmartwatchModal={() => setSmartwatchModalOpen(true)}
         activeStreak={currentStreak}
+        hunterUser={hunterUser}
+        onOpenProfile={() => setProfileModalOpen(true)}
+        onOpenAuth={() => setAuthModalOpen(true)}
       />
 
       {/* 2. 122-Day Sliding Date Picker */}
@@ -344,6 +406,25 @@ export default function WinterArcDashboard() {
         currentWater={healthLog.waterIntakeMl}
         onSyncSuccess={handleSmartwatchSyncSuccess}
       />
+
+      {/* Web Auth Modal */}
+      <WebAuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        onSuccess={handleAuthSuccess}
+      />
+
+      {/* Web Profile Modal */}
+      {hunterUser && (
+        <WebProfileModal
+          isOpen={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+          user={hunterUser}
+          streakDays={currentStreak}
+          onSignOut={handleSignOut}
+          onUpdateName={handleUpdateName}
+        />
+      )}
     </div>
   );
 }
