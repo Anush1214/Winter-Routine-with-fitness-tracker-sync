@@ -16,6 +16,7 @@ import '../widgets/consistency_heatmap_widget.dart';
 import 'quest_editor_modal.dart';
 import 'notification_settings_modal.dart';
 import 'smartwatch_sync_sheet.dart';
+import '../widgets/sung_jinwoo_assistant_dialog.dart';
 import '../../services/health_service.dart';
 
 class HomeQuestScreen extends StatefulWidget {
@@ -244,11 +245,48 @@ class _HomeQuestScreenState extends State<HomeQuestScreen> {
                         selectedDate: service.selectedDate,
                         onSelectDate: (d) => service.selectDate(d),
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 80),
                     ],
                   ),
                 ),
               ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          SungJinwooAssistantDialog.show(
+            context,
+            tasks: service.tasks,
+            onTriggerAction: () {
+              final pending = service.tasks.where((t) => !t.isCompleted).toList();
+              if (pending.isNotEmpty) {
+                service.toggleTask(pending.first.id, false);
+              }
+            },
+          );
+        },
+        backgroundColor: SoloColors.obsidianVoid,
+        elevation: 12,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(30),
+          side: const BorderSide(color: SoloColors.neonCyan, width: 1.5),
+        ),
+        icon: Container(
+          width: 28,
+          height: 28,
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            color: Color(0xFF042F2E),
+          ),
+          child: const Icon(Icons.record_voice_over, color: SoloColors.neonCyan, size: 16),
+        ),
+        label: Text(
+          "JIN-WOO",
+          style: SoloTypography.systemTag.copyWith(
+            fontSize: 10,
+            color: SoloColors.neonCyan,
+            letterSpacing: 1.5,
+          ),
+        ),
       ),
     );
   }
