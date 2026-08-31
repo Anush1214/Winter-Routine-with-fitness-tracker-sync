@@ -65,7 +65,7 @@ class AuthService extends ChangeNotifier {
   HunterUser? _currentUser;
   HunterUser? get currentUser => _currentUser;
   bool get isAuthenticated => _currentUser != null;
-  String get currentUserId => _currentUser?.uid ?? 'default_hunter';
+  String get currentUserId => _currentUser?.uid ?? 'guest_hunter_local';
   bool get isFemaleTheme => _currentUser?.gender == 'female';
 
   final StreamController<HunterUser?> _authController =
@@ -79,6 +79,11 @@ class AuthService extends ChangeNotifier {
     scopes: ['email', 'profile'],
   );
 
+  String _sanitizeUid(String prefix, String identifier) {
+    final clean = identifier.toLowerCase().replaceAll(RegExp(r'[^a-zA-Z0-9_]'), '_');
+    return '${prefix}_$clean';
+  }
+
   Future<void> init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -89,14 +94,26 @@ class AuthService extends ChangeNotifier {
       final savedGender = prefs.getString('saved_user_gender') ?? 'male';
       final savedProvider = prefs.getString('saved_user_provider') ?? 'guest';
 
-      if (savedUid != null && savedEmail != null) {
+      if (savedUid != null && savedUid.isNotEmpty && savedEmail != null) {
         _currentUser = HunterUser(
           uid: savedUid,
           email: savedEmail,
-          displayName: savedName ?? 'Shadow Hunter',
+          displayName: savedName ?? 'Hunter Anush',
           photoUrl: savedPhoto,
           gender: savedGender,
           provider: savedProvider,
+        );
+        _authController.add(_currentUser);
+        notifyListeners();
+      } else {
+        // Default to persistent primary guest session
+        _currentUser = HunterUser(
+          uid: 'guest_hunter_local',
+          email: 'guest@winterarc.solo',
+          displayName: savedGender == 'female' ? 'S-Rank Dancer' : 'Shadow Monarch',
+          gender: savedGender,
+          provider: 'guest',
+          isAnonymous: true,
         );
         _authController.add(_currentUser);
         notifyListeners();
@@ -164,10 +181,13 @@ class AuthService extends ChangeNotifier {
         throw AuthException('Failed to retrieve hunter data from Google.');
       }
 
+      final email = fbUser.email ?? googleUser.email;
+      final stableUid = fbUser.uid.isNotEmpty ? fbUser.uid : _sanitizeUid('google', email);
+
       final user = HunterUser(
-        uid: fbUser.uid,
-        email: fbUser.email ?? 'hunter@winterarc.solo',
-        displayName: fbUser.displayName ?? googleUser.displayName ?? 'Hunter',
+        uid: stableUid,
+        email: email,
+        displayName: fbUser.displayName ?? googleUser.displayName ?? 'Hunter Anush',
         photoUrl: fbUser.photoURL ?? googleUser.photoUrl,
         provider: 'google',
         gender: gender,
@@ -184,10 +204,12 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<HunterUser> _fallbackGoogleSignIn({String gender = 'male'}) async {
+    const email = 'anushrao021@gmail.com';
+    final stableUid = _sanitizeUid('google', email);
     final user = HunterUser(
-      uid: 'google_hunter_${DateTime.now().millisecondsSinceEpoch}',
-      email: 'hunter.anush@gmail.com',
-      displayName: 'Hunter Anush',
+      uid: stableUid,
+      email: email,
+      displayName: 'Anush Rao',
       photoUrl: null,
       provider: 'google',
       gender: gender,
@@ -202,8 +224,9 @@ class AuthService extends ChangeNotifier {
     required String password,
     String gender = 'male',
   }) async {
+    final stableUid = _sanitizeUid('email', email);
     final user = HunterUser(
-      uid: 'email_${email.hashCode.abs()}',
+      uid: stableUid,
       email: email,
       displayName: email.split('@').first.toUpperCase(),
       provider: 'email',
@@ -220,10 +243,11 @@ class AuthService extends ChangeNotifier {
     required String displayName,
     String gender = 'male',
   }) async {
+    final stableUid = _sanitizeUid('email', email);
     final user = HunterUser(
-      uid: 'email_${email.hashCode.abs()}',
+      uid: stableUid,
       email: email,
-      displayName: displayName.isNotEmpty ? displayName : 'Hunter',
+      displayName: displayName.isNotEmpty ? displayName : email.split('@').first,
       provider: 'email',
       gender: gender,
       isAnonymous: false,
@@ -234,7 +258,7 @@ class AuthService extends ChangeNotifier {
 
   Future<HunterUser> signInAsGuest({String gender = 'male'}) async {
     final user = HunterUser(
-      uid: 'guest_${DateTime.now().millisecondsSinceEpoch}',
+      uid: 'guest_hunter_local',
       email: 'guest@winterarc.solo',
       displayName: gender == 'female' ? 'S-Rank Dancer' : 'Shadow Monarch',
       provider: 'guest',
@@ -250,6 +274,10 @@ class AuthService extends ChangeNotifier {
       final updated = _currentUser!.copyWith(gender: newGender);
       await _persistUser(updated);
     }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('saved_user_gender', newGender);
+    } catch (_) {}
   }
 
   Future<void> updateProfile({String? displayName, String? photoUrl}) async {
@@ -263,9 +291,11 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<HunterUser> signInWithGitHub({String gender = 'male'}) async {
+    const email = 'github.hunter@winterarc.solo';
+    final stableUid = _sanitizeUid('github', email);
     final user = HunterUser(
-      uid: 'github_hunter_${DateTime.now().millisecondsSinceEpoch}',
-      email: 'github.hunter@winterarc.solo',
+      uid: stableUid,
+      email: email,
       displayName: 'GitHub Hunter',
       photoUrl: null,
       provider: 'github',
@@ -288,8 +318,15 @@ class AuthService extends ChangeNotifier {
       await _googleSignIn.signOut();
     } catch (_) {}
 
-    _currentUser = null;
-    _authController.add(null);
+    // Reset back to guest session so app continues without breaking
+    _currentUser = HunterUser(
+      uid: 'guest_hunter_local',
+      email: 'guest@winterarc.solo',
+      displayName: 'Shadow Monarch',
+      provider: 'guest',
+      isAnonymous: true,
+    );
+    _authController.add(_currentUser);
     notifyListeners();
 
     try {
@@ -298,6 +335,7 @@ class AuthService extends ChangeNotifier {
       await prefs.remove('saved_user_email');
       await prefs.remove('saved_user_name');
       await prefs.remove('saved_user_photo');
+      await prefs.remove('saved_user_provider');
     } catch (_) {}
   }
 }

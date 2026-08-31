@@ -201,6 +201,23 @@ class NotificationService {
     }
   }
 
+  /// Trigger a test notification for a specific system topic
+  Future<void> triggerInstantTestNotification(String topic) async {
+    String title = "⚡ [ SYSTEM ALERT : NOTIFICATION TEST ]";
+    String body = "System telemetry active. Daily quests and alarms synchronized.";
+    if (topic == 'morning') {
+      title = "⚡ [ SYSTEM NOTIFICATION : DAILY QUEST ISSUED ]";
+      body = "Wake Up & Morning Protocol. Hydrate with 500ml water and initiate the day's expedition.";
+    } else if (topic == 'evening') {
+      title = "⚔️ [ SYSTEM QUEST : PLACEMENT & DSA SHIFT ]";
+      body = "Evening Dungeon Active. Fresh up and prepare for Placement, DSA, and Japanese practice.";
+    } else if (topic == 'night') {
+      title = "⚠️ [ CAUTION : PENALTY QUEST WARNING ]";
+      body = "30 minutes remaining in daily protocol! Complete all active objectives before 11:00 PM.";
+    }
+    await showInstantNotification(title: title, body: body);
+  }
+
   /// Cancel all scheduled alarms
   Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();

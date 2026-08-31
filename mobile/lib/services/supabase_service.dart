@@ -28,7 +28,7 @@ class SupabaseService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  String get currentUserId => AuthService().currentUser?.uid ?? 'guest_hunter';
+  String get currentUserId => AuthService().currentUser?.uid ?? 'guest_hunter_local';
 
   SupabaseService() {
     _selectedDate = TimelineUtils.formatDateKey(DateTime.now());
@@ -45,6 +45,7 @@ class SupabaseService extends ChangeNotifier {
 
   Future<void> _initializeUserSession() async {
     await _loadFromLocalStorage(_selectedDate);
+    notifyListeners();
     await loadDateData(_selectedDate);
   }
 
@@ -67,7 +68,7 @@ class SupabaseService extends ChangeNotifier {
       if (tasksJson != null && tasksJson.isNotEmpty) {
         final List list = jsonDecode(tasksJson);
         _tasks = list.map((t) => TaskModel.fromJson(t)).toList();
-      } else if (_tasks.isEmpty) {
+      } else {
         _useLocalDefaultTasks(date);
       }
 
@@ -80,6 +81,7 @@ class SupabaseService extends ChangeNotifier {
       if (savedStreak != null) {
         _currentStreak = savedStreak;
       }
+      _recalculateStats();
     } catch (e) {
       debugPrint("Error loading local storage: $e");
       if (_tasks.isEmpty) _useLocalDefaultTasks(date);
@@ -101,7 +103,6 @@ class SupabaseService extends ChangeNotifier {
   Future<void> loadDateData(String date) async {
     _isLoading = true;
     _error = null;
-    notifyListeners();
 
     final userIdParam = "&userId=$currentUserId";
 
@@ -110,7 +111,18 @@ class SupabaseService extends ChangeNotifier {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['tasks'] != null && (data['tasks'] as List).isNotEmpty) {
-          _tasks = (data['tasks'] as List).map((t) => TaskModel.fromJson(t)).toList();
+          final serverTasks = (data['tasks'] as List).map((t) => TaskModel.fromJson(t)).toList();
+          
+          // Merge completed statuses so locally checked tasks are never lost
+          final Map<String, bool> localCompletion = {
+            for (var t in _tasks) t.id: t.isCompleted
+          };
+
+          _tasks = serverTasks.map((st) {
+            final localState = localCompletion[st.id];
+            return localState != null ? st.copyWith(isCompleted: localState || st.isCompleted) : st;
+          }).toList();
+
           await _saveToLocalStorage(date);
         } else if (_tasks.isEmpty) {
           _useLocalDefaultTasks(date);
@@ -124,7 +136,7 @@ class SupabaseService extends ChangeNotifier {
         final data = jsonDecode(healthRes.body);
         if (data['log'] != null) {
           final serverLog = HealthLogModel.fromJson(data['log']);
-          if (serverLog.waterIntakeMl > 0 || _healthLog.waterIntakeMl == 0) {
+          if (serverLog.waterIntakeMl >= _healthLog.waterIntakeMl) {
             _healthLog = serverLog;
             await _saveToLocalStorage(date);
           }
@@ -148,6 +160,7 @@ class SupabaseService extends ChangeNotifier {
       if (_tasks.isEmpty) {
         _useLocalDefaultTasks(date);
       }
+      _recalculateStats();
       _isLoading = false;
       notifyListeners();
       NotificationService().scheduleAllTaskNotifications(_tasks);
@@ -308,15 +321,35 @@ class SupabaseService extends ChangeNotifier {
     bool? gymWorkoutDone,
     int? waterIntakeMl,
   }) async {
+    int newWater = waterIntakeMl ?? _healthLog.waterIntakeMl;
+    int newSteps = steps ?? _healthLog.steps;
+    int newSleep = sleepMinutes ?? _healthLog.sleepMinutes;
+    bool newGym = gymWorkoutDone ?? _healthLog.gymWorkoutDone;
+
     _healthLog = _healthLog.copyWith(
-      steps: steps ?? _healthLog.steps,
-      sleepMinutes: sleepMinutes ?? _healthLog.sleepMinutes,
-      gymWorkoutDone: gymWorkoutDone ?? _healthLog.gymWorkoutDone,
-      waterIntakeMl: waterIntakeMl ?? _healthLog.waterIntakeMl,
+      steps: newSteps,
+      sleepMinutes: newSleep,
+      gymWorkoutDone: newGym,
+      waterIntakeMl: newWater,
       userId: currentUserId,
     );
 
-    _autoCheckHealthTasks();
+    // Auto-check health tasks
+    for (int i = 0; i < _tasks.length; i++) {
+      if (_tasks[i].autoMetric == 'steps_10k' && newSteps >= 10000) {
+        _tasks[i] = _tasks[i].copyWith(isCompleted: true);
+      }
+      if (_tasks[i].autoMetric == 'sleep_7h' && newSleep >= 420) {
+        _tasks[i] = _tasks[i].copyWith(isCompleted: true);
+      }
+      if (_tasks[i].autoMetric == 'gym_workout' && newGym) {
+        _tasks[i] = _tasks[i].copyWith(isCompleted: true);
+      }
+      if (_tasks[i].autoMetric == 'water_4l' && newWater >= 4000) {
+        _tasks[i] = _tasks[i].copyWith(isCompleted: true);
+      }
+    }
+
     _recalculateStats();
     await _saveToLocalStorage(_selectedDate);
     notifyListeners();
@@ -327,45 +360,24 @@ class SupabaseService extends ChangeNotifier {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'date': _selectedDate,
-          'steps': _healthLog.steps,
-          'sleepMinutes': _healthLog.sleepMinutes,
-          'gymWorkoutDone': _healthLog.gymWorkoutDone,
-          'waterIntakeMl': _healthLog.waterIntakeMl,
+          'steps': newSteps,
+          'sleepMinutes': newSleep,
+          'gymWorkoutDone': newGym,
+          'waterIntakeMl': newWater,
           'userId': currentUserId,
         }),
       );
     } catch (_) {}
   }
 
-  void _autoCheckHealthTasks() {
-    for (int i = 0; i < _tasks.length; i++) {
-      final t = _tasks[i];
-      if (t.autoMetric == 'steps_10k' && _healthLog.steps >= 10000 && !t.isCompleted) {
-        _tasks[i] = t.copyWith(isCompleted: true);
-      } else if (t.autoMetric == 'sleep_7h' && _healthLog.sleepMinutes >= 420 && !t.isCompleted) {
-        _tasks[i] = t.copyWith(isCompleted: true);
-      } else if (t.autoMetric == 'gym_workout' && _healthLog.gymWorkoutDone && !t.isCompleted) {
-        _tasks[i] = t.copyWith(isCompleted: true);
-      } else if (t.autoMetric == 'water_4l' && _healthLog.waterIntakeMl >= 4000 && !t.isCompleted) {
-        _tasks[i] = t.copyWith(isCompleted: true);
-      }
-    }
+  Future<void> sendTestAlert(String topic) async {
+    await NotificationService().triggerInstantTestNotification(topic);
   }
 
   void _recalculateStats() {
     if (_tasks.isEmpty) return;
     final completed = _tasks.where((t) => t.isCompleted).length;
-    final rate = completed / _tasks.length;
+    final rate = (completed / _tasks.length) * 100.0;
     _heatmapRates[_selectedDate] = rate;
-  }
-
-  Future<void> sendTestAlert(String topic) async {
-    try {
-      await http.post(
-        Uri.parse("$_baseUrl/api/notifications/test"),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'topic': topic, 'userId': currentUserId}),
-      );
-    } catch (_) {}
   }
 }

@@ -30,7 +30,7 @@ class RoutineSectionsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFemale = context.watch<AuthService>().isFemaleTheme;
-    final themeColor = isFemale ? const Color(0xFFFBBF24) : SoloColors.neonCyan;
+
     // 4 Distinct Solo Leveling Quest Categories
     final morningTasks = <TaskModel>[];
     final daytimeTasks = <TaskModel>[];
@@ -62,24 +62,28 @@ class RoutineSectionsWidget extends StatelessWidget {
       else if ((hour != null && hour >= 9 && hour < 18) ||
           titleLower.contains('office') ||
           titleLower.contains('self-study') ||
+          titleLower.contains('work shift') ||
           titleLower.contains('revision') ||
-          t.category == 'study') {
+          t.category == 'fitness') {
         daytimeTasks.add(t);
       }
       // Phase 3: Evening Placement & Skill Dungeon (18:30 - 21:30)
       else if ((hour != null && hour >= 18 && hour < 21) ||
           titleLower.contains('dsa') ||
           titleLower.contains('placement') ||
-          titleLower.contains('japanese') ||
+          titleLower.contains('leetcode') ||
           titleLower.contains('project') ||
           titleLower.contains('fresh up') ||
-          t.category == 'career') {
+          titleLower.contains('japanese') ||
+          t.category == 'career' ||
+          t.category == 'study') {
         eveningTasks.add(t);
       }
-      // Phase 4: Night Protocol & Recovery (21:30 - 23:00)
+      // Phase 4: Night Protocol & Sleep (21:30 - 23:00+)
       else if ((hour != null && (hour >= 21 || hour < 5)) ||
           titleLower.contains('night') ||
-          titleLower.contains('sleep by')) {
+          titleLower.contains('sleep by') ||
+          titleLower.contains('duolingo')) {
         nightTasks.add(t);
       } else {
         unclassified.add(t);
@@ -112,7 +116,7 @@ class RoutineSectionsWidget extends StatelessWidget {
           title: "QUEST PART III : EVENING PLACEMENT & SKILL DUNGEON",
           timeframe: "18:30 — 21:30",
           icon: Icons.code,
-          color: isFemale ? const Color(0xFFD97706) : SoloColors.monarchGold,
+          color: isFemale ? const Color(0xFFD97706) : const Color(0xFFC084FC),
           tasks: eveningTasks,
           categoryKey: 'career',
         ),
@@ -122,7 +126,7 @@ class RoutineSectionsWidget extends StatelessWidget {
           title: "QUEST PART IV : NIGHT PROTOCOL & RECOVERY",
           timeframe: "21:30 — 23:00",
           icon: Icons.nightlight_round,
-          color: isFemale ? const Color(0xFFF59E0B) : SoloColors.manaViolet,
+          color: isFemale ? const Color(0xFFF59E0B) : const Color(0xFFA855F7),
           tasks: nightTasks,
           categoryKey: 'routine',
         ),
@@ -133,7 +137,7 @@ class RoutineSectionsWidget extends StatelessWidget {
             title: "ADDITIONAL HUNTER OBJECTIVES",
             timeframe: "ALL-DAY",
             icon: Icons.star_border,
-            color: isFemale ? const Color(0xFFFDE047) : SoloColors.flameOrange,
+            color: isFemale ? const Color(0xFFFDE047) : const Color(0xFF38BDF8),
             tasks: unclassified,
             categoryKey: 'custom',
           ),
@@ -154,6 +158,7 @@ class RoutineSectionsWidget extends StatelessWidget {
 
     return HolographicFrame(
       padding: const EdgeInsets.all(14),
+      borderColor: color,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

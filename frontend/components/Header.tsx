@@ -7,6 +7,7 @@ import {
   Clock,
   DownloadCloud,
   Crown,
+  Bell,
 } from "lucide-react";
 import { audio } from "../lib/audio";
 import { getWinterArcDaysRemaining } from "../lib/utils";
@@ -166,12 +167,27 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* Live IST Clock */}
-          <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-950 border text-xs font-mono font-bold ${
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 border text-xs font-mono font-bold ${
             isFemale ? "border-amber-500/40 text-amber-200" : "border-purple-500/30 text-purple-200"
           }`}>
             <Clock className={`w-3.5 h-3.5 ${isFemale ? "text-amber-400" : "text-purple-400"}`} />
             <span>{istTimeStr}</span>
           </div>
+
+          {/* Notifications / Alerts Hub */}
+          <button
+            onClick={() => {
+              audio.playClick();
+              onOpenNotificationModal();
+            }}
+            title="System Notifications & Alerts"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 border text-xs font-mono font-bold hover:scale-105 transition-all ${
+              isFemale ? "border-amber-500/40 text-amber-300 hover:border-amber-400" : "border-purple-500/40 text-purple-300 hover:border-purple-400"
+            }`}
+          >
+            <Bell className={`w-3.5 h-3.5 ${isFemale ? "text-amber-400 animate-pulse" : "text-purple-400 animate-pulse"}`} />
+            <span>Alerts</span>
+          </button>
 
           {/* Hunter Profile Avatar / Login (Desktop) */}
           <div className="hidden md:block">

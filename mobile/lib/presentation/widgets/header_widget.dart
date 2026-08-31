@@ -218,67 +218,108 @@ class _HeaderWidgetState extends State<HeaderWidget> {
           Divider(color: themeColor.withValues(alpha: 0.25), height: 1),
           const SizedBox(height: 12),
 
-          // Streamlined Top Controls: ONLY STREAK AND TIME
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // 1. Streak Flame Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF431407),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: SoloColors.flameOrange.withValues(alpha: 0.6)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: SoloColors.flameOrange.withValues(alpha: 0.25),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.local_fire_department, color: SoloColors.flameOrange, size: 15),
-                    const SizedBox(width: 5),
-                    Text(
-                      "${widget.activeStreak}D STREAK",
-                      style: SoloTypography.systemTag.copyWith(
-                        color: SoloColors.flameOrange,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w900,
+          // Top Controls: STREAK, LIVE CLOCK, & NOTIFICATIONS (ALERTS)
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // 1. Streak Flame Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF431407),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: SoloColors.flameOrange.withValues(alpha: 0.6)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: SoloColors.flameOrange.withValues(alpha: 0.25),
+                        blurRadius: 8,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.local_fire_department, color: SoloColors.flameOrange, size: 15),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${widget.activeStreak}D STREAK",
+                        style: SoloTypography.systemTag.copyWith(
+                          color: SoloColors.flameOrange,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
+                const SizedBox(width: 8),
 
-              // 2. Live IST Clock
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF090314),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: themeColor.withValues(alpha: 0.35)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.access_time_filled_rounded, color: themeColor, size: 14),
-                    const SizedBox(width: 6),
-                    Text(
-                      _timeStr,
-                      style: SoloTypography.systemTag.copyWith(
-                        fontSize: 10.5,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
+                // 2. Live IST Clock
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF090314),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: themeColor.withValues(alpha: 0.35)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.access_time_filled_rounded, color: themeColor, size: 14),
+                      const SizedBox(width: 5),
+                      Text(
+                        _timeStr,
+                        style: SoloTypography.systemTag.copyWith(
+                          fontSize: 10.5,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 8),
+
+                // 3. Notification / Alerts Hub (Beside Live Time/Clock)
+                GestureDetector(
+                  onTap: () {
+                    SoundService().playClick();
+                    widget.onOpenNotificationModal();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF090314),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: themeColor.withValues(alpha: 0.45)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: themeShadow.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.notifications_active_rounded, color: themeColor, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          "Alerts",
+                          style: SoloTypography.systemTag.copyWith(
+                            fontSize: 10.5,
+                            color: themeColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

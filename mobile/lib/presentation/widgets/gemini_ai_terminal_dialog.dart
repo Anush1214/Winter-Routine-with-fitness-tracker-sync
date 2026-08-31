@@ -8,22 +8,26 @@ import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
 import '../../models/task_model.dart';
 import '../../services/auth_service.dart';
+import '../../services/supabase_service.dart';
 
 class GeminiChatMessage {
   final String text;
   final bool isUser;
   final DateTime timestamp;
+  final bool isActionRegistered;
 
   GeminiChatMessage({
     required this.text,
     required this.isUser,
     required this.timestamp,
+    this.isActionRegistered = false,
   });
 
   Map<String, dynamic> toJson() => {
         'text': text,
         'isUser': isUser,
         'timestamp': timestamp.toIso8601String(),
+        'isActionRegistered': isActionRegistered,
       };
 
   factory GeminiChatMessage.fromJson(Map<String, dynamic> json) => GeminiChatMessage(
@@ -32,6 +36,7 @@ class GeminiChatMessage {
         timestamp: json['timestamp'] != null
             ? DateTime.tryParse(json['timestamp'] as String) ?? DateTime.now()
             : DateTime.now(),
+        isActionRegistered: json['isActionRegistered'] as bool? ?? false,
       );
 }
 
@@ -127,7 +132,7 @@ class _GeminiAiTerminalDialogState extends State<GeminiAiTerminalDialog> {
     setState(() {
       _messages = [
         GeminiChatMessage(
-          text: "[ SYSTEM GEMINI AI AWAKENED ]\n\nGreetings, Hunter. I have synchronized with your routine logs and active discipline telemetry.\n\nAsk me anything regarding workout optimization, DSA problem strategies, sleep recovery, or general queries. Memory is active.",
+          text: "[ SYSTEM GEMINI AI AWAKENED ]\n\nGreetings, Hunter. I have synchronized with your routine logs and active discipline telemetry.\n\nYou can ask me questions or command me to register new routines automatically (e.g. \"add a routine to do duolingo every day at night 10pm\"). Memory is active.",
           isUser: false,
           timestamp: DateTime.now(),
         ),
@@ -172,6 +177,49 @@ class _GeminiAiTerminalDialogState extends State<GeminiAiTerminalDialog> {
     });
   }
 
+  String? _extractTimeFromText(String text) {
+    final lower = text.toLowerCase();
+    // Match 10pm, 10:30pm, 10 pm, 22:00, 7am, 7:30 am
+    final match12 = RegExp(r'(\d{1,2})(?::(\d{2}))?\s*(am|pm)').firstMatch(lower);
+    if (match12 != null) {
+      int hour = int.parse(match12.group(1)!);
+      int minute = match12.group(2) != null ? int.parse(match12.group(2)!) : 0;
+      final period = match12.group(3)!;
+      if (period == 'pm' && hour < 12) hour += 12;
+      if (period == 'am' && hour == 12) hour = 0;
+      return "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}";
+    }
+
+    final match24 = RegExp(r'(\d{1,2}):(\d{2})').firstMatch(lower);
+    if (match24 != null) {
+      int hour = int.parse(match24.group(1)!);
+      int minute = int.parse(match24.group(2)!);
+      return "${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}";
+    }
+
+    if (lower.contains('night') || lower.contains('evening')) return "22:00";
+    if (lower.contains('morning')) return "07:00";
+    if (lower.contains('afternoon')) return "14:00";
+    return null;
+  }
+
+  String _inferCategory(String text) {
+    final lower = text.toLowerCase();
+    if (lower.contains('duolingo') || lower.contains('study') || lower.contains('read') || lower.contains('dsa') || lower.contains('code') || lower.contains('learn')) {
+      return 'study';
+    }
+    if (lower.contains('gym') || lower.contains('workout') || lower.contains('run') || lower.contains('walk') || lower.contains('exercise') || lower.contains('pushup')) {
+      return 'fitness';
+    }
+    if (lower.contains('water') || lower.contains('sleep') || lower.contains('meditat') || lower.contains('diet') || lower.contains('stretch')) {
+      return 'health';
+    }
+    if (lower.contains('project') || lower.contains('job') || lower.contains('work') || lower.contains('interview')) {
+      return 'career';
+    }
+    return 'routine';
+  }
+
   Future<void> _sendMessage(String query) async {
     if (query.trim().isEmpty || _isLoading) return;
     final userText = query.trim();
@@ -194,10 +242,14 @@ class _GeminiAiTerminalDialogState extends State<GeminiAiTerminalDialog> {
     final completedCount = widget.tasks.where((t) => t.isCompleted).length;
     final totalCount = widget.tasks.length;
 
-    // Build In-Context System Prompt with instructions for clean readable output
+    // Check if user is asking to add a routine
+    final lowerQuery = userText.toLowerCase();
+    final isAddIntent = lowerQuery.contains('add ') || lowerQuery.contains('create ') || lowerQuery.contains('schedule ') || lowerQuery.contains('set routine') || lowerQuery.contains('set quest');
+
+    // Build In-Context System Prompt with Instructions for Automatic Tool Use
     final systemInstruction = """
 You are the Google Gemini System AI and Awakening Mentor for Hunter Anush in the Solo Leveling Winter Arc Protocol.
-You have real-time awareness of the Hunter's routine telemetry and chat memory.
+You have real-time awareness of the Hunter's routine telemetry, chat memory, and the power to automatically register quests into the protocol.
 
 [ LIVE HUNTER APP TELEMETRY ]
 - Active Streak: ${widget.streak} Days
@@ -205,13 +257,21 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
 - Current Water Hydration: ${widget.waterMl}ml / 4500ml
 - Quests List: ${widget.tasks.map((t) => "${t.title} (${t.isCompleted ? 'CLEARED' : 'PENDING'})").join(', ')}
 
-[ OUTPUT FORMATTING DIRECTIVES - VERY IMPORTANT ]
+[ SPECIAL ABILITY : AUTOMATIC QUEST REGISTRATION ]
+If the hunter asks you to add, create, or schedule any quest, task, habit, or routine (e.g. "add a routine to do duolingo every day at night 10pm", "add reading at 8am"):
+1. You MUST generate an action command tag in your response:
+[ACTION:ADD_QUEST:{"title":"Duolingo Language Practice","category":"study","startTime":"22:00","scope":"all_future"}]
+Valid categories: "routine", "fitness", "career", "study", "health".
+Valid startTimes: 24-hr format "HH:mm" (e.g. "22:00", "07:00", "19:30").
+Valid scopes: "all_future" (for daily / everyday routine) or "today".
+2. Confirm with high-tech Solo Leveling System style that the quest has been bound to their daily protocol.
+
+[ OUTPUT FORMATTING DIRECTIVES ]
 1. DO NOT use raw markdown headers like '###' or '##'.
 2. DO NOT wrap section titles in double asterisks like '### **[ TITLE ]**'.
-3. Use clean brackets for sections, e.g.: '[ STATUS ANALYSIS ]' or '[ TACTICAL DIRECTIVE ]'.
+3. Use clean brackets for sections, e.g.: '[ STATUS ANALYSIS ]' or '[ QUEST REGISTERED ]'.
 4. For lists, use simple bullet symbols '•' or numbered points '1.', '2.'.
 5. Avoid excessive double asterisks '**'. Keep text clean, sleek, and formatted like a high-tech Solo Leveling System window interface.
-6. Answer ANY type of question (workouts, DSA coding, life habits, algorithms, science, motivation) with sharp intelligence and tactical precision.
 """;
 
     // Build multi-turn conversational history contents for Gemini API
@@ -255,12 +315,90 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
         aiReply = data["candidates"]?[0]?["content"]?["parts"]?[0]?["text"] ?? "";
       }
 
-      if (aiReply.isEmpty) {
-        aiReply = "[ SYSTEM DIRECTIVE ]\n\nI have analyzed your request, Hunter. Maintain high discipline, clear your remaining quests (${totalCount - completedCount} pending), and execute your algorithms with surgical precision.";
+      // Check if Gemini generated [ACTION:ADD_QUEST:{...}] or fallback to local pattern
+      bool actionExecuted = false;
+      String? addedTaskTitle;
+      String? addedTaskTime;
+
+      final actionRegex = RegExp(r'\[ACTION:ADD_QUEST:(\{.*?\})\]', dotAll: true);
+      final actionMatch = actionRegex.firstMatch(aiReply);
+
+      if (actionMatch != null && mounted) {
+        try {
+          final actionJson = jsonDecode(actionMatch.group(1)!);
+          final title = actionJson['title'] ?? 'Custom Objective';
+          final category = actionJson['category'] ?? _inferCategory(title);
+          final startTime = actionJson['startTime'] ?? _extractTimeFromText(userText);
+          final scope = actionJson['scope'] ?? 'all_future';
+
+          final newTask = TaskModel(
+            id: 'task_${DateTime.now().millisecondsSinceEpoch}',
+            title: title,
+            category: category,
+            targetDate: context.read<SupabaseService>().selectedDate,
+            startTime: startTime,
+            isCompleted: false,
+          );
+
+          await context.read<SupabaseService>().saveTask(newTask, scope);
+          actionExecuted = true;
+          addedTaskTitle = title;
+          addedTaskTime = startTime;
+          SoundService().playVictory();
+        } catch (e) {
+          debugPrint("Error parsing Gemini action JSON: $e");
+        }
+      } else if (isAddIntent && mounted) {
+        // Fallback local NLP auto-registration
+        try {
+          String cleanedTitle = userText
+              .replaceAll(RegExp(r'^(?:please\s+)?(?:add|create|schedule|set)\s+(?:a\s+)?(?:new\s+)?(?:routine|quest|task|habit)?\s*(?:to\s+)?', caseSensitive: false), '')
+              .replaceAll(RegExp(r'\s*(?:every\s*day|daily|at\s+\d{1,2}(?::\d{2})?\s*(?:am|pm)?|at\s+night|in\s+morning).*$', caseSensitive: false), '')
+              .trim();
+
+          if (cleanedTitle.isEmpty) cleanedTitle = "Custom Objective";
+          if (cleanedTitle.toLowerCase().startsWith("do ")) {
+            cleanedTitle = cleanedTitle.substring(3).trim();
+          }
+          cleanedTitle = "${cleanedTitle[0].toUpperCase()}${cleanedTitle.substring(1)}";
+
+          final extractedTime = _extractTimeFromText(userText) ?? "22:00";
+          final category = _inferCategory(cleanedTitle);
+
+          final newTask = TaskModel(
+            id: 'task_${DateTime.now().millisecondsSinceEpoch}',
+            title: cleanedTitle,
+            category: category,
+            targetDate: context.read<SupabaseService>().selectedDate,
+            startTime: extractedTime,
+            isCompleted: false,
+          );
+
+          await context.read<SupabaseService>().saveTask(newTask, 'all_future');
+          actionExecuted = true;
+          addedTaskTitle = cleanedTitle;
+          addedTaskTime = extractedTime;
+          SoundService().playVictory();
+        } catch (e) {
+          debugPrint("Fallback task addition error: $e");
+        }
       }
 
-      // Clean any accidental markdown hashes or awkward formatting
+      if (aiReply.isEmpty) {
+        if (actionExecuted) {
+          aiReply = "[ SYSTEM NOTIFICATION : QUEST REGISTERED ]\n\n• Objective: $addedTaskTitle\n• Schedule: Daily at $addedTaskTime\n• Status: Added to your Winter Arc Protocol.\n\nYour protocol has been synchronized with this daily habit.";
+        } else {
+          aiReply = "[ SYSTEM DIRECTIVE ]\n\nI have analyzed your request, Hunter. Maintain high discipline, clear your remaining quests (${totalCount - completedCount} pending), and execute your algorithms with surgical precision.";
+        }
+      }
+
+      // Remove the raw action tag from the visual display and clean text
+      aiReply = aiReply.replaceAll(actionRegex, '').trim();
       aiReply = _cleanSystemText(aiReply);
+
+      if (actionExecuted && !aiReply.contains("QUEST REGISTERED") && !aiReply.contains("PROTOCOL UPDATED")) {
+        aiReply = "[ SYSTEM NOTIFICATION : QUEST BOUND TO PROTOCOL ]\n• Added: $addedTaskTitle (${addedTaskTime ?? 'Daily'})\n\n$aiReply";
+      }
 
       SoundService().playVictory();
       if (mounted) {
@@ -269,6 +407,7 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
             text: aiReply,
             isUser: false,
             timestamp: DateTime.now(),
+            isActionRegistered: actionExecuted,
           ));
           _isLoading = false;
         });
@@ -277,11 +416,29 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
       }
     } catch (e) {
       if (mounted) {
+        // Even if network fails, check if we can register locally
+        if (isAddIntent) {
+          final extractedTime = _extractTimeFromText(userText) ?? "22:00";
+          final newTask = TaskModel(
+            id: 'task_${DateTime.now().millisecondsSinceEpoch}',
+            title: userText.replaceAll(RegExp(r'^(?:add|create|schedule)\s+(?:a\s+)?(?:routine|task|quest)?\s*(?:to\s+)?', caseSensitive: false), '').trim(),
+            category: 'routine',
+            targetDate: context.read<SupabaseService>().selectedDate,
+            startTime: extractedTime,
+            isCompleted: false,
+          );
+          context.read<SupabaseService>().saveTask(newTask, 'all_future');
+          SoundService().playVictory();
+        }
+
         setState(() {
           _messages.add(GeminiChatMessage(
-            text: "[ TACTICAL TELEMETRY ]\n\n• Today's Status: $completedCount/$totalCount quests cleared.\n• Discipline: Active ${widget.streak}-day streak.\n• Next Move: Focus on your pending quest and conquer the day.",
+            text: isAddIntent
+                ? "[ SYSTEM NOTIFICATION : QUEST REGISTERED ]\n\nYour routine has been registered and scheduled into your daily protocol.\n• Status: Active in all future days."
+                : "[ TACTICAL TELEMETRY ]\n\n• Today's Status: $completedCount/$totalCount quests cleared.\n• Discipline: Active ${widget.streak}-day streak.\n• Next Move: Focus on your pending quest and conquer the day.",
             isUser: false,
             timestamp: DateTime.now(),
+            isActionRegistered: isAddIntent,
           ));
           _isLoading = false;
         });
@@ -385,7 +542,7 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
                                 border: Border.all(color: geminiAccent),
                               ),
                               child: const Text(
-                                "MEMORY ON • GEMINI FLASH",
+                                "AUTO-ROUTINE ACTIVE • GEMINI",
                                 style: TextStyle(
                                   fontSize: 8,
                                   color: Color(0xFFC084FC),
@@ -425,9 +582,11 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    _buildPromptChip("⚡ Analyze Routine", "Analyze my today's routine and give me tactical advice on what to prioritize next."),
+                    _buildPromptChip("⚡ Add Duolingo at 10 PM", "Add a routine to do duolingo every day at night 10pm"),
                     const SizedBox(width: 6),
-                    _buildPromptChip("🎯 DSA Binary Tree Plan", "Give me a step-by-step strategy to master Binary Trees and LeetCode Mediums tonight."),
+                    _buildPromptChip("📖 Add Reading at 8 AM", "Add a daily quest to read 20 pages at 8:00 AM"),
+                    const SizedBox(width: 6),
+                    _buildPromptChip("🎯 Analyze Routine", "Analyze my today's routine and give me tactical advice on what to prioritize next."),
                     const SizedBox(width: 6),
                     _buildPromptChip("💧 Hydration Plan", "How can I optimize my recovery and water intake based on my 4500ml goal?"),
                     const SizedBox(width: 6),
@@ -479,7 +638,8 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
                                 color: msg.isUser ? userBubbleBg : const Color(0xFF130A24),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
-                                  color: msg.isUser ? userBubbleBorder : geminiAccent.withValues(alpha: 0.3),
+                                  color: msg.isUser ? userBubbleBorder : (msg.isActionRegistered ? const Color(0xFF10B981) : geminiAccent.withValues(alpha: 0.3)),
+                                  width: msg.isActionRegistered ? 1.6 : 1.0,
                                 ),
                               ),
                               child: _SystemFormattedMessageText(
@@ -510,7 +670,7 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      "Gemini is analyzing with chat memory...",
+                      "Gemini is executing directives...",
                       style: SoloTypography.systemTag.copyWith(fontSize: 9, color: const Color(0xFFC084FC)),
                     ),
                   ],
@@ -540,7 +700,7 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
                         style: const TextStyle(color: Colors.white, fontSize: 13),
                         onSubmitted: _sendMessage,
                         decoration: const InputDecoration(
-                          hintText: "Ask Gemini anything (DSA, workouts, algorithms)...",
+                          hintText: "Tell Gemini to add routines (e.g. \"add duolingo at 10pm\")...",
                           hintStyle: TextStyle(color: Colors.white38, fontSize: 12),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -633,22 +793,25 @@ class _SystemFormattedMessageText extends StatelessWidget {
         continue;
       }
 
-      // Check if line is a Section Header [ TITLE ] or [ TITLE ]
+      // Check if line is a Section Header [ TITLE ]
       if (line.startsWith('[') && line.endsWith(']')) {
+        final isSuccess = line.contains('REGISTERED') || line.contains('BOUND') || line.contains('CLEARED');
         widgets.add(
           Padding(
             padding: const EdgeInsets.only(top: 4, bottom: 3),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: const Color(0xFF2E1065).withValues(alpha: 0.7),
+                color: isSuccess ? const Color(0xFF064E3B).withValues(alpha: 0.8) : const Color(0xFF2E1065).withValues(alpha: 0.7),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFA855F7).withValues(alpha: 0.6)),
+                border: Border.all(
+                  color: isSuccess ? const Color(0xFF34D399) : const Color(0xFFA855F7).withValues(alpha: 0.6),
+                ),
               ),
               child: Text(
                 line,
                 style: GoogleFonts.jetBrainsMono(
-                  color: const Color(0xFFE9D5FF),
+                  color: isSuccess ? const Color(0xFF6EE7B7) : const Color(0xFFE9D5FF),
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.8,

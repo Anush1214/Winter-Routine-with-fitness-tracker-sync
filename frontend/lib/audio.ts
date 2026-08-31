@@ -1,7 +1,7 @@
 // frontend/lib/audio.ts - Custom User Sound Effects Engine
 
 class AudioManager {
-  private soundEnabled: boolean = true;
+  private soundEnabled: boolean = false;
   private clickAudio: HTMLAudioElement | null = null;
   private winAudio: HTMLAudioElement | null = null;
   private robotAudio: HTMLAudioElement | null = null;
@@ -11,6 +11,8 @@ class AudioManager {
       const stored = localStorage.getItem("winter_arc_sound");
       if (stored !== null) {
         this.soundEnabled = stored === "true";
+      } else {
+        this.soundEnabled = false;
       }
       try {
         this.clickAudio = new Audio("/sounds/click.wav");
