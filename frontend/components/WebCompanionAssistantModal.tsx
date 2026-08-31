@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Volume2, Sparkles, CheckCircle2, Shield, Heart } from "lucide-react";
+import { X, Volume2, Sparkles, CheckCircle2, Shield, Sword } from "lucide-react";
 import { audio } from "../lib/audio";
 
-export type CompanionPersona = "jinwoo" | "hinata";
+export type CompanionPersona = "jinwoo" | "chahaein";
 export type CompanionLang = "ja" | "en";
 
 interface WebCompanionAssistantModalProps {
@@ -34,7 +34,7 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
     if (persona === "jinwoo") {
       return lang === "ja" ? "Taito Ban (坂 泰斗)" : "Aleks Le";
     } else {
-      return lang === "ja" ? "Nana Mizuki (水樹 奈々)" : "Stephanie Sheh";
+      return lang === "ja" ? "Reina Ueda (上田 麗奈)" : "Michelle Rojas";
     }
   };
 
@@ -72,37 +72,37 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
         return "“All daily quests cleared. Recover your stamina, sleep early, and prepare to Arise tomorrow.”";
       }
     } else {
-      // HINATA HYUGA
+      // CHA HAE-IN (S-RANK DANCER / GOLD THEME)
       if (lang === "ja") {
         if (nextTask) {
           const t = nextTask.title.toLowerCase();
           if (t.includes("wake") || t.includes("gym")) {
-            return "「おはようございます！ 朝の鍛錬、一緒に頑張ろうね... 私も諦めないよ！」";
+            return "「私の剣は決して鈍りません。朝の鍛錬、一緒に全力を尽くしましょう。」";
           } else if (t.includes("dsa") || t.includes("japanese")) {
-            return "「DSAのお勉強、ずっと応援してるよ... あなたの努力、ちゃんと見てるからね！」";
+            return "「DSAと修練のダンジョンですね。集中力を極限まで研ぎ澄ませて、共に勝利を掴みましょう。」";
           } else if (t.includes("night") || t.includes("sleep")) {
-            return "「今日も一日本当にお疲れ様でした。ゆっくり休んで、明日も前を向こうね... おやすみなさい。」";
+            return "「今日も素晴らしい一日でした。体をしっかり休めて、明日に備えてくださいね。」";
           }
-          return `「次の目標は 『${nextTask.title}』 だね... 私、信じてるから、頑張ってね！」`;
+          return `「次の目標 『${nextTask.title}』 を確認しました。Sランクの誇りを持って挑みましょう！」`;
         }
-        if (hour >= 6 && hour < 12) return "「今日も新しい一日の始まりだよ！ お水もしっかり飲んで、一緒に歩んでいこうね。」";
-        if (hour >= 18 && hour < 22) return "「夕方の修行の時間だよ！ 自分の忍道を貫いて、一歩ずつ前に進もう！」";
-        return "「クエスト達成おめでとう！ あなたは本当にすごいよ... 今夜はゆっくり休んでね。」";
+        if (hour >= 6 && hour < 12) return "「おはようございます！ 今日も光り輝く一日を、一歩ずつ歩んでいきましょう。」";
+        if (hour >= 18 && hour < 22) return "「夕方の修練時間です。剣筋を乱さず、最後までやり遂げましょう！」";
+        return "「本日のデイリークエスト、見事な達成でした。ゆっくりお休みくださいね。」";
       } else {
         if (nextTask) {
           const t = nextTask.title.toLowerCase();
           if (t.includes("wake") || t.includes("gym")) {
-            return "“Good morning! Let's give our best in today's morning training. I won't back down, and I know you won't either!”";
+            return "“A true S-Rank Hunter never hesitates. Hydrate, initiate your morning routine, and conquer the workout dungeon.”";
           } else if (t.includes("dsa") || t.includes("japanese")) {
-            return "“Time for Placement & DSA practice! Keep your focus sharp—I believe in you with all my heart.”";
+            return "“Placement & DSA training is active. Keep your focus razor-sharp and execute every algorithm with precision.”";
           } else if (t.includes("night") || t.includes("sleep")) {
-            return "“You did amazing today! Please get plenty of rest so you can restore your chakra for tomorrow. Good night!”";
+            return "“You demonstrated true S-Rank discipline today. Rest your body, recover your strength, and prepare for tomorrow.”";
           }
-          return `“Your next mission is ‘${nextTask.title}’. Take a deep breath, stay confident, and conquer it!”`;
+          return `“Target objective locked: ‘${nextTask.title}’. Believe in your training and clear it with absolute mastery.”`;
         }
-        if (hour >= 6 && hour < 12) return "“A new day begins! Hydrate, stay strong, and let's make every moment count together.”";
-        if (hour >= 18 && hour < 22) return "“Evening training is here. Never give up on your dreams—that is our ninja way!”";
-        return "“All daily objectives completed! I'm so proud of how far you've come. Rest well tonight!”";
+        if (hour >= 6 && hour < 12) return "“Good morning! A new day awaits. Let's make every single minute count with golden determination.”";
+        if (hour >= 18 && hour < 22) return "“Evening training shift is underway. Stay centered, maintain your stance, and push forward!”";
+        return "“All daily protocol quests cleared with flying colors! Sleep well and restore your mana tonight.”";
       }
     }
   };
@@ -115,8 +115,8 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
       const cleanQuote = quote.replace(/[「」“”"']/g, "");
       const utterance = new SpeechSynthesisUtterance(cleanQuote);
       utterance.lang = lang === "ja" ? "ja-JP" : "en-US";
-      utterance.pitch = persona === "jinwoo" ? 0.85 : 1.25;
-      utterance.rate = persona === "jinwoo" ? 0.95 : 1.05;
+      utterance.pitch = persona === "jinwoo" ? 0.85 : 1.18;
+      utterance.rate = persona === "jinwoo" ? 0.95 : 1.02;
 
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
@@ -126,26 +126,24 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
     }
   };
 
-  const themeColor = persona === "jinwoo" ? "cyan" : "pink";
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg animate-fade-in">
       <div
-        className={`relative w-full max-w-lg bg-[#02050E] border-2 ${
+        className={`relative w-full max-w-lg bg-[#090414] border-2 ${
           persona === "jinwoo"
-            ? "border-cyan-400/80 shadow-[0_0_50px_rgba(0,240,255,0.35)]"
-            : "border-pink-400/80 shadow-[0_0_50px_rgba(255,119,169,0.35)]"
+            ? "border-purple-400/80 shadow-[0_0_50px_rgba(192,132,252,0.35)]"
+            : "border-amber-400/80 shadow-[0_0_50px_rgba(251,191,36,0.35)]"
         } rounded-3xl p-6 sm:p-8 overflow-hidden`}
       >
         {/* Glowing Background Radial */}
         <div
           className={`absolute -top-24 -right-24 w-48 h-48 ${
-            persona === "jinwoo" ? "bg-cyan-500/20" : "bg-pink-500/20"
+            persona === "jinwoo" ? "bg-purple-500/20" : "bg-amber-500/20"
           } rounded-full blur-3xl pointer-events-none`}
         />
         <div
           className={`absolute -bottom-24 -left-24 w-48 h-48 ${
-            persona === "jinwoo" ? "bg-violet-600/20" : "bg-purple-600/20"
+            persona === "jinwoo" ? "bg-violet-600/20" : "bg-yellow-600/20"
           } rounded-full blur-3xl pointer-events-none`}
         />
 
@@ -167,36 +165,36 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
           <div
             className={`w-14 h-14 rounded-2xl ${
               persona === "jinwoo"
-                ? "bg-slate-950 border-2 border-cyan-400 shadow-[0_0_20px_rgba(0,240,255,0.5)]"
-                : "bg-slate-950 border-2 border-pink-400 shadow-[0_0_20px_rgba(255,119,169,0.5)]"
+                ? "bg-slate-950 border-2 border-purple-400 shadow-[0_0_20px_rgba(192,132,252,0.5)]"
+                : "bg-slate-950 border-2 border-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.5)]"
             } flex items-center justify-center`}
           >
             {persona === "jinwoo" ? (
-              <Shield className="w-7 h-7 text-cyan-400" />
+              <Shield className="w-7 h-7 text-purple-400" />
             ) : (
-              <Heart className="w-7 h-7 text-pink-400" />
+              <Sword className="w-7 h-7 text-amber-400" />
             )}
           </div>
           <div>
             <span
               className={`inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-widest ${
                 persona === "jinwoo"
-                  ? "bg-cyan-950/80 text-cyan-400 border border-cyan-500/30"
-                  : "bg-pink-950/80 text-pink-400 border border-pink-500/30"
+                  ? "bg-purple-950/80 text-purple-300 border border-purple-500/30"
+                  : "bg-amber-950/80 text-amber-300 border border-amber-500/30"
               }`}
             >
-              {persona === "jinwoo" ? "SHADOW MONARCH COMPANION" : "GENTLE STEP NINJA COMPANION"}
+              {persona === "jinwoo" ? "SHADOW MONARCH COMPANION" : "S-RANK THE DANCER (GOLD THEME)"}
             </span>
             <h2 className="text-xl font-black font-['Outfit'] uppercase tracking-wider text-white mt-0.5">
-              {persona === "jinwoo" ? "SUNG JIN-WOO" : "HINATA HYUGA"}
+              {persona === "jinwoo" ? "SUNG JIN-WOO" : "CHA HAE-IN (차해イン)"}
             </h2>
             <p className="text-[11px] font-mono text-slate-400">
-              VA: <span className={persona === "jinwoo" ? "text-cyan-300 font-bold" : "text-pink-300 font-bold"}>{getVoiceActorName()}</span>
+              VA: <span className={persona === "jinwoo" ? "text-purple-300 font-bold" : "text-amber-300 font-bold"}>{getVoiceActorName()}</span>
             </p>
           </div>
         </div>
 
-        {/* Persona Switcher */}
+        {/* Persona Switcher: Male Purple vs Female Gold */}
         <div className="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-xl border border-slate-800 mb-3">
           <button
             type="button"
@@ -206,7 +204,7 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
             }}
             className={`flex items-center justify-center gap-1.5 py-2 rounded-lg font-mono text-xs font-bold transition-all ${
               persona === "jinwoo"
-                ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400"
+                ? "bg-purple-500/20 text-purple-300 border border-purple-400"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -218,16 +216,16 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
             type="button"
             onClick={() => {
               audio.playClick();
-              setPersona("hinata");
+              setPersona("chahaein");
             }}
             className={`flex items-center justify-center gap-1.5 py-2 rounded-lg font-mono text-xs font-bold transition-all ${
-              persona === "hinata"
-                ? "bg-pink-500/20 text-pink-300 border border-pink-400"
+              persona === "chahaein"
+                ? "bg-amber-500/25 text-amber-300 border border-amber-400"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            <span>🌸</span>
-            <span>HINATA (FEMALE)</span>
+            <span>⚔️</span>
+            <span>CHA HAE-IN (GOLD)</span>
           </button>
         </div>
 
@@ -242,12 +240,12 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
             className={`py-1.5 text-center font-mono text-[11px] font-bold rounded-lg transition-all ${
               lang === "en"
                 ? persona === "jinwoo"
-                  ? "bg-cyan-950 text-cyan-300 border border-cyan-500/40"
-                  : "bg-pink-950 text-pink-300 border border-pink-500/40"
+                  ? "bg-purple-950 text-purple-300 border border-purple-500/40"
+                  : "bg-amber-950 text-amber-300 border border-amber-500/40"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            🇺🇸 {persona === "jinwoo" ? "ALEKS LE (EN)" : "STEPHANIE SHEH (EN)"}
+            🇺🇸 {persona === "jinwoo" ? "ALEKS LE (EN)" : "MICHELLE ROJAS (EN)"}
           </button>
 
           <button
@@ -260,24 +258,26 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
               lang === "ja"
                 ? persona === "jinwoo"
                   ? "bg-violet-950 text-violet-300 border border-violet-500/40"
-                  : "bg-purple-950 text-purple-300 border border-purple-500/40"
+                  : "bg-yellow-950 text-yellow-300 border border-yellow-500/40"
                 : "text-slate-400 hover:text-slate-200"
             }`}
           >
-            🇯🇵 {persona === "jinwoo" ? "TAITO BAN (JP)" : "NANA MIZUKI (JP)"}
+            🇯🇵 {persona === "jinwoo" ? "TAITO BAN (JP)" : "REINA UEDA (JP)"}
           </button>
         </div>
 
         {/* Holographic Quote Dialogue Box */}
         <div
-          className={`p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-950 to-[#02050E] border ${
-            persona === "jinwoo" ? "border-cyan-500/40" : "border-pink-500/40"
-          } mb-5 relative`}
+          className={`p-4 sm:p-5 rounded-2xl bg-gradient-to-br ${
+            persona === "jinwoo"
+              ? "from-purple-950/40 via-slate-950 to-[#090414] border-purple-500/40"
+              : "from-amber-950/40 via-slate-950 to-[#140C03] border-amber-500/50"
+          } border mb-5 relative`}
         >
           <div className="flex items-center justify-between mb-2">
             <span
               className={`text-[10px] font-mono font-bold ${
-                persona === "jinwoo" ? "text-cyan-400" : "text-pink-400"
+                persona === "jinwoo" ? "text-purple-300" : "text-amber-300"
               }`}
             >
               [ {getVoiceActorName()} // VOICE CUE ]
@@ -286,8 +286,8 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
               onClick={handlePlayVoice}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-950 border ${
                 persona === "jinwoo"
-                  ? "border-cyan-500/40 text-cyan-300 hover:border-cyan-400"
-                  : "border-pink-500/40 text-pink-300 hover:border-pink-400"
+                  ? "border-purple-500/40 text-purple-300 hover:border-purple-400"
+                  : "border-amber-500/40 text-amber-300 hover:border-amber-400"
               } text-[10px] font-mono font-bold transition-all`}
             >
               <Volume2 className={`w-3.5 h-3.5 ${isSpeaking ? "animate-pulse" : ""}`} />
@@ -302,7 +302,7 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
           {nextTask && (
             <div className="mt-3 pt-3 border-t border-slate-800 flex items-center gap-2">
               <CheckCircle2
-                className={`w-4 h-4 ${persona === "jinwoo" ? "text-cyan-400" : "text-pink-400"}`}
+                className={`w-4 h-4 ${persona === "jinwoo" ? "text-purple-400" : "text-amber-400"}`}
               />
               <span className="text-xs font-mono text-slate-300 truncate">
                 TARGET: <span className="text-white font-bold">{nextTask.title}</span>
@@ -330,12 +330,12 @@ export const WebCompanionAssistantModal: React.FC<WebCompanionAssistantModalProp
               }}
               className={`flex-[2] py-3 rounded-xl ${
                 persona === "jinwoo"
-                  ? "bg-cyan-400 hover:bg-cyan-300 text-black shadow-[0_0_20px_rgba(0,240,255,0.4)]"
-                  : "bg-pink-400 hover:bg-pink-300 text-black shadow-[0_0_20px_rgba(255,119,169,0.4)]"
+                  ? "bg-purple-400 hover:bg-purple-300 text-black shadow-[0_0_20px_rgba(192,132,252,0.4)]"
+                  : "bg-amber-400 hover:bg-amber-300 text-black shadow-[0_0_20px_rgba(251,191,36,0.4)]"
               } font-mono text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2`}
             >
               <Sparkles className="w-4 h-4" />
-              <span>{persona === "jinwoo" ? "EXECUTE QUEST" : "CONQUER QUEST"}</span>
+              <span>{persona === "jinwoo" ? "EXECUTE QUEST" : "CONQUER S-RANK QUEST"}</span>
             </button>
           )}
         </div>
