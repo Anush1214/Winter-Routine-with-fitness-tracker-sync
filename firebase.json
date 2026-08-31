@@ -5,6 +5,8 @@
   "auth": {
     "authorizedDomains": [
       "localhost",
+      "winter-tracker-xi.vercel.app",
+      "vercel.app",
       "winter-arc-protocol.firebaseapp.com",
       "winter-arc-protocol.web.app"
     ],
