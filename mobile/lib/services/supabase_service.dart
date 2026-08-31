@@ -54,8 +54,11 @@ class SupabaseService extends ChangeNotifier {
       final res = await http.get(Uri.parse("$_baseUrl/api/tasks?date=$date$userIdParam"));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        if (data['tasks'] != null) {
+        if (data['tasks'] != null && (data['tasks'] as List).isNotEmpty) {
           _tasks = (data['tasks'] as List).map((t) => TaskModel.fromJson(t)).toList();
+        } else {
+          _useLocalDefaultTasks(date);
+          _seedTasksToServer(date);
         }
       } else {
         _useLocalDefaultTasks(date);
@@ -84,26 +87,48 @@ class SupabaseService extends ChangeNotifier {
       // Local graceful fallback
       _useLocalDefaultTasks(date);
     } finally {
+      if (_tasks.isEmpty) {
+        _useLocalDefaultTasks(date);
+      }
       _isLoading = false;
       notifyListeners();
     }
   }
 
   void _useLocalDefaultTasks(String date) {
-    if (_tasks.isEmpty) {
-      _tasks = [
-        TaskModel(id: '1', title: 'Wake Up & Morning Protocol', category: 'routine', targetDate: date, startTime: '07:00', isCompleted: false, userId: currentUserId),
-        TaskModel(id: '2', title: 'Hydration Goal: 4-5L Water', category: 'health', targetDate: date, autoMetric: 'water_4l', isCompleted: false, userId: currentUserId),
-        TaskModel(id: '3', title: 'Sleep Recovery: 7-8 Hours', category: 'health', targetDate: date, autoMetric: 'sleep_7h', isCompleted: false, userId: currentUserId),
-        TaskModel(id: '4', title: 'Daily Movement: 10,000 Steps', category: 'fitness', targetDate: date, autoMetric: 'steps_10k', isCompleted: false, userId: currentUserId),
-        TaskModel(id: '5', title: 'Office Work Shift', category: 'routine', targetDate: date, startTime: '09:00', isCompleted: false, userId: currentUserId),
-        TaskModel(id: '6', title: 'Self-Study & Revision (If Time Permits)', category: 'study', targetDate: date, isCompleted: false, userId: currentUserId),
-        TaskModel(id: '7', title: 'Evening Fresh Up & Transition', category: 'routine', targetDate: date, startTime: '18:30', isCompleted: false, userId: currentUserId),
-        TaskModel(id: '8', title: 'DSA & Placement Preparation Shift', category: 'career', targetDate: date, startTime: '19:00', isCompleted: false, userId: currentUserId),
-        TaskModel(id: '9', title: 'DSA Practice & Japanese Language', category: 'career', targetDate: date, isCompleted: false, userId: currentUserId),
-        TaskModel(id: '10', title: 'Major Project Development', category: 'career', targetDate: date, isCompleted: false, userId: currentUserId),
-        TaskModel(id: '11', title: 'Night Protocol & Sleep by 11:00 PM', category: 'routine', targetDate: date, startTime: '23:00', isCompleted: false, userId: currentUserId),
-      ];
+    _tasks = [
+      TaskModel(id: '${date}_gym', title: 'Gym Workout Session (06:00 - 07:00)', category: 'fitness', targetDate: date, startTime: '06:00', autoMetric: 'gym_workout', isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_1', title: 'Wake Up & Morning Protocol', category: 'routine', targetDate: date, startTime: '07:00', isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_2', title: 'Hydration Goal: 4-5L Water', category: 'health', targetDate: date, autoMetric: 'water_4l', isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_3', title: 'Sleep Recovery: 7-8 Hours', category: 'health', targetDate: date, autoMetric: 'sleep_7h', isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_4', title: 'Daily Movement: 10,000 Steps', category: 'fitness', targetDate: date, autoMetric: 'steps_10k', isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_5', title: 'Office Work Shift', category: 'routine', targetDate: date, startTime: '09:00', isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_6', title: 'Self-Study & Revision (If Time Permits)', category: 'study', targetDate: date, isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_7', title: 'Evening Fresh Up & Transition', category: 'routine', targetDate: date, startTime: '18:30', isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_8', title: 'DSA & Placement Preparation Shift', category: 'career', targetDate: date, startTime: '19:00', isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_9', title: 'DSA Practice & Japanese Language', category: 'career', targetDate: date, isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_10', title: 'Major Project Development', category: 'career', targetDate: date, isCompleted: false, userId: currentUserId),
+      TaskModel(id: '${date}_11', title: 'Night Protocol & Sleep by 11:00 PM', category: 'routine', targetDate: date, startTime: '23:00', isCompleted: false, userId: currentUserId),
+    ];
+  }
+
+  Future<void> _seedTasksToServer(String date) async {
+    for (final task in _tasks) {
+      try {
+        await http.post(
+          Uri.parse("$_baseUrl/api/tasks"),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'title': task.title,
+            'category': task.category,
+            'targetDate': task.targetDate,
+            'startTime': task.startTime,
+            'autoMetric': task.autoMetric,
+            'applyScope': 'today',
+            'userId': currentUserId ?? 'default_hunter',
+          }),
+        );
+      } catch (_) {}
     }
   }
 

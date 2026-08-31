@@ -18,8 +18,44 @@ export async function getTasksAndHealth(dateParam: string, userId: string = "def
       }),
     ]);
 
+    if (tasks.length === 0) {
+      const year = new Date().getFullYear();
+      const gymStartDate = new Date(Date.UTC(year, 8, 5));
+      const targetDateObj = new Date(`${dateParam}T00:00:00Z`);
+
+      const defaultTasksData = [
+        { title: "Gym Workout Session (06:00 - 07:00)", category: "fitness", startTime: "06:00", autoMetric: "gym_workout" },
+        { title: "Wake Up & Morning Protocol", category: "routine", startTime: "07:00", autoMetric: null },
+        { title: "Hydration Goal: 4-5L Water", category: "health", startTime: null, autoMetric: "water_4l" },
+        { title: "Sleep Recovery: 7-8 Hours", category: "health", startTime: null, autoMetric: "sleep_7h" },
+        { title: "Daily Movement: 10,000 Steps", category: "fitness", startTime: null, autoMetric: "steps_10k" },
+        { title: "Office Work Shift", category: "routine", startTime: "09:00", autoMetric: null },
+        { title: "Self-Study & Revision (If Time Permits)", category: "study", startTime: null, autoMetric: null },
+        { title: "Evening Fresh Up & Transition", category: "routine", startTime: "18:30", autoMetric: null },
+        { title: "DSA & Placement Preparation Shift", category: "career", startTime: "19:00", autoMetric: null },
+        { title: "DSA Practice & Japanese Language", category: "career", startTime: null, autoMetric: null },
+        { title: "Major Project Development", category: "career", startTime: null, autoMetric: null },
+        { title: "Night Protocol & Sleep by 11:00 PM", category: "routine", startTime: "23:00", autoMetric: null },
+      ];
+
+      try {
+        await prisma.task.createMany({
+          data: defaultTasksData.map((t) => ({
+            ...t,
+            targetDate: targetDateObj,
+            userId,
+          })),
+        });
+
+        tasks = await prisma.task.findMany({
+          where: { targetDate: targetDateObj, userId },
+          orderBy: [{ startTime: "asc" }, { createdAt: "asc" }],
+        });
+      } catch (_) {}
+    }
+
     return {
-      tasks,
+      tasks: tasks.length > 0 ? tasks : localStore.getTasksByDate(dateParam),
       healthLog: healthLog || {
         logDate: dateParam,
         userId,
