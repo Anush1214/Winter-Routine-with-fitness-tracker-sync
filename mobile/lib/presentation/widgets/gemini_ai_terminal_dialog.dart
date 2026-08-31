@@ -242,9 +242,15 @@ class _GeminiAiTerminalDialogState extends State<GeminiAiTerminalDialog> {
     final completedCount = widget.tasks.where((t) => t.isCompleted).length;
     final totalCount = widget.tasks.length;
 
-    // Check if user is asking to add a routine
+    // Check if user is asking to add any routine, quest, task, or habit
     final lowerQuery = userText.toLowerCase();
-    final isAddIntent = lowerQuery.contains('add ') || lowerQuery.contains('create ') || lowerQuery.contains('schedule ') || lowerQuery.contains('set routine') || lowerQuery.contains('set quest');
+    final isAddIntent = lowerQuery.contains('add ') ||
+        lowerQuery.contains('create ') ||
+        lowerQuery.contains('schedule ') ||
+        lowerQuery.contains('set ') ||
+        lowerQuery.contains('remind me to ') ||
+        lowerQuery.contains('put ') ||
+        lowerQuery.contains('register ');
 
     // Build In-Context System Prompt with Instructions for Automatic Tool Use
     final systemInstruction = """
@@ -257,13 +263,15 @@ You have real-time awareness of the Hunter's routine telemetry, chat memory, and
 - Current Water Hydration: ${widget.waterMl}ml / 4500ml
 - Quests List: ${widget.tasks.map((t) => "${t.title} (${t.isCompleted ? 'CLEARED' : 'PENDING'})").join(', ')}
 
-[ SPECIAL ABILITY : AUTOMATIC QUEST REGISTRATION ]
-If the hunter asks you to add, create, or schedule any quest, task, habit, or routine (e.g. "add a routine to do duolingo every day at night 10pm", "add reading at 8am"):
+[ SPECIAL ABILITY : AUTOMATIC QUEST & ROUTINE REGISTRATION ]
+You can automatically add and schedule ANY routine, habit, task, or quest the hunter mentions (e.g. reading, meditation, coding, gym, jogging, duolingo, journaling, guitar, stretching, studying, revision, sleep prep, etc.).
+Whenever the hunter asks to add, create, or schedule ANY activity:
 1. You MUST generate an action command tag in your response:
-[ACTION:ADD_QUEST:{"title":"Duolingo Language Practice","category":"study","startTime":"22:00","scope":"all_future"}]
-Valid categories: "routine", "fitness", "career", "study", "health".
-Valid startTimes: 24-hr format "HH:mm" (e.g. "22:00", "07:00", "19:30").
-Valid scopes: "all_future" (for daily / everyday routine) or "today".
+[ACTION:ADD_QUEST:{"title":"Descriptive Objective Title","category":"routine|fitness|career|study|health","startTime":"HH:mm","scope":"all_future"}]
+- "title": Clean, professional title of the quest.
+- "category": Choose the best matching category from: "routine", "fitness", "career", "study", "health".
+- "startTime": 24-hr format "HH:mm" (e.g. "22:00", "07:00", "19:30", "06:30"). If not mentioned, select a logical hour based on the task.
+- "scope": "all_future" (for daily / everyday routine) or "today".
 2. Confirm with high-tech Solo Leveling System style that the quest has been bound to their daily protocol.
 
 [ OUTPUT FORMATTING DIRECTIVES ]
