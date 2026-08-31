@@ -155,6 +155,32 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
 
+        {/* Solo Leveling System Awakening Overlay */}
+        {loadingProvider !== null && (
+          <div className="absolute inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#02050E]/95 backdrop-blur-md animate-fade-in text-center">
+            <div className="relative w-24 h-24 mb-5 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full border-2 border-cyan-400/60 border-t-cyan-300 animate-spin" />
+              <div className="absolute -inset-2 rounded-full border border-violet-500/40 animate-ping" />
+              <div className="w-16 h-16 rounded-2xl overflow-hidden border border-cyan-400 shadow-[0_0_30px_rgba(0,240,255,0.6)]">
+                <img src="/app_logo.jpg" alt="Solo Leveling" className="w-full h-full object-cover" />
+              </div>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-400 text-[10px] font-mono font-black text-cyan-400 mb-2">
+              <Zap className="w-3 h-3 text-cyan-400 animate-bounce" />
+              <span>SYSTEM NOTIFICATION // AWAKENING</span>
+            </div>
+            <h3 className="text-base font-black font-['Outfit'] text-white uppercase tracking-wider mb-2">
+              {isSignUp ? "ESTABLISHING SHADOW SOUL LINK..." : "SYNCHRONIZING WITH SYSTEM DUNGEON..."}
+            </h3>
+            <p className="text-[11px] font-mono text-cyan-300/80 tracking-widest uppercase mb-4">
+              COMMAND: 「 A R I S E 」
+            </p>
+            <div className="w-48 h-1.5 bg-slate-900 rounded-full overflow-hidden border border-cyan-500/40">
+              <div className="w-full h-full bg-gradient-to-r from-cyan-500 via-blue-400 to-violet-500 animate-pulse" />
+            </div>
+          </div>
+        )}
+
         {/* Close Button (only available if user is already authenticated) */}
         {canClose && onClose && (
           <button

@@ -156,25 +156,34 @@ class RoutineSectionsWidget extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Icon(icon, color: color, size: 16),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: SoloTypography.systemTag.copyWith(color: color, fontSize: 10),
+              Expanded(
+                child: Row(
+                  children: [
+                    Icon(icon, color: color, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: SoloTypography.systemTag.copyWith(color: color, fontSize: 10),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            timeframe,
+                            style: SoloTypography.bodyMuted.copyWith(fontSize: 9),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        timeframe,
-                        style: SoloTypography.bodyMuted.copyWith(fontSize: 9),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Row(
                 children: [
                   Container(

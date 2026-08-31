@@ -135,13 +135,15 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: SoloColors.obsidianVoid,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
                 // Top Glowing Crown Emblem
                 Container(
                   width: 64,
@@ -438,8 +440,13 @@ class _AuthScreenState extends State<AuthScreen> {
           ),
         ),
       ),
-    );
-  }
+      if (_anyLoading)
+        _SoloAwakeningOverlay(
+          isSignUp: _isSignUp,
+        ),
+    ],
+  );
+}
 
   Widget _buildTextField({
     required TextEditingController controller,
@@ -533,3 +540,192 @@ class _SocialButton extends StatelessWidget {
     );
   }
 }
+
+// Solo Leveling System Awakening Loading Screen Overlay
+class _SoloAwakeningOverlay extends StatefulWidget {
+  final bool isSignUp;
+
+  const _SoloAwakeningOverlay({
+    required this.isSignUp,
+  });
+
+  @override
+  State<_SoloAwakeningOverlay> createState() => _SoloAwakeningOverlayState();
+}
+
+class _SoloAwakeningOverlayState extends State<_SoloAwakeningOverlay>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+  late Animation<double> _rotateAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1600),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 0.85, end: 1.15).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    _rotateAnimation = Tween<double>(begin: 0.0, end: 6.28318).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.linear),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: Container(
+        color: SoloColors.obsidianVoid.withValues(alpha: 0.92),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Glowing Shadow Monarch Rune Crest
+              AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  return Transform.scale(
+                    scale: _pulseAnimation.value,
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: const RadialGradient(
+                          colors: [
+                            Color(0x9900F0FF),
+                            Color(0x448B5CF6),
+                            Colors.transparent,
+                          ],
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: SoloColors.neonCyan.withValues(alpha: 0.5),
+                            blurRadius: 30,
+                            spreadRadius: 6,
+                          ),
+                          BoxShadow(
+                            color: SoloColors.manaViolet.withValues(alpha: 0.4),
+                            blurRadius: 45,
+                            spreadRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Rotating outer rune ring
+                          Transform.rotate(
+                            angle: _rotateAnimation.value,
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: SoloColors.neonCyan.withValues(alpha: 0.6),
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Center App Logo
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(30),
+                            child: Image.asset(
+                              'assets/app_logo.jpg',
+                              width: 58,
+                              height: 58,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => const Icon(
+                                Icons.shield_outlined,
+                                color: SoloColors.neonCyan,
+                                size: 36,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 28),
+
+              // System Awakening Holographic Dialog Box
+              HolographicFrame(
+                padding: const EdgeInsets.all(18),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.flash_on, color: SoloColors.neonCyan, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          widget.isSignUp
+                              ? "[ SYSTEM : NEW AWAKENING ENGAGED ]"
+                              : "[ SYSTEM : HUNTER IDENTIFICATION ]",
+                          style: SoloTypography.systemTag.copyWith(
+                            fontSize: 10,
+                            letterSpacing: 1.5,
+                            color: SoloColors.neonCyan,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.isSignUp
+                          ? "ESTABLISHING SHADOW MONARCH SOUL LINK..."
+                          : "SYNCHRONIZING WITH SYSTEM DUNGEON PROTOCOL...",
+                      textAlign: TextAlign.center,
+                      style: SoloTypography.systemTitle.copyWith(fontSize: 13),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Glowing Progress Bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: const SizedBox(
+                        height: 4,
+                        width: 200,
+                        child: LinearProgressIndicator(
+                          backgroundColor: Color(0xFF0F172A),
+                          valueColor: AlwaysStoppedAnimation<Color>(SoloColors.neonCyan),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    Text(
+                      "COMMAND: 「 A R I S E 」",
+                      style: SoloTypography.systemTag.copyWith(
+                        fontSize: 9,
+                        letterSpacing: 3.0,
+                        color: SoloColors.electricSky,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
