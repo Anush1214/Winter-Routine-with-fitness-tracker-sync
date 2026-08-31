@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { X, Send, Sparkles, Bot, User, RefreshCw } from "lucide-react";
+import { X, Send, Sparkles, Trash2, RefreshCw } from "lucide-react";
 import { audio } from "../lib/audio";
 
 interface WebGeminiChatModalProps {
@@ -15,8 +15,10 @@ interface WebGeminiChatModalProps {
 interface ChatMessage {
   text: string;
   isUser: boolean;
-  timestamp: Date;
+  timestamp: string;
 }
+
+const STORAGE_KEY = "solo_gemini_web_chat_v2";
 
 export const WebGeminiChatModal: React.FC<WebGeminiChatModalProps> = ({
   isOpen,
@@ -25,25 +27,57 @@ export const WebGeminiChatModal: React.FC<WebGeminiChatModalProps> = ({
   streak = 7,
   waterMl = 3200,
 }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      text: "**[ SYSTEM GEMINI AI AWAKENED ]**\n\nGreetings, Hunter. I have ingested your real-time routine telemetry and active discipline metrics.\n\nAsk me anything regarding workout dungeon optimization, DSA & placement strategy, recovery metrics, or general knowledge.",
-      isUser: false,
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setMessages(parsed);
+          return;
+        }
+      }
+    } catch {}
+
+    setMessages([
+      {
+        text: "[ SYSTEM GEMINI AI AWAKENED ]\n\nGreetings, Hunter. I have synchronized with your routine logs and active discipline telemetry.\n\nAsk me anything regarding workout optimization, DSA problem strategies, sleep recovery, or general queries. Memory is active.",
+        isUser: false,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+      } catch {}
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages]);
 
   if (!isOpen) return null;
 
   const completedCount = tasks.filter((t) => t.isCompleted).length;
   const totalCount = tasks.length;
+
+  const handleClearHistory = () => {
+    audio.playClick();
+    localStorage.removeItem(STORAGE_KEY);
+    setMessages([
+      {
+        text: "[ SYSTEM MEMORY RESET ]\n\nChat history cleared. Active telemetry re-synchronized. Ready for new directives.",
+        isUser: false,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+  };
 
   const handleSendMessage = async (queryText?: string) => {
     const textToSend = queryText || input;
@@ -53,10 +87,11 @@ export const WebGeminiChatModal: React.FC<WebGeminiChatModalProps> = ({
     const userMsg: ChatMessage = {
       text: textToSend.trim(),
       isUser: true,
-      timestamp: new Date(),
+      timestamp: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInput("");
     setIsLoading(true);
 
@@ -66,6 +101,7 @@ export const WebGeminiChatModal: React.FC<WebGeminiChatModalProps> = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: textToSend.trim(),
+          history: updatedMessages.slice(-8), // Send recent turns for continuous memory
           telemetry: {
             userName: "Anush",
             rank: "S-Rank",
@@ -88,16 +124,16 @@ export const WebGeminiChatModal: React.FC<WebGeminiChatModalProps> = ({
         {
           text: data.reply || "Tactical telemetry updated. Arise Hunter!",
           isUser: false,
-          timestamp: new Date(),
+          timestamp: new Date().toISOString(),
         },
       ]);
     } catch (e) {
       setMessages((prev) => [
         ...prev,
         {
-          text: `👑 **[ TACTICAL ANALYSIS ]**\n\n- **Today's Status**: ${completedCount}/${totalCount} quests cleared.\n- **Discipline**: Keep your ${streak}-day streak alive.\n- **Next Move**: Focus on your next pending quest and conquer the day!`,
+          text: `[ TACTICAL TELEMETRY ]\n\n• Today's Status: ${completedCount}/${totalCount} quests cleared.\n• Discipline: Active ${streak}-day streak.\n• Next Move: Focus on your pending quest and conquer the day.`,
           isUser: false,
-          timestamp: new Date(),
+          timestamp: new Date().toISOString(),
         },
       ]);
     } finally {
@@ -111,13 +147,22 @@ export const WebGeminiChatModal: React.FC<WebGeminiChatModalProps> = ({
         {/* Glowing Background Radial */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white transition-all"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Top Control Buttons */}
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          <button
+            onClick={handleClearHistory}
+            title="Reset Chat Memory"
+            className="p-2 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-red-400 transition-all"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-400 hover:text-white transition-all"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
         {/* Header with Authentic Gemini Sparkle Logo */}
         <div className="flex items-center gap-3.5 mb-4">
@@ -126,7 +171,7 @@ export const WebGeminiChatModal: React.FC<WebGeminiChatModalProps> = ({
           </div>
           <div>
             <span className="inline-block px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-widest bg-purple-950/80 text-purple-300 border border-purple-500/30">
-              POWERED BY GOOGLE GEMINI
+              MEMORY ON • GOOGLE GEMINI
             </span>
             <h2 className="text-lg font-black font-['Outfit'] uppercase tracking-wider text-white mt-0.5">
               GEMINI AI INTELLIGENCE HUB
@@ -177,11 +222,11 @@ export const WebGeminiChatModal: React.FC<WebGeminiChatModalProps> = ({
             }
             className="shrink-0 px-2.5 py-1 rounded-lg bg-slate-950 border border-amber-500/40 text-amber-200 text-[11px] font-mono hover:border-amber-300 transition-all"
           >
-            👑 S-Rank Awakening
+            👑 Awakening Directive
           </button>
         </div>
 
-        {/* Messages Scroll Area */}
+        {/* Messages Scroll Area with Rich System Rendering */}
         <div className="flex-1 overflow-y-auto space-y-3 p-3 rounded-2xl bg-[#06030c] border border-purple-500/20 mb-3 text-xs sm:text-sm leading-relaxed">
           {messages.map((msg, i) => (
             <div
@@ -194,20 +239,20 @@ export const WebGeminiChatModal: React.FC<WebGeminiChatModalProps> = ({
                 </div>
               )}
               <div
-                className={`max-w-[85%] p-3.5 rounded-2xl ${
+                className={`max-w-[88%] p-3.5 rounded-2xl ${
                   msg.isUser
-                    ? "bg-purple-700/80 text-white border border-purple-400/60 rounded-tr-none"
+                    ? "bg-purple-800/80 text-white border border-purple-400/60 rounded-tr-none"
                     : "bg-[#140b24] text-slate-100 border border-purple-500/30 rounded-tl-none"
                 }`}
               >
-                <div className="whitespace-pre-wrap font-sans">{msg.text}</div>
+                <SystemMessageFormatter text={msg.text} isUser={msg.isUser} />
               </div>
             </div>
           ))}
           {isLoading && (
             <div className="flex items-center gap-2 text-xs font-mono text-purple-300">
               <RefreshCw className="w-3.5 h-3.5 animate-spin text-purple-400" />
-              <span>Gemini is synthesizing tactical intelligence...</span>
+              <span>Gemini is synthesizing with active chat memory...</span>
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -240,3 +285,86 @@ export const WebGeminiChatModal: React.FC<WebGeminiChatModalProps> = ({
     </div>
   );
 };
+
+// Rich formatter component for Web with clean badges, bold tags, and zero raw markdown hashes
+const SystemMessageFormatter: React.FC<{ text: string; isUser: boolean }> = ({ text, isUser }) => {
+  if (isUser) return <div className="whitespace-pre-wrap font-medium">{text}</div>;
+
+  const lines = text.split("\n");
+
+  return (
+    <div className="space-y-1.5 font-sans leading-relaxed">
+      {lines.map((rawLine, idx) => {
+        let line = rawLine.trim();
+        if (!line) return <div key={idx} className="h-1.5" />;
+
+        // Clean raw markdown headers like ### or ##
+        line = line.replace(/^#{1,4}\s*/, "");
+
+        // Section Badge [ SECTION TITLE ]
+        if (line.startsWith("[") && line.endsWith("]")) {
+          return (
+            <div key={idx} className="pt-1.5 pb-1">
+              <span className="inline-block px-2.5 py-0.5 rounded-md bg-purple-950/80 border border-purple-400/60 text-purple-200 font-mono text-[11px] font-black tracking-wide">
+                {line}
+              </span>
+            </div>
+          );
+        }
+
+        // Bullet list
+        const isBullet = line.startsWith("•") || line.startsWith("*") || line.startsWith("-");
+        const cleanContent = isBullet ? line.replace(/^[•\*\-]\s*/, "") : line;
+
+        // Parse **bold** and `code` spans
+        const parsed = parseSpans(cleanContent);
+
+        if (isBullet) {
+          return (
+            <div key={idx} className="flex items-start gap-2 text-xs sm:text-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 mt-2 shrink-0" />
+              <div className="text-slate-200">{parsed}</div>
+            </div>
+          );
+        }
+
+        return (
+          <p key={idx} className="text-xs sm:text-sm text-slate-200">
+            {parsed}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
+function parseSpans(line: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  const regex = /(\*\*.*?\*\*|`.*?`|[^\*`]+)/g;
+  let match;
+  let key = 0;
+
+  while ((match = regex.exec(line)) !== null) {
+    const token = match[0];
+    if (token.startsWith("**") && token.endsWith("**") && token.length >= 4) {
+      parts.push(
+        <strong key={key++} className="font-extrabold text-white">
+          {token.slice(2, -2)}
+        </strong>
+      );
+    } else if (token.startsWith("`") && token.endsWith("`") && token.length >= 2) {
+      parts.push(
+        <code
+          key={key++}
+          className="px-1.5 py-0.5 mx-0.5 rounded bg-slate-900 border border-cyan-500/50 text-cyan-300 font-mono text-[11px] font-bold"
+        >
+          {token.slice(1, -1)}
+        </code>
+      );
+    } else {
+      parts.push(<span key={key++}>{token}</span>);
+    }
+  }
+
+  return parts;
+}
