@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0c192e" />
+      <stop offset="100%" stop-color="#04060a" />
+    </radialGradient>
+    <linearGradient id="frostGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f0ff" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+    <linearGradient id="neonGlow" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff5e3a" />
+      <stop offset="100%" stop-color="#00f0ff" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="16" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="128" fill="url(#bg)" stroke="#1e293b" stroke-width="8"/>
+  
+  <!-- Outer glowing ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="url(#frostGrad)" stroke-width="12" stroke-dasharray="8 16" opacity="0.6"/>
+
+  <!-- Snowflake / Arc Core Motif -->
+  <g filter="url(#glow)" stroke="url(#frostGrad)" stroke-width="18" stroke-linecap="round">
+    <!-- Vertical and horizontal main axes -->
+    <line x1="256" y1="110" x2="256" y2="402" />
+    <line x1="110" y1="256" x2="402" y2="256" />
+
+    <!-- Diagonal axes -->
+    <line x1="152" y1="152" x2="360" y2="360" />
+    <line x1="152" y1="360" x2="360" y2="152" />
+
+    <!-- Branch chevrons -->
+    <path d="M 230 160 L 256 134 L 282 160" fill="none" stroke-width="14"/>
+    <path d="M 230 352 L 256 378 L 282 352" fill="none" stroke-width="14"/>
+    <path d="M 160 230 L 134 256 L 160 282" fill="none" stroke-width="14"/>
+    <path d="M 352 230 L 378 256 L 352 282" fill="none" stroke-width="14"/>
+  </g>
+
+  <!-- Glowing central core -->
+  <circle cx="256" cy="256" r="42" fill="#060913" stroke="#00f0ff" stroke-width="10"/>
+  <circle cx="256" cy="256" r="20" fill="#00f0ff" filter="url(#glow)"/>
+</svg>

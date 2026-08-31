@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Task {
+  id          String   @id @default(uuid())
+  title       String
+  category    String   // 'fitness', 'career', 'routine', 'health', 'study', etc.
+  targetDate  DateTime @db.Date
+  startTime   String?  // e.g. "07:00", "18:30", "19:00", "23:00"
+  isCompleted Boolean  @default(false)
+  autoMetric  String?  // 'steps_10k', 'sleep_7h', 'gym_workout', etc.
+  createdAt   DateTime @default(now())
+
+  @@index([targetDate])
+  @@index([category])
+  @@index([autoMetric])
+}
+
+model HealthLog {
+  logDate        DateTime @id @db.Date
+  steps          Int      @default(0)
+  sleepMinutes   Int      @default(0)
+  waterIntakeMl  Int      @default(0)
+  gymWorkoutDone Boolean  @default(false)
+  syncedAt       DateTime @default(now())
+}
+
+model UserSettings {
+  id               String   @id @default("default")
+  ntfyTopic        String   @default("winter-arc-routine")
+  ntfyServer       String   @default("https://ntfy.sh")
+  morningTime      String   @default("07:00")
+  morningEnabled   Boolean  @default(true)
+  eveningTime      String   @default("18:30")
+  eveningEnabled   Boolean  @default(true)
+  nightTime        String   @default("22:30")
+  nightEnabled     Boolean  @default(true)
+  waterGoalMl      Int      @default(4500)
+  stepsGoal        Int      @default(10000)
+  sleepGoalMinutes Int      @default(420)
+  customSlots      String?  // JSON string of custom slots: [{ "id": "1", "name": "Deep Work", "time": "14:00", "enabled": true }]
+  updatedAt        DateTime @updatedAt
+}

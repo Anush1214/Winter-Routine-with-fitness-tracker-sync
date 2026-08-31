@@ -1,0 +1,18 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npx prisma generate && next build",
+  "crons": [
+    {
+      "path": "/api/notifications/trigger?slot=morning",
+      "schedule": "30 1 * * *"
+    },
+    {
+      "path": "/api/notifications/trigger?slot=evening",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/notifications/trigger?slot=night",
+      "schedule": "0 17 * * *"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "CMF Watch Pro 2 & Apple Health Integration Guide",
+  "endpoint": "POST /api/sync-health",
+  "payload_example": {
+    "date": "2026-09-01",
+    "steps": 10450,
+    "sleepMinutes": 450,
+    "gymWorkoutDone": true,
+    "waterIntakeMl": 4200
+  },
+  "auto_triggers": {
+    "steps_10k": "Triggered when steps >= 10,000 (or user configured stepsGoal)",
+    "sleep_7h": "Triggered when sleepMinutes >= 420 (7 hours)",
+    "gym_workout": "Triggered when gymWorkoutDone is true (from Sept 5th onwards)",
+    "water_4l": "Triggered when waterIntakeMl >= 4000ml"
+  },
+  "ios_shortcuts_setup": [
+    "1. Open the iOS Shortcuts App on iPhone.",
+    "2. Create a new Automation running Daily at 10:00 PM.",
+    "3. Add action 'Find Health Samples where Type is Steps, Date is Today' -> Sum values.",
+    "4. Add action 'Find Health Samples where Type is Sleep Analysis' -> Calculate Total Minutes.",
+    "5. Add action 'Get Contents of URL' with Method: POST, Headers: Content-Type: application/json.",
+    "6. Request Body JSON: { 'date': Current Date (yyyy-MM-dd), 'steps': Steps Sum, 'sleepMinutes': Sleep Mins, 'gymWorkoutDone': true }",
+    "7. Set URL to: https://<YOUR_APP_URL>/api/sync-health"
+  ]
+}
