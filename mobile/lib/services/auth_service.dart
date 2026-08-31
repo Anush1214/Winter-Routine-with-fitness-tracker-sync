@@ -129,7 +129,10 @@ class AuthService extends ChangeNotifier {
         }
       } on fb.FirebaseAuthException catch (e) {
         if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
-          throw AuthException('Invalid email identifier or security key.', code: e.code);
+          throw AuthException(
+            'Account not found or invalid password. If this is your first time, switch to "NEW AWAKENING" to create your account, or tap "GMAIL / GOOGLE" above.',
+            code: e.code,
+          );
         } else if (e.code == 'invalid-email') {
           throw AuthException('Invalid email address format.', code: e.code);
         } else if (e.code == 'user-disabled') {
