@@ -137,144 +137,83 @@ class _AuthScreenState extends State<AuthScreen> {
       backgroundColor: SoloColors.obsidianVoid,
       body: Stack(
         children: [
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                // Top Awakening Rune Crest
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFC084FC), Color(0xFF7E22CE), Color(0xFF1E0B36)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    border: Border.all(color: const Color(0xFFC084FC), width: 1.8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFA855F7).withValues(alpha: 0.5),
-                        blurRadius: 24,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: Icon(Icons.flash_on, color: Colors.white, size: 28),
-                  ),
+          // Full Immersive Shadow Monarch Hero Background Header
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 380,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/app_logo.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
+                  errorBuilder: (_, __, ___) => const SizedBox(),
                 ),
-                const SizedBox(height: 12),
-
-                Text(
-                  "⚡ AWAKEN",
-                  style: SoloTypography.systemTag.copyWith(
-                    fontSize: 12,
-                    letterSpacing: 4,
-                    color: const Color(0xFFC084FC),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Awakening Hero Art Card
+                // Seamless Dark Gradient Fade
                 Container(
-                  width: double.infinity,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: const Color(0xFFA855F7).withValues(alpha: 0.4),
-                      width: 1.2,
-                    ),
-                    gradient: const LinearGradient(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
                       colors: [
-                        Color(0xFF2E1065),
-                        Color(0xFF0F0826),
+                        Colors.transparent,
+                        Color(0x88090414),
                         Color(0xFF090414),
                       ],
+                      stops: [0.0, 0.65, 1.0],
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFA855F7).withValues(alpha: 0.2),
-                        blurRadius: 30,
-                      ),
-                    ],
-                  ),
-                  child: Stack(
-                    children: [
-                      // Radial Glowing Aura
-                      Center(
-                        child: Container(
-                          width: 120,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: const Color(0xFFA855F7).withValues(alpha: 0.35),
-                          ),
-                        ),
-                      ),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
-                        child: Center(
-                          child: Image.asset(
-                            'assets/app_logo.jpg',
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: double.infinity,
-                            errorBuilder: (_, __, ___) => const Center(
-                              child: Icon(
-                                Icons.remove_red_eye_rounded,
-                                color: Color(0xFFC084FC),
-                                size: 54,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-                const SizedBox(height: 18),
+              ],
+            ),
+          ),
 
-                // "YOUR AWAKENING BEGINS NOW!" (Reference UI Title)
-                ShaderMask(
-                  shaderCallback: (bounds) => const LinearGradient(
-                    colors: [Colors.white, Color(0xFFE9D5FF), Color(0xFFC084FC)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  ).createShader(bounds),
-                  child: const Text(
-                    "YOUR AWAKENING\nBEGINS NOW!",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontFamily: 'serif',
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.5,
-                      height: 1.2,
-                      color: Colors.white,
+          SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 180),
+
+                    // Cinematic "YOUR AWAKENING BEGINS NOW!" Title
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [Colors.white, Color(0xFFE9D5FF), Color(0xFFC084FC)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ).createShader(bounds),
+                      child: const Text(
+                        "YOUR AWAKENING\nBEGINS NOW!",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: 'serif',
+                          fontSize: 26,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2.0,
+                          height: 1.2,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 8),
+                    const SizedBox(height: 8),
 
-                Text(
-                  "Walk your path. Take action. Conquer. Become a legend!",
-                  textAlign: TextAlign.center,
-                  style: SoloTypography.bodyMuted.copyWith(
-                    fontSize: 11.5,
-                    color: const Color(0xFFA89BB9),
-                  ),
-                ),
+                    Text(
+                      "Walk your path. Take action. Conquer. Become a legend!",
+                      textAlign: TextAlign.center,
+                      style: SoloTypography.bodyMuted.copyWith(
+                        fontSize: 12,
+                        color: const Color(0xFFA89BB9),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
 
-                // Firebase status indicator
+                    // Firebase status indicator
                 if (!AuthService().isFirebaseAvailable) ...[
                   const SizedBox(height: 10),
                   Container(
