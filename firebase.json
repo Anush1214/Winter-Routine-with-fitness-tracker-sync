@@ -1,0 +1,19 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "auth": {
+    "authorizedDomains": [
+      "localhost",
+      "winter-arc-protocol.firebaseapp.com",
+      "winter-arc-protocol.web.app"
+    ],
+    "providers": {
+      "anonymous": true,
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Winter Arc Protocol"
+      }
+    }
+  }
+}
