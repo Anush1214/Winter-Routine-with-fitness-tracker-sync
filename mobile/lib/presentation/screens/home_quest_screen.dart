@@ -20,7 +20,9 @@ import '../widgets/sung_jinwoo_assistant_dialog.dart';
 import '../../services/health_service.dart';
 
 class HomeQuestScreen extends StatefulWidget {
-  const HomeQuestScreen({super.key});
+  final bool hideFabForNavbar;
+
+  const HomeQuestScreen({super.key, this.hideFabForNavbar = false});
 
   @override
   State<HomeQuestScreen> createState() => _HomeQuestScreenState();
@@ -251,43 +253,45 @@ class _HomeQuestScreenState extends State<HomeQuestScreen> {
                 ),
               ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          SungJinwooAssistantDialog.show(
-            context,
-            tasks: service.tasks,
-            onTriggerAction: () {
-              final pending = service.tasks.where((t) => !t.isCompleted).toList();
-              if (pending.isNotEmpty) {
-                service.toggleTask(pending.first.id, false);
-              }
-            },
-          );
-        },
-        backgroundColor: SoloColors.obsidianVoid,
-        elevation: 12,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
-          side: const BorderSide(color: SoloColors.neonCyan, width: 1.5),
-        ),
-        icon: Container(
-          width: 28,
-          height: 28,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Color(0xFF042F2E),
-          ),
-          child: const Icon(Icons.record_voice_over, color: SoloColors.neonCyan, size: 16),
-        ),
-        label: Text(
-          "JIN-WOO",
-          style: SoloTypography.systemTag.copyWith(
-            fontSize: 10,
-            color: SoloColors.neonCyan,
-            letterSpacing: 1.5,
-          ),
-        ),
-      ),
+      floatingActionButton: widget.hideFabForNavbar
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () {
+                SungJinwooAssistantDialog.show(
+                  context,
+                  tasks: service.tasks,
+                  onTriggerAction: () {
+                    final pending = service.tasks.where((t) => !t.isCompleted).toList();
+                    if (pending.isNotEmpty) {
+                      service.toggleTask(pending.first.id, false);
+                    }
+                  },
+                );
+              },
+              backgroundColor: SoloColors.obsidianVoid,
+              elevation: 12,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+                side: const BorderSide(color: SoloColors.neonCyan, width: 1.5),
+              ),
+              icon: Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFF042F2E),
+                ),
+                child: const Icon(Icons.record_voice_over, color: SoloColors.neonCyan, size: 16),
+              ),
+              label: Text(
+                "JIN-WOO",
+                style: SoloTypography.systemTag.copyWith(
+                  fontSize: 10,
+                  color: SoloColors.neonCyan,
+                  letterSpacing: 1.5,
+                ),
+              ),
+            ),
     );
   }
 }

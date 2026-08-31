@@ -1,52 +1,58 @@
 import 'package:flutter/material.dart';
 
 class SoloColors {
-  // Deep Holographic Voids
-  static const Color obsidianVoid = Color(0xFF02050E);
-  static const Color obsidianGlass = Color(0xFF061226);
-  static const Color obsidianCard = Color(0xFF040C1B);
-  static const Color obsidianBorder = Color(0xFF0E223D);
+  // Deep Awakening Obsidian & Violet Voids (Reference UI Theme)
+  static const Color obsidianVoid = Color(0xFF090414);
+  static const Color obsidianGlass = Color(0xFF130926);
+  static const Color obsidianCard = Color(0xFF100722);
+  static const Color obsidianBorder = Color(0xFF2A154D);
 
-  // Solo Leveling Neon Cyans & Mana Blues
-  static const Color neonCyan = Color(0xFF00F0FF);
-  static const Color manaBlue = Color(0xFF0284C7);
-  static const Color electricSky = Color(0xFF38BDF8);
-  static const Color deepMana = Color(0xFF0369A1);
-  static const Color manaViolet = Color(0xFF8B5CF6);
+  // Awakening Purple & Orchid Mana Accents
+  static const Color neonCyan = Color(0xFFC084FC); // Radiant Orchid Purple
+  static const Color manaViolet = Color(0xFFA855F7); // Core Purple Mana
+  static const Color manaBlue = Color(0xFF9333EA); // Deep Violet
+  static const Color electricSky = Color(0xFFE9D5FF); // Soft Lavender Glow
+  static const Color deepMana = Color(0xFF6B21A8); // Shadow Purple
 
   // Hunter Ranks & Accents
-  static const Color monarchGold = Color(0xFFF59E0B);
-  static const Color flameOrange = Color(0xFFF97316);
-  static const Color rankEmerald = Color(0xFF10B981);
+  static const Color monarchGold = Color(0xFFFFD700);
+  static const Color flameOrange = Color(0xFFFB923C);
+  static const Color rankEmerald = Color(0xFF34D399);
   
   // Penalty Alerts
-  static const Color penaltyCrimson = Color(0xFFEF4444);
-  static const Color penaltyBg = Color(0xFF450A0A);
+  static const Color penaltyCrimson = Color(0xFFF43F5E);
+  static const Color penaltyBg = Color(0xFF4C0519);
 
   // Typography & Neutrals
-  static const Color textGlowWhite = Color(0xFFE2F4FF);
-  static const Color textMuted = Color(0xFF94A3B8);
-  static const Color textDim = Color(0xFF64748B);
+  static const Color textGlowWhite = Color(0xFFFAF5FF);
+  static const Color textMuted = Color(0xFFA89BB9);
+  static const Color textDim = Color(0xFF706284);
 
   // Gradients
   static const LinearGradient manaGradient = LinearGradient(
-    colors: [neonCyan, manaBlue, manaViolet],
+    colors: [Color(0xFFC084FC), Color(0xFFA855F7), Color(0xFF7E22CE)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient glassGradient = LinearGradient(
     colors: [
-      Color(0xCC061226),
-      Color(0xEE020814),
+      Color(0xDD130926),
+      Color(0xEE090414),
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient buttonCyanGradient = LinearGradient(
-    colors: [neonCyan, Color(0xFF0284C7)],
+    colors: [Color(0xFFC084FC), Color(0xFF9333EA)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
+  );
+
+  static const LinearGradient awakenButtonGradient = LinearGradient(
+    colors: [Color(0xFFD8B4FE), Color(0xFFA855F7)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
 }

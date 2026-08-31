@@ -144,52 +144,134 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                // Top Glowing Crown Emblem
+                // Top Awakening Rune Crest
                 Container(
-                  width: 64,
-                  height: 64,
+                  width: 56,
+                  height: 56,
                   decoration: BoxDecoration(
+                    shape: BoxShape.circle,
                     gradient: const LinearGradient(
-                      colors: [Color(0x7700F0FF), Color(0x330284C7), Color(0x2202050E)],
+                      colors: [Color(0xFFC084FC), Color(0xFF7E22CE), Color(0xFF1E0B36)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: SoloColors.neonCyan, width: 1.8),
+                    border: Border.all(color: const Color(0xFFC084FC), width: 1.8),
                     boxShadow: [
                       BoxShadow(
-                        color: SoloColors.neonCyan.withValues(alpha: 0.4),
-                        blurRadius: 20,
+                        color: const Color(0xFFA855F7).withValues(alpha: 0.5),
+                        blurRadius: 24,
+                        spreadRadius: 2,
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(14),
-                    child: Image.asset(
-                      'assets/app_logo.jpg',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Center(
-                        child: Icon(Icons.shield_outlined, color: SoloColors.neonCyan, size: 34),
-                      ),
-                    ),
+                  child: const Center(
+                    child: Icon(Icons.flash_on, color: Colors.white, size: 28),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                Text(
+                  "⚡ AWAKEN",
+                  style: SoloTypography.systemTag.copyWith(
+                    fontSize: 12,
+                    letterSpacing: 4,
+                    color: const Color(0xFFC084FC),
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 16),
 
-                Text(
-                  "SOLO LEVELING // SYSTEM",
-                  style: SoloTypography.systemTag.copyWith(fontSize: 11, letterSpacing: 2.5),
+                // Awakening Hero Art Card
+                Container(
+                  width: double.infinity,
+                  height: 180,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: const Color(0xFFA855F7).withValues(alpha: 0.4),
+                      width: 1.2,
+                    ),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF2E1065),
+                        Color(0xFF0F0826),
+                        Color(0xFF090414),
+                      ],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFA855F7).withValues(alpha: 0.2),
+                        blurRadius: 30,
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      // Radial Glowing Aura
+                      Center(
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFFA855F7).withValues(alpha: 0.35),
+                          ),
+                        ),
+                      ),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Center(
+                          child: Image.asset(
+                            'assets/app_logo.jpg',
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                            errorBuilder: (_, __, ___) => const Center(
+                              child: Icon(
+                                Icons.remove_red_eye_rounded,
+                                color: Color(0xFFC084FC),
+                                size: 54,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  "HUNTER AWAKENING PORTAL",
-                  style: SoloTypography.systemTitle.copyWith(fontSize: 22),
+                const SizedBox(height: 18),
+
+                // "YOUR AWAKENING BEGINS NOW!" (Reference UI Title)
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [Colors.white, Color(0xFFE9D5FF), Color(0xFFC084FC)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ).createShader(bounds),
+                  child: const Text(
+                    "YOUR AWAKENING\nBEGINS NOW!",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'serif',
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                      height: 1.2,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
+
                 Text(
-                  "Identify your Hunter credentials to synchronize your daily quests.",
+                  "Walk your path. Take action. Conquer. Become a legend!",
                   textAlign: TextAlign.center,
-                  style: SoloTypography.bodyMuted.copyWith(fontSize: 11),
+                  style: SoloTypography.bodyMuted.copyWith(
+                    fontSize: 11.5,
+                    color: const Color(0xFFA89BB9),
+                  ),
                 ),
 
                 // Firebase status indicator

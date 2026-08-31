@@ -7,7 +7,7 @@ import 'services/notification_service.dart';
 import 'services/auth_service.dart';
 import 'firebase_options.dart';
 import 'presentation/screens/arise_splash_screen.dart';
-import 'presentation/screens/home_quest_screen.dart';
+import 'presentation/screens/main_shell_screen.dart';
 import 'presentation/screens/auth_screen.dart';
 
 void main() async {
@@ -73,7 +73,7 @@ class _WinterArcMobileAppState extends State<WinterArcMobileApp> {
             : Consumer<AuthService>(
                 builder: (context, auth, _) {
                   if (auth.isAuthenticated) {
-                    return const HomeQuestScreen();
+                    return const MainShellScreen();
                   }
                   return const AuthScreen();
                 },
