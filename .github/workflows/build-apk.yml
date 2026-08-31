@@ -79,7 +79,8 @@ jobs:
             
             Direct Download for Android Phone:
             - **Filename:** `app-release.apk`
-            - **APK SHA-1 Signing Fingerprint:** `${{ env.SHA1_VAL }}`
+            - **APK SHA-1 Fingerprint:** `${{ env.SHA1_VAL }}`
+            - **APK SHA-256 Fingerprint:** `${{ env.SHA256_VAL }}`
             - **Features:** Strict Firebase Auth (Google OAuth, GitHub, Email/Password), Profile Avatar Customization with Solo Leveling Presets & Uploads, Habit Counters & Smartwatch Sync, Native Offline Alarms.
           files: mobile/build/app/outputs/flutter-apk/app-release.apk
           draft: false
