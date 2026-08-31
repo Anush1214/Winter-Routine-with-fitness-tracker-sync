@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "37819138819-6rg9rf6gemmoprkug7jfhik1mm6j0gcg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.winter_arc_mobile",
+            "certificate_hash": "bd4d52a5584b9e7702562f914537d20510de9fda"
+          }
+        },
+        {
+          "client_id": "37819138819-q9b5he2c1s3s5gbha7rae867q7jldkek.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.winter_arc_mobile",
+            "certificate_hash": "e0aa8442209f777f1f7eb675f747301a652c88f4"
+          }
+        },
+        {
           "client_id": "37819138819-5ntotmdejvs65uscip3pgh39coh4ldh0.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,6 +45,13 @@
             {
               "client_id": "37819138819-5ntotmdejvs65uscip3pgh39coh4ldh0.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "37819138819-5mga06gbk05jsgkqa77f623c4ppr2dl9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.winterArcMobile"
+              }
             }
           ]
         }
