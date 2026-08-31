@@ -56,14 +56,17 @@ class SupabaseService extends ChangeNotifier {
     await loadDateData(date);
   }
 
-  // --- Instant Local Storage Persistence (Zero Reset Across Logins) ---
+  // --- Multi-Layer Local Storage Persistence (Zero Reset Across Logins) ---
   String _tasksKey(String date) => "tasks_${currentUserId}_$date";
+  String _healthKey(String date) => "health_${currentUserId}_$date";
   String _waterKey(String date) => "water_${currentUserId}_$date";
   String _streakKey() => "streak_${currentUserId}";
 
   Future<void> _loadFromLocalStorage(String date) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+      
+      // 1. Load tasks
       final tasksJson = prefs.getString(_tasksKey(date));
       if (tasksJson != null && tasksJson.isNotEmpty) {
         final List list = jsonDecode(tasksJson);
@@ -72,11 +75,18 @@ class SupabaseService extends ChangeNotifier {
         _useLocalDefaultTasks(date);
       }
 
-      final waterVal = prefs.getInt(_waterKey(date));
-      if (waterVal != null) {
-        _healthLog = _healthLog.copyWith(waterIntakeMl: waterVal, userId: currentUserId);
+      // 2. Load health log
+      final healthJson = prefs.getString(_healthKey(date));
+      if (healthJson != null && healthJson.isNotEmpty) {
+        _healthLog = HealthLogModel.fromJson(jsonDecode(healthJson)).copyWith(userId: currentUserId);
+      } else {
+        final waterVal = prefs.getInt(_waterKey(date));
+        if (waterVal != null) {
+          _healthLog = _healthLog.copyWith(waterIntakeMl: waterVal, userId: currentUserId);
+        }
       }
 
+      // 3. Load streak
       final savedStreak = prefs.getInt(_streakKey());
       if (savedStreak != null) {
         _currentStreak = savedStreak;
@@ -93,6 +103,7 @@ class SupabaseService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final tasksData = _tasks.map((t) => t.toJson()).toList();
       await prefs.setString(_tasksKey(date), jsonEncode(tasksData));
+      await prefs.setString(_healthKey(date), jsonEncode(_healthLog.toJson()));
       await prefs.setInt(_waterKey(date), _healthLog.waterIntakeMl);
       await prefs.setInt(_streakKey(), _currentStreak);
     } catch (e) {
@@ -113,14 +124,29 @@ class SupabaseService extends ChangeNotifier {
         if (data['tasks'] != null && (data['tasks'] as List).isNotEmpty) {
           final serverTasks = (data['tasks'] as List).map((t) => TaskModel.fromJson(t)).toList();
           
-          // Merge completed statuses so locally checked tasks are never lost
-          final Map<String, bool> localCompletion = {
+          // Triple-Layer Merging: match by ID, Title, and AutoMetric so checked tasks are NEVER unchecked
+          final Map<String, bool> localCompletionById = {
             for (var t in _tasks) t.id: t.isCompleted
+          };
+          final Map<String, bool> localCompletionByTitle = {
+            for (var t in _tasks) t.title.toLowerCase().trim(): t.isCompleted
+          };
+          final Map<String, bool> localCompletionByMetric = {
+            for (var t in _tasks) if (t.autoMetric != null) t.autoMetric!: t.isCompleted
           };
 
           _tasks = serverTasks.map((st) {
-            final localState = localCompletion[st.id];
-            return localState != null ? st.copyWith(isCompleted: localState || st.isCompleted) : st;
+            final titleKey = st.title.toLowerCase().trim();
+            final localStateById = localCompletionById[st.id];
+            final localStateByTitle = localCompletionByTitle[titleKey];
+            final localStateByMetric = st.autoMetric != null ? localCompletionByMetric[st.autoMetric!] : null;
+
+            final isChecked = (localStateById == true) ||
+                (localStateByTitle == true) ||
+                (localStateByMetric == true) ||
+                st.isCompleted;
+
+            return st.copyWith(isCompleted: isChecked, userId: currentUserId);
           }).toList();
 
           await _saveToLocalStorage(date);
@@ -136,10 +162,20 @@ class SupabaseService extends ChangeNotifier {
         final data = jsonDecode(healthRes.body);
         if (data['log'] != null) {
           final serverLog = HealthLogModel.fromJson(data['log']);
-          if (serverLog.waterIntakeMl >= _healthLog.waterIntakeMl) {
-            _healthLog = serverLog;
-            await _saveToLocalStorage(date);
-          }
+          // Keep highest water intake logged across local & server
+          final maxWater = serverLog.waterIntakeMl > _healthLog.waterIntakeMl ? serverLog.waterIntakeMl : _healthLog.waterIntakeMl;
+          final maxSteps = serverLog.steps > _healthLog.steps ? serverLog.steps : _healthLog.steps;
+          final maxSleep = serverLog.sleepMinutes > _healthLog.sleepMinutes ? serverLog.sleepMinutes : _healthLog.sleepMinutes;
+          final gymDone = serverLog.gymWorkoutDone || _healthLog.gymWorkoutDone;
+
+          _healthLog = _healthLog.copyWith(
+            waterIntakeMl: maxWater,
+            steps: maxSteps,
+            sleepMinutes: maxSleep,
+            gymWorkoutDone: gymDone,
+            userId: currentUserId,
+          );
+          await _saveToLocalStorage(date);
         }
       }
 
