@@ -7,8 +7,8 @@ import '../core/utils/timeline_utils.dart';
 import 'auth_service.dart';
 
 class SupabaseService extends ChangeNotifier {
-  // Point to Next.js API or direct Supabase
-  String _baseUrl = "http://localhost:3000";
+  // Production backend URL for database & health synchronization
+  String _baseUrl = "https://winter-tracker-xi.vercel.app";
 
   List<TaskModel> _tasks = [];
   HealthLogModel _healthLog = HealthLogModel.empty('2026-08-31');

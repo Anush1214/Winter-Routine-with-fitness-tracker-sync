@@ -16,6 +16,7 @@ import '../widgets/consistency_heatmap_widget.dart';
 import 'quest_editor_modal.dart';
 import 'notification_settings_modal.dart';
 import 'smartwatch_sync_sheet.dart';
+import '../../services/health_service.dart';
 
 class HomeQuestScreen extends StatefulWidget {
   const HomeQuestScreen({super.key});
@@ -28,10 +29,24 @@ class _HomeQuestScreenState extends State<HomeQuestScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SupabaseService>().loadDateData(
-            TimelineUtils.formatDateKey(DateTime.now()),
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final supabase = context.read<SupabaseService>();
+      await supabase.loadDateData(
+        TimelineUtils.formatDateKey(DateTime.now()),
+      );
+
+      // Auto-ingest live telemetry from Nothing X / Health Connect
+      try {
+        final metrics = await HealthService().fetchNothingXDailyMetrics(DateTime.now());
+        if ((metrics['steps'] ?? 0) > 0 || (metrics['sleepMinutes'] ?? 0) > 0 || (metrics['waterIntakeMl'] ?? 0) > 0) {
+          await supabase.syncHealth(
+            steps: (metrics['steps'] ?? 0) > 0 ? metrics['steps'] : supabase.healthLog.steps,
+            sleepMinutes: (metrics['sleepMinutes'] ?? 0) > 0 ? metrics['sleepMinutes'] : supabase.healthLog.sleepMinutes,
+            gymWorkoutDone: metrics['gymWorkoutDone'] ?? supabase.healthLog.gymWorkoutDone,
+            waterIntakeMl: (metrics['waterIntakeMl'] ?? 0) > 0 ? metrics['waterIntakeMl'] : supabase.healthLog.waterIntakeMl,
           );
+        }
+      } catch (_) {}
     });
   }
 
