@@ -27,12 +27,6 @@ dependencies:
   google_fonts: ^6.2.1
   lucide_icons: ^0.257.0
   
-  # Audio Synthesizer & Sound Effects
-  audioplayers: ^6.0.0
-  
-  # Haptics & Vibration
-  vibration: ^2.0.1
-  
   # Smartwatch & Health Ingestion (Apple Health & Health Connect)
   health: ^11.0.0
   
