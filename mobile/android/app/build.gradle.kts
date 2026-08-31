@@ -30,9 +30,9 @@ android {
             val keystoreFile = file("upload-keystore.jks")
             if (keystoreFile.exists()) {
                 storeFile = keystoreFile
-                storePassword = "androiddebug"
+                storePassword = "winterarc2026"
                 keyAlias = "upload"
-                keyPassword = "androiddebug"
+                keyPassword = "winterarc2026"
             } else {
                 storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
                 storePassword = "android"
