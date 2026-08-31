@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import '../models/task_model.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -166,8 +167,43 @@ class NotificationService {
     );
   }
 
+  /// Schedule an exact notification for an individual task with a startTime
+  Future<void> scheduleTaskNotification(TaskModel task) async {
+    if (kIsWeb || task.startTime == null || task.startTime!.isEmpty) return;
+    try {
+      final parts = task.startTime!.split(':');
+      if (parts.length >= 2) {
+        final hour = int.tryParse(parts[0]);
+        final minute = int.tryParse(parts[1]);
+        if (hour != null && minute != null) {
+          final id = (task.title.hashCode.abs() % 100000) + 1000;
+          await _scheduleDailyAtTime(
+            id: id,
+            hour: hour,
+            minute: minute,
+            title: "⚔️ [ SYSTEM OBJECTIVE : ${task.title.toUpperCase()} ]",
+            body: "Scheduled routine objective for ${task.startTime}. Open app to execute.",
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Error scheduling task notification: $e");
+    }
+  }
+
+  /// Schedule notifications for all active routine tasks with a startTime
+  Future<void> scheduleAllTaskNotifications(List<TaskModel> tasks) async {
+    if (kIsWeb) return;
+    for (final task in tasks) {
+      if (task.startTime != null && task.startTime!.isNotEmpty) {
+        await scheduleTaskNotification(task);
+      }
+    }
+  }
+
   /// Cancel all scheduled alarms
   Future<void> cancelAll() async {
     await _notificationsPlugin.cancelAll();
   }
 }
+

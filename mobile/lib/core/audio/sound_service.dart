@@ -13,26 +13,38 @@ class SoundService {
   }
 
   void playClick() {
+    if (!_isSoundEnabled) return;
+    SystemSound.play(SystemSoundType.click);
     HapticFeedback.lightImpact();
   }
 
   void playChime() {
+    if (!_isSoundEnabled) return;
+    SystemSound.play(SystemSoundType.click);
     HapticFeedback.mediumImpact();
   }
 
   void playWaterDrop() {
+    if (!_isSoundEnabled) return;
+    SystemSound.play(SystemSoundType.click);
     HapticFeedback.selectionClick();
   }
 
   void playVictory() {
+    if (!_isSoundEnabled) return;
+    SystemSound.play(SystemSoundType.alert);
     HapticFeedback.heavyImpact();
   }
 
   void playLevelUp() {
+    if (!_isSoundEnabled) return;
+    SystemSound.play(SystemSoundType.alert);
     HapticFeedback.heavyImpact();
   }
 
   void playPenaltyWarning() {
+    if (!_isSoundEnabled) return;
+    SystemSound.play(SystemSoundType.alert);
     HapticFeedback.vibrate();
   }
 }

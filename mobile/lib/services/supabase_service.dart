@@ -5,6 +5,7 @@ import '../models/task_model.dart';
 import '../models/health_log_model.dart';
 import '../core/utils/timeline_utils.dart';
 import 'auth_service.dart';
+import 'notification_service.dart';
 
 class SupabaseService extends ChangeNotifier {
   // Production backend URL for database & health synchronization
@@ -96,6 +97,7 @@ class SupabaseService extends ChangeNotifier {
       }
       _isLoading = false;
       notifyListeners();
+      NotificationService().scheduleAllTaskNotifications(_tasks);
     }
   }
 
@@ -166,6 +168,7 @@ class SupabaseService extends ChangeNotifier {
     }
     _recalculateStats();
     notifyListeners();
+    NotificationService().scheduleTaskNotification(scopedTask);
 
     try {
       await http.post(
