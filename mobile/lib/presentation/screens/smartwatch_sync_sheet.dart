@@ -156,7 +156,7 @@ class _SmartwatchSyncSheetState extends State<SmartwatchSyncSheet> {
               const SizedBox(height: 10),
 
               // Steps Slider
-              Text("Steps: $_steps / 10,000", style: SoloTypography.bodyRegular.copyWith(fontSize: 12)),
+              Text("Steps: $_steps / 10,000", style: SoloTypography.bodyMuted.copyWith(fontSize: 12)),
               Slider(
                 value: _steps.toDouble(),
                 min: 0,
@@ -168,7 +168,7 @@ class _SmartwatchSyncSheetState extends State<SmartwatchSyncSheet> {
               ),
 
               // Sleep Slider
-              Text("Sleep: ${(_sleep / 60).toStringAsFixed(1)}h / 7-8h", style: SoloTypography.bodyRegular.copyWith(fontSize: 12)),
+              Text("Sleep: ${(_sleep / 60).toStringAsFixed(1)}h / 7-8h", style: SoloTypography.bodyMuted.copyWith(fontSize: 12)),
               Slider(
                 value: _sleep.toDouble(),
                 min: 0,
@@ -182,7 +182,7 @@ class _SmartwatchSyncSheetState extends State<SmartwatchSyncSheet> {
               // Gym Workout Toggle
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text("Morning Gym Workout Completed", style: SoloTypography.bodyRegular.copyWith(fontSize: 12)),
+                title: Text("Morning Gym Workout Completed", style: SoloTypography.bodyMuted.copyWith(fontSize: 12)),
                 value: _gym,
                 activeColor: SoloColors.neonCyan,
                 onChanged: (val) => setState(() => _gym = val),
