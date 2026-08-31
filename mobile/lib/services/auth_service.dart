@@ -92,9 +92,9 @@ class AuthService extends ChangeNotifier {
       final savedName = prefs.getString('saved_user_name');
       final savedPhoto = prefs.getString('saved_user_photo');
       final savedGender = prefs.getString('saved_user_gender') ?? 'male';
-      final savedProvider = prefs.getString('saved_user_provider') ?? 'guest';
+      final savedProvider = prefs.getString('saved_user_provider') ?? 'email';
 
-      if (savedUid != null && savedUid.isNotEmpty && savedEmail != null) {
+      if (savedUid != null && savedUid.isNotEmpty && savedEmail != null && savedEmail.isNotEmpty) {
         _currentUser = HunterUser(
           uid: savedUid,
           email: savedEmail,
@@ -106,16 +106,9 @@ class AuthService extends ChangeNotifier {
         _authController.add(_currentUser);
         notifyListeners();
       } else {
-        // Default to persistent primary guest session
-        _currentUser = HunterUser(
-          uid: 'guest_hunter_local',
-          email: 'guest@winterarc.solo',
-          displayName: savedGender == 'female' ? 'S-Rank Dancer' : 'Shadow Monarch',
-          gender: savedGender,
-          provider: 'guest',
-          isAnonymous: true,
-        );
-        _authController.add(_currentUser);
+        // No active user saved → Present Sign-In & Awakening Page
+        _currentUser = null;
+        _authController.add(null);
         notifyListeners();
       }
 
@@ -318,15 +311,8 @@ class AuthService extends ChangeNotifier {
       await _googleSignIn.signOut();
     } catch (_) {}
 
-    // Reset back to guest session so app continues without breaking
-    _currentUser = HunterUser(
-      uid: 'guest_hunter_local',
-      email: 'guest@winterarc.solo',
-      displayName: 'Shadow Monarch',
-      provider: 'guest',
-      isAnonymous: true,
-    );
-    _authController.add(_currentUser);
+    _currentUser = null;
+    _authController.add(null);
     notifyListeners();
 
     try {

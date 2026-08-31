@@ -261,7 +261,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     if (user == null) {
       return const Scaffold(
         backgroundColor: Color(0xFF090414),
-        body: Center(child: CircularProgressIndicator(color: Color(0xFFC084FC))),
+        body: SizedBox.shrink(),
       );
     }
 
@@ -547,8 +547,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     SoundService().playClick();
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    }
                     await auth.signOut();
-                    if (context.mounted) Navigator.pop(context);
                   },
                   icon: Icon(Icons.logout_rounded, color: themeColor, size: 18),
                   label: Text(
@@ -576,8 +578,10 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     SoundService().playClick();
+                    if (Navigator.of(context).canPop()) {
+                      Navigator.of(context).popUntil((route) => route.isFirst);
+                    }
                     await auth.deleteAccount();
-                    if (context.mounted) Navigator.pop(context);
                   },
                   icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 18),
                   label: const Text(
