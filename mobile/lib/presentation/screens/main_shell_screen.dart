@@ -10,6 +10,7 @@ import 'notification_settings_modal.dart';
 import 'quest_editor_modal.dart';
 import 'smartwatch_sync_sheet.dart';
 import '../widgets/sung_jinwoo_assistant_dialog.dart';
+import '../widgets/gemini_ai_terminal_dialog.dart';
 import '../widgets/consistency_heatmap_widget.dart';
 import '../widgets/expedition_matrix.dart';
 import '../widgets/holographic_frame.dart';
@@ -24,6 +25,16 @@ class MainShellScreen extends StatefulWidget {
 
 class _MainShellScreenState extends State<MainShellScreen> {
   int _currentTabIndex = 0;
+
+  void _openGeminiAiTerminal() {
+    final service = context.read<SupabaseService>();
+    GeminiAiTerminalDialog.show(
+      context,
+      tasks: service.tasks,
+      streak: service.currentStreak,
+      waterMl: service.healthLog.waterIntakeMl,
+    );
+  }
 
   void _openTaskEditor() {
     final service = context.read<SupabaseService>();
@@ -195,6 +206,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
             onAddQuest: _openTaskEditor,
             onOpenVoiceCompanion: _openVoiceCompanion,
             onOpenWatchSync: _openSmartwatchSync,
+            onOpenGeminiAi: _openGeminiAiTerminal,
             userPhotoUrl: user?.photoUrl,
           ),
         ],

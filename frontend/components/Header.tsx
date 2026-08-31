@@ -32,6 +32,7 @@ interface HeaderProps {
   } | null;
   onOpenProfile?: () => void;
   onOpenAuth?: () => void;
+  onOpenGeminiAI?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -43,6 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   hunterUser,
   onOpenProfile,
   onOpenAuth,
+  onOpenGeminiAI,
 }) => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [istTimeStr, setIstTimeStr] = useState<string>("");
@@ -180,6 +182,17 @@ export const Header: React.FC<HeaderProps> = ({
               <VolumeX className="w-4 h-4 text-slate-600" />
             )}
           </button>
+
+          {/* ✨ Gemini AI Intelligence Hub */}
+          {onOpenGeminiAI && (
+            <button
+              onClick={onOpenGeminiAI}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white text-xs font-mono font-bold hover:shadow-[0_0_15px_rgba(155,114,203,0.6)] transition-all transform active:scale-95 border border-white/30"
+            >
+              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+              <span>Gemini AI</span>
+            </button>
+          )}
 
           {/* Alerts / Notifications */}
           <button

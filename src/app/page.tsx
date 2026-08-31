@@ -14,6 +14,7 @@ import { WebAriseSplash } from "@/frontend/components/WebAriseSplash";
 import { WebAuthModal } from "@/frontend/components/WebAuthModal";
 import { WebProfileModal } from "@/frontend/components/WebProfileModal";
 import { WebCompanionAssistantModal } from "@/frontend/components/WebCompanionAssistantModal";
+import { WebGeminiChatModal } from "@/frontend/components/WebGeminiChatModal";
 import { TaskData } from "@/frontend/components/TaskItem";
 import { formatDateKey } from "@/frontend/lib/utils";
 import { Loader2, Sparkles, Volume2 } from "lucide-react";
@@ -66,6 +67,7 @@ export default function WinterArcDashboard() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [companionModalOpen, setCompanionModalOpen] = useState(false);
+  const [geminiModalOpen, setGeminiModalOpen] = useState(false);
 
   // Restore saved hunter user session from localStorage
   useEffect(() => {
@@ -346,6 +348,7 @@ export default function WinterArcDashboard() {
         hunterUser={hunterUser}
         onOpenProfile={() => setProfileModalOpen(true)}
         onOpenAuth={() => setAuthModalOpen(true)}
+        onOpenGeminiAI={() => setGeminiModalOpen(true)}
       />
 
       {/* 2. 122-Day Sliding Date Picker */}
@@ -455,6 +458,15 @@ export default function WinterArcDashboard() {
         onExecuteNextTask={(taskId) => {
           handleToggleTask(taskId, false);
         }}
+      />
+
+      {/* Web Gemini AI Intelligence Terminal Modal */}
+      <WebGeminiChatModal
+        isOpen={geminiModalOpen}
+        onClose={() => setGeminiModalOpen(false)}
+        tasks={tasks}
+        streak={currentStreak}
+        waterMl={healthLog.waterIntakeMl}
       />
 
       {/* Floating Voice Companion Assistant Trigger */}

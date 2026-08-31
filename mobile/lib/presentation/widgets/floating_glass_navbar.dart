@@ -9,6 +9,7 @@ class FloatingGlassNavbar extends StatelessWidget {
   final VoidCallback onAddQuest;
   final VoidCallback onOpenVoiceCompanion;
   final VoidCallback onOpenWatchSync;
+  final VoidCallback? onOpenGeminiAi;
   final String? userPhotoUrl;
 
   const FloatingGlassNavbar({
@@ -18,6 +19,7 @@ class FloatingGlassNavbar extends StatelessWidget {
     required this.onAddQuest,
     required this.onOpenVoiceCompanion,
     required this.onOpenWatchSync,
+    this.onOpenGeminiAi,
     this.userPhotoUrl,
   });
 
@@ -105,15 +107,61 @@ class FloatingGlassNavbar extends StatelessWidget {
                           onTap: () => onTabSelected(0),
                         ),
 
-                        // 2. Stats / Heatmap Matrix
+                        // 2. Expeditions Matrix / Analytics
                         _LiquidNavItem(
-                          icon: Icons.show_chart_rounded,
-                          tooltip: "Matrix",
+                          icon: Icons.auto_graph_rounded,
+                          tooltip: "Expeditions Matrix",
                           isSelected: selectedIndex == 1,
                           onTap: () => onTabSelected(1),
                         ),
 
-                        // 3. Voice Companion & Voice Switcher (👑 / ⚔️)
+                        // 3. ✨ GEMINI AI INTELLIGENCE HUB PILL
+                        if (onOpenGeminiAi != null)
+                          GestureDetector(
+                            onTap: () {
+                              SoundService().playRobotClick();
+                              onOpenGeminiAi!();
+                            },
+                            behavior: HitTestBehavior.opaque,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF4285F4), Color(0xFF9B72CB), Color(0xFFD96570)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.6),
+                                  width: 1.0,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF9B72CB).withValues(alpha: 0.5),
+                                    blurRadius: 12,
+                                  ),
+                                ],
+                              ),
+                              child: const Row(
+                                children: [
+                                  Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+                                  SizedBox(width: 3),
+                                  Text(
+                                    "AI",
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                        // 4. Voice Companion Capsule Switcher (👑 / ⚔️)
                         GestureDetector(
                           onTap: () {
                             SoundService().playLevelUp();
