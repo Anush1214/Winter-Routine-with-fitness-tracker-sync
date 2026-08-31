@@ -13,9 +13,10 @@ import { SmartwatchSyncModal } from "@/frontend/components/SmartwatchSyncModal";
 import { WebAriseSplash } from "@/frontend/components/WebAriseSplash";
 import { WebAuthModal } from "@/frontend/components/WebAuthModal";
 import { WebProfileModal } from "@/frontend/components/WebProfileModal";
+import { WebCompanionAssistantModal } from "@/frontend/components/WebCompanionAssistantModal";
 import { TaskData } from "@/frontend/components/TaskItem";
 import { formatDateKey } from "@/frontend/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, Volume2 } from "lucide-react";
 
 interface HunterUser {
   uid: string;
@@ -64,6 +65,7 @@ export default function WinterArcDashboard() {
   const [smartwatchModalOpen, setSmartwatchModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [companionModalOpen, setCompanionModalOpen] = useState(false);
 
   // Restore saved hunter user session from localStorage
   useEffect(() => {
@@ -443,6 +445,34 @@ export default function WinterArcDashboard() {
           onUpdateName={handleUpdateName}
           onUpdatePhoto={handleUpdatePhoto}
         />
+      )}
+
+      {/* Web Companion Assistant Modal (Jin-Woo & Hinata) */}
+      <WebCompanionAssistantModal
+        isOpen={companionModalOpen}
+        onClose={() => setCompanionModalOpen(false)}
+        tasks={tasks}
+        onExecuteNextTask={(taskId) => {
+          handleToggleTask(taskId, false);
+        }}
+      />
+
+      {/* Floating Voice Companion Assistant Trigger */}
+      {hunterUser && (
+        <button
+          onClick={() => {
+            setCompanionModalOpen(true);
+          }}
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 rounded-full bg-[#02050E] border-2 border-cyan-400 text-cyan-300 font-mono text-xs font-black uppercase tracking-widest shadow-[0_0_25px_rgba(0,240,255,0.4)] hover:bg-slate-900 hover:scale-105 transition-all"
+        >
+          <div className="w-6 h-6 rounded-full bg-cyan-950 flex items-center justify-center border border-cyan-400">
+            <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
+          </div>
+          <span>VOICE COMPANION</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-cyan-400">
+            👑 / 🌸
+          </span>
+        </button>
       )}
     </div>
   );
