@@ -34,7 +34,7 @@ const nextConfig = {
     return [
       {
         source: '/__/auth/:path*',
-        destination: 'https://winter-arc-protocol.firebaseapp.com/__/auth/:path*',
+        destination: 'https://winter-arc-protocol.web.app/__/auth/:path*',
       },
     ];
   },

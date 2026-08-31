@@ -32,7 +32,7 @@ const getAuthDomain = () => {
   if (typeof window !== "undefined" && window.location.hostname && window.location.hostname !== "localhost") {
     return window.location.host;
   }
-  return process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "winter-arc-protocol.firebaseapp.com";
+  return process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "winter-arc-protocol.web.app";
 };
 
 export const firebaseConfig = {

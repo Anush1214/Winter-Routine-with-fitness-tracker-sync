@@ -24,7 +24,7 @@ class DefaultFirebaseOptions {
     appId: '1:37819138819:web:6f5fb1969209b043bb5f36',
     messagingSenderId: '37819138819',
     projectId: 'winter-arc-protocol',
-    authDomain: 'winter-arc-protocol.firebaseapp.com',
+    authDomain: 'winter-arc-protocol.web.app',
     storageBucket: 'winter-arc-protocol.firebasestorage.app',
     measurementId: 'G-FJHLL5V1VN',
   );
