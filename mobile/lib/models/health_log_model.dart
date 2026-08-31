@@ -4,6 +4,7 @@ class HealthLogModel {
   final int sleepMinutes;
   final bool gymWorkoutDone;
   final int waterIntakeMl;
+  final String? userId;
 
   HealthLogModel({
     required this.date,
@@ -11,15 +12,17 @@ class HealthLogModel {
     this.sleepMinutes = 0,
     this.gymWorkoutDone = false,
     this.waterIntakeMl = 0,
+    this.userId,
   });
 
-  factory HealthLogModel.empty(String date) {
+  factory HealthLogModel.empty(String date, [String? userId]) {
     return HealthLogModel(
       date: date,
       steps: 0,
       sleepMinutes: 0,
       gymWorkoutDone: false,
       waterIntakeMl: 0,
+      userId: userId,
     );
   }
 
@@ -30,6 +33,7 @@ class HealthLogModel {
       sleepMinutes: json['sleepMinutes'] as int? ?? 0,
       gymWorkoutDone: json['gymWorkoutDone'] as bool? ?? false,
       waterIntakeMl: json['waterIntakeMl'] as int? ?? 0,
+      userId: json['userId'] as String?,
     );
   }
 
@@ -40,6 +44,7 @@ class HealthLogModel {
       'sleepMinutes': sleepMinutes,
       'gymWorkoutDone': gymWorkoutDone,
       'waterIntakeMl': waterIntakeMl,
+      'userId': userId,
     };
   }
 
@@ -49,6 +54,7 @@ class HealthLogModel {
     int? sleepMinutes,
     bool? gymWorkoutDone,
     int? waterIntakeMl,
+    String? userId,
   }) {
     return HealthLogModel(
       date: date ?? this.date,
@@ -56,6 +62,7 @@ class HealthLogModel {
       sleepMinutes: sleepMinutes ?? this.sleepMinutes,
       gymWorkoutDone: gymWorkoutDone ?? this.gymWorkoutDone,
       waterIntakeMl: waterIntakeMl ?? this.waterIntakeMl,
+      userId: userId ?? this.userId,
     );
   }
 }

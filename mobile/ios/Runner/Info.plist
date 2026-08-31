@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Winter Arc Mobile</string>
+	<string>Winter Arc Protocol</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -26,6 +26,23 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	
+	<!-- HealthKit Permissions for Smartwatch / Apple Health Ingestion -->
+	<key>NSHealthShareUsageDescription</key>
+	<string>Winter Arc reads step count, workouts, and sleep telemetry from Apple Health to automatically complete your daily Solo Leveling system quests.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Winter Arc logs hydration and quest completion data to Apple Health.</string>
+	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
+	<string>Winter Arc reads health metrics to update your daily quest progress.</string>
+
+	<!-- Background Modes for Alarms and Fetch -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+		<string>processing</string>
+	</array>
+
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -56,15 +73,11 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 </dict>
 </plist>

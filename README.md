@@ -1,55 +1,80 @@
 # ❄️ SOLO LEVELING // WINTER ARC PROTOCOL 2026
 
-> Strict 4-Month Transformation System Protocol (September 1 to December 31) with **Native Flutter Mobile Companion App**, **Smartwatch Health Auto-Sync**, **Dynamic Routine Management**, and **Built-in Offline Native System Push Notifications** powered 24/7 by Supabase PostgreSQL.
+> Strict 4-Month Transformation System Protocol (September 1 to December 31) with **Native Flutter Mobile Companion App (Android & iOS)**, **Nothing X / CMF Watch Pro 2 Health Auto-Sync**, **Firebase Multi-User Authentication**, and **Built-in Offline Native System Push Notifications** powered 24/7 by Supabase PostgreSQL.
 
 ---
 
-## 📥 Direct APK Download for Android
+## 📥 Direct Downloads & Quick Links
 
-[![Download APK](https://img.shields.io/badge/📲_Direct_Download-Solo_Leveling_APK-00F0FF?style=for-the-badge&logo=android&logoColor=02050E)](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk)
+[![Download APK](https://img.shields.io/badge/📲_Direct_Download-Android_Solo_Leveling_APK-00F0FF?style=for-the-badge&logo=android&logoColor=02050E)](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk)
+[![PWA iOS App](https://img.shields.io/badge/🍎_iOS_Instant_App-PWA_Safari_Install-FF0055?style=for-the-badge&logo=apple&logoColor=white)](https://your-winter-arc-app.vercel.app)
 
-* **Direct 1-Tap APK Download Link:**  
+* **Direct 1-Tap APK Download Link (Android):**  
   👉 **[https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk)**
 
-* **Alternative (GitHub Actions Artifacts):**  
+* **GitHub Actions Builds & Artifacts:**  
   👉 **[https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions)**
 
 ---
 
-## 📱 How to Install the APK on Your Android Phone
+## 📱 How to Install the App on Android
 
-1. **Tap the Download Link**:  
-   Click the **[Direct APK Download Link](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk)** above directly on your phone.
-2. **Install the App**:  
-   Open your phone's **Downloads** notification / Files app $\rightarrow$ Tap **`app-release.apk`** $\rightarrow$ Tap **Install**.
+1. **Download the APK**: Tap the [Direct APK Download Link](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/releases/latest/download/app-release.apk) on your phone.
+2. **Install**: Open your **Downloads** folder $\rightarrow$ Tap **`app-release.apk`** $\rightarrow$ Tap **Install**.
    - *If prompted with "Install unknown apps", tap **Settings $\rightarrow$ Allow from this source** $\rightarrow$ Tap **Install**.*
    - *If Google Play Protect shows a notice, tap **Install anyway**.*
-3. **Launch the Solo Leveling System**:  
-   Open **Winter Arc Protocol** and grant notification permissions to enable daily quest alerts and smartwatch vibrations!
+3. **Awaken Your Hunter**: Open **Winter Arc Protocol**, sign in or tap **`CONTINUE AS GUEST SHADOW HUNTER`**, and allow notification permissions!
 
 ---
 
-### 🔔 Built-In Offline Native Notifications (No Extra Apps Needed!)
+## 🍎 How to Install the App on iPhone (iOS)
 
-The mobile app includes a **Native On-Device Alarm & Notification Engine** (`flutter_local_notifications` + Android `AlarmManager`):
-- **100% Offline & Standalone**: System alarms trigger reliably even if the app is closed, phone is locked, or there is no internet connection.
-- **Smartwatch Wrist Vibration**: All native Android alerts automatically mirror and vibrate on your **CMF Watch Pro 2** (via the CMF Watch / Nothing X companion app).
-- **Daily Automated Schedule**:
-  - **🌅 07:00 AM IST:** `⚡ [ SYSTEM NOTIFICATION : DAILY QUEST ISSUED ]` (Morning Awakening Protocol)
-  - **⚔️ 06:30 PM IST:** `⚔️ [ SYSTEM QUEST : PLACEMENT & DSA SHIFT ]` (DSA & Japanese Practice)
-  - **⚠️ 10:30 PM IST:** `⚠️ [ CAUTION : PENALTY QUEST WARNING ]` (Night Protocol & Penalty Alert)
-- **Instant Testing**: Open the app $\rightarrow$ Tap **Alerts** in the top bar $\rightarrow$ Tap **`TEST NATIVE NOTIFICATION NOW`** to test instant vibration.
+### ⚡ Method 1: Instant 1-Tap PWA Install (No Mac or Xcode Required)
+1. Open the hosted web app link in **Safari** on your iPhone.
+2. Tap the **Share Button** (square with upward arrow) at the bottom of Safari.
+3. Scroll down and tap **"Add to Home Screen"** $\rightarrow$ tap **Add**.
+4. The **Winter Arc Protocol** icon will appear on your home screen and run full-screen as a native iOS app!
 
----
-
-### 💻 Alternative: Building the APK Locally on Your PC
-
-```powershell
+### 💻 Method 2: Native iOS Runner (Using Mac & Xcode)
+```bash
 cd mobile
 flutter pub get
-flutter build apk --release --no-tree-shake-icons
+cd ios && pod install && cd ..
+flutter run -d ios
 ```
-Output: `mobile/build/app/outputs/flutter-apk/app-release.apk`
+
+---
+
+## ⌚ How to Connect with Nothing X (CMF Watch Pro 2)
+
+Your CMF Watch Pro 2 connects to the **Nothing X** app, which automatically syncs your steps, sleep, and workouts with **Google Health Connect** (Android) and **Apple Health** (iOS):
+
+1. **In Nothing X App**:
+   - Open the **Nothing X** (or CMF Watch) app on your phone.
+   - Go to **Profile / Settings** $\rightarrow$ **Third-Party Services**.
+   - Enable **Google Health Connect** (Android) or **Apple Health** (iOS).
+2. **In Winter Arc Mobile App**:
+   - Tap **Watch Sync** in the top bar.
+   - Tap **`FETCH LIVE METRICS FROM NOTHING X`**.
+   - Tap **`PUSH TELEMETRY & AUTO-CHECK QUESTS`** to automatically complete your 10,000 steps, 7-8h sleep, and gym workout quests!
+
+---
+
+## 🔥 Firebase Multi-User Authentication & Data Isolation
+
+The app includes a dedicated Solo Leveling **Hunter Awakening Portal**:
+- **Multi-User Isolation**: Each user has their own isolated routine tasks, 122-day progress heatmap, and hydration logs.
+- **Sign In & Registration**: Authenticate using your email & password.
+- **Guest Shadow Hunter Mode**: Tap **`CONTINUE AS GUEST SHADOW HUNTER`** for 1-tap instant offline access without typing credentials.
+
+---
+
+## 🔔 Standalone Offline Native Notifications
+
+The app schedules native OS alarms with Android `AlarmManager` and iOS notification center:
+- **🌅 07:00 AM IST:** `⚡ [ SYSTEM NOTIFICATION : DAILY QUEST ISSUED ]` (Morning Protocol)
+- **⚔️ 06:30 PM IST:** `⚔️ [ SYSTEM QUEST : PLACEMENT & DSA SHIFT ]` (DSA & Japanese Practice)
+- **⚠️ 10:30 PM IST:** `⚠️ [ CAUTION : PENALTY QUEST WARNING ]` (Night Warning)
 
 ---
 
@@ -62,78 +87,36 @@ Output: `mobile/build/app/outputs/flutter-apk/app-release.apk`
 │   ├── lib/                      # Procedural Web Audio API sound synthesizer & utilities
 │   └── styles/globals.css        # Solo Leveling obsidian glassmorphism & HUD neon styles
 │
-├── mobile/                       # Native Flutter & Dart Mobile Companion App
+├── mobile/                       # Native Flutter & Dart Mobile Companion App (Android & iOS)
 │   ├── lib/
-│   │   ├── main.dart             # App entry point with dark holographic theme & Provider
-│   │   ├── core/theme/           # Obsidian Void #02050E, Neon Cyan #00F0FF, Mana Blue
+│   │   ├── main.dart             # App entry point with AuthService gating & dark theme
 │   │   ├── services/
+│   │   │   ├── auth_service.dart         # Firebase Auth + Guest session management
 │   │   │   ├── notification_service.dart # Native on-device offline alarms & notifications
-│   │   │   ├── health_service.dart       # HealthKit / Health Connect sync
-│   │   │   └── supabase_service.dart     # Real-time state manager & API sync
-│   │   └── presentation/         # Animated Solo Leveling HUD frames, gauges & 4 quest sections
+│   │   │   ├── health_service.dart       # Nothing X / Health Connect / HealthKit sync
+│   │   │   └── supabase_service.dart     # Per-user isolated state manager & API sync
+│   │   └── presentation/         # Animated Solo Leveling HUD frames, AuthScreen & quest views
+│   ├── android/                  # Android Runner (SDK 36, desugaring enabled)
+│   ├── ios/                      # iOS Runner (HealthKit permissions, iOS 14+ Podfile)
 │   └── pubspec.yaml              # Mobile dependencies & assets
 │
 ├── backend/                      # Services, Prisma Database, Smartwatch Sync, Automations
-│   ├── prisma/
-│   │   ├── schema.prisma         # Supabase PostgreSQL models (Task, HealthLog, UserSettings)
-│   │   └── seed.ts               # Seeding script for all 122 days (Sept 1 - Dec 31)
+│   ├── prisma/                   # Supabase PostgreSQL models (Task, HealthLog, UserSettings)
 │   ├── services/                 # Tasks, Health Sync, Hydration, Notifications & Stats
 │   └── automation/               # GitHub Actions workflows & Smartwatch shortcuts
 │
-└── src/app/api/                  # Next.js App Router API endpoints with CORS enabled
+└── src/app/api/                  # Next.js App Router API endpoints with CORS & User Isolation
 ```
 
 ---
 
 ## ⚡ Quick Start (Web Development)
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-2. **Push database schema to Supabase:**
-   ```bash
-   npm run prisma:generate
-   npm run prisma:push
-   npm run prisma:seed
-   ```
-3. **Start local dev server:**
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 📱 Quick Start (Flutter Mobile App)
-
 ```bash
-cd mobile
-flutter pub get
-flutter run -d chrome      # Preview in browser with live reload
-flutter run -d windows     # Run native desktop app
-flutter run                # Run on connected Android / iOS device
+npm install
+npm run prisma:generate
+npm run prisma:push
+npm run prisma:seed
+npm run dev
 ```
-
----
-
-## ⌚ CMF Watch Pro 2 & Smartwatch Auto-Sync
-
-The tracker accepts POST requests to `/api/sync-health`:
-
-```bash
-curl -X POST https://your-winter-arc-app.vercel.app/api/sync-health \
-  -H "Content-Type: application/json" \
-  -d '{
-    "date": "2026-09-01",
-    "steps": 10450,
-    "sleepMinutes": 450,
-    "gymWorkoutDone": true,
-    "waterIntakeMl": 4200
-  }'
-```
-
-- **Steps >= 10,000** $\rightarrow$ Auto-completes `Daily Movement: 10,000 Steps`.
-- **Sleep >= 420 mins (7 hrs)** $\rightarrow$ Auto-completes `Sleep Recovery: 7-8 Hours`.
-- **Gym Workout Done = true** $\rightarrow$ Auto-completes `Gym Workout Session (06:00 - 07:00)`.
-- **Water >= 4000ml** $\rightarrow$ Auto-completes `Hydration Goal: 4-5L Water`.
+Open [http://localhost:3000](http://localhost:3000) in your browser.

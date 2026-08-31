@@ -10,6 +10,10 @@ dependencies:
   flutter:
     sdk: flutter
   
+  # Firebase Multi-User Authentication
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  
   # Native Local On-Device Push Notifications & Alarms
   flutter_local_notifications: ^17.2.1
   timezone: ^0.9.4
@@ -27,7 +31,7 @@ dependencies:
   google_fonts: ^6.2.1
   lucide_icons: ^0.257.0
   
-  # Smartwatch & Health Ingestion (Apple Health & Health Connect)
+  # Smartwatch & Health Ingestion (Apple Health, Health Connect, Nothing X)
   health: ^11.0.0
   
   # Utilities

@@ -6,6 +6,7 @@ class TaskModel {
   final String? startTime;
   final bool isCompleted;
   final String? autoMetric;
+  final String? userId;
 
   TaskModel({
     required this.id,
@@ -15,43 +16,19 @@ class TaskModel {
     this.startTime,
     required this.isCompleted,
     this.autoMetric,
+    this.userId,
   });
 
-  TaskModel copyWith({
-    String? id,
-    String? title,
-    String? category,
-    String? targetDate,
-    String? startTime,
-    bool? isCompleted,
-    String? autoMetric,
-  }) {
-    return TaskModel(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      category: category ?? this.category,
-      targetDate: targetDate ?? this.targetDate,
-      startTime: startTime ?? this.startTime,
-      isCompleted: isCompleted ?? this.isCompleted,
-      autoMetric: autoMetric ?? this.autoMetric,
-    );
-  }
-
   factory TaskModel.fromJson(Map<String, dynamic> json) {
-    String dateStr = "";
-    if (json['targetDate'] != null) {
-      final raw = json['targetDate'].toString();
-      dateStr = raw.contains('T') ? raw.split('T')[0] : raw;
-    }
-
     return TaskModel(
-      id: json['id']?.toString() ?? '',
-      title: json['title']?.toString() ?? '',
-      category: json['category']?.toString() ?? 'routine',
-      targetDate: dateStr,
-      startTime: json['startTime']?.toString(),
-      isCompleted: json['isCompleted'] == true,
-      autoMetric: json['autoMetric']?.toString(),
+      id: json['id'] as String,
+      title: json['title'] as String,
+      category: json['category'] as String,
+      targetDate: json['targetDate'] as String,
+      startTime: json['startTime'] as String?,
+      isCompleted: json['isCompleted'] as bool? ?? false,
+      autoMetric: json['autoMetric'] as String?,
+      userId: json['userId'] as String?,
     );
   }
 
@@ -64,6 +41,29 @@ class TaskModel {
       'startTime': startTime,
       'isCompleted': isCompleted,
       'autoMetric': autoMetric,
+      'userId': userId,
     };
+  }
+
+  TaskModel copyWith({
+    String? id,
+    String? title,
+    String? category,
+    String? targetDate,
+    String? startTime,
+    bool? isCompleted,
+    String? autoMetric,
+    String? userId,
+  }) {
+    return TaskModel(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      category: category ?? this.category,
+      targetDate: targetDate ?? this.targetDate,
+      startTime: startTime ?? this.startTime,
+      isCompleted: isCompleted ?? this.isCompleted,
+      autoMetric: autoMetric ?? this.autoMetric,
+      userId: userId ?? this.userId,
+    );
   }
 }

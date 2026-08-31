@@ -5,6 +5,7 @@ import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
 import '../../core/utils/timeline_utils.dart';
+import '../../services/auth_service.dart';
 import 'hunter_rank_badge.dart';
 import 'holographic_frame.dart';
 
@@ -56,6 +57,8 @@ class _HeaderWidgetState extends State<HeaderWidget> {
   Widget build(BuildContext context) {
     final date = DateTime.tryParse(widget.currentDate) ?? DateTime.now();
     final dayNum = TimelineUtils.getDayNumber(date);
+    final hunter = AuthService().currentUser;
+    final hunterName = hunter?.displayName ?? "Sung Jin-Woo";
 
     return HolographicFrame(
       padding: const EdgeInsets.all(16),
@@ -78,7 +81,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   border: Border.all(color: SoloColors.neonCyan, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: SoloColors.neonCyan.withOpacity(0.35),
+                      color: SoloColors.neonCyan.withValues(alpha: 0.35),
                       blurRadius: 16,
                     ),
                   ],
@@ -114,10 +117,10 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                           decoration: BoxDecoration(
                             color: const Color(0xFF042F2E),
                             borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: SoloColors.neonCyan.withOpacity(0.5)),
+                            border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.5)),
                           ),
                           child: Text(
-                            "[ SYSTEM : ACTIVE ]",
+                            "[ SYSTEM : $hunterName ]",
                             style: SoloTypography.systemTag.copyWith(fontSize: 8),
                           ),
                         ),
@@ -150,6 +153,15 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   ],
                 ),
               ),
+              // Logout / Switch User Trigger
+              IconButton(
+                icon: const Icon(Icons.logout, color: SoloColors.textDim, size: 18),
+                tooltip: "Sign Out Hunter",
+                onPressed: () async {
+                  SoundService().playClick();
+                  await AuthService().signOut();
+                },
+              ),
             ],
           ),
           const SizedBox(height: 14),
@@ -169,10 +181,10 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 decoration: BoxDecoration(
                   color: const Color(0xFF431407),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: SoloColors.flameOrange.withOpacity(0.5)),
+                  border: Border.all(color: SoloColors.flameOrange.withValues(alpha: 0.5)),
                   boxShadow: [
                     BoxShadow(
-                      color: SoloColors.flameOrange.withOpacity(0.2),
+                      color: SoloColors.flameOrange.withValues(alpha: 0.2),
                       blurRadius: 8,
                     ),
                   ],
@@ -196,7 +208,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 decoration: BoxDecoration(
                   color: SoloColors.obsidianVoid,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: SoloColors.neonCyan.withOpacity(0.3)),
+                  border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -219,7 +231,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   decoration: BoxDecoration(
                     color: SoloColors.obsidianVoid,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: SoloColors.neonCyan.withOpacity(0.4)),
+                    border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
                   ),
                   child: Icon(
                     SoundService().isSoundEnabled ? Icons.volume_up : Icons.volume_off,
@@ -237,7 +249,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   decoration: BoxDecoration(
                     color: SoloColors.obsidianVoid,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: SoloColors.neonCyan.withOpacity(0.4)),
+                    border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -258,7 +270,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   decoration: BoxDecoration(
                     color: SoloColors.obsidianVoid,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: SoloColors.manaViolet.withOpacity(0.5)),
+                    border: Border.all(color: SoloColors.manaViolet.withValues(alpha: 0.5)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -281,7 +293,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
-                        color: SoloColors.neonCyan.withOpacity(0.4),
+                        color: SoloColors.neonCyan.withValues(alpha: 0.4),
                         blurRadius: 10,
                       ),
                     ],

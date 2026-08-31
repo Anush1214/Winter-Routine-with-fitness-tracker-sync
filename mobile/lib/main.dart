@@ -3,13 +3,18 @@ import 'package:provider/provider.dart';
 import 'core/theme/solo_colors.dart';
 import 'services/supabase_service.dart';
 import 'services/notification_service.dart';
+import 'services/auth_service.dart';
 import 'presentation/screens/home_quest_screen.dart';
+import 'presentation/screens/auth_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
   // Initialize native on-device notifications
   await NotificationService().init();
+  
+  // Initialize authentication state
+  await AuthService().init();
   
   runApp(const WinterArcMobileApp());
 }
@@ -21,6 +26,7 @@ class WinterArcMobileApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => SupabaseService()),
       ],
       child: MaterialApp(
@@ -37,7 +43,14 @@ class WinterArcMobileApp extends StatelessWidget {
           ),
           useMaterial3: true,
         ),
-        home: const HomeQuestScreen(),
+        home: Consumer<AuthService>(
+          builder: (context, auth, _) {
+            if (auth.isAuthenticated) {
+              return const HomeQuestScreen();
+            }
+            return const AuthScreen();
+          },
+        ),
       ),
     );
   }

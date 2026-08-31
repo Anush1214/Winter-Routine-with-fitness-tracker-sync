@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/task_model.dart';
 import '../models/health_log_model.dart';
 import '../core/utils/timeline_utils.dart';
+import 'auth_service.dart';
 
 class SupabaseService extends ChangeNotifier {
   // Point to Next.js API or direct Supabase
@@ -25,6 +26,8 @@ class SupabaseService extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
 
+  String? get currentUserId => AuthService().currentUser?.uid;
+
   SupabaseService() {
     _selectedDate = TimelineUtils.formatDateKey(DateTime.now());
   }
@@ -45,8 +48,10 @@ class SupabaseService extends ChangeNotifier {
     _error = null;
     notifyListeners();
 
+    final userIdParam = currentUserId != null ? "&userId=$currentUserId" : "";
+
     try {
-      final res = await http.get(Uri.parse("$_baseUrl/api/tasks?date=$date"));
+      final res = await http.get(Uri.parse("$_baseUrl/api/tasks?date=$date$userIdParam"));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data['tasks'] != null) {
@@ -57,7 +62,7 @@ class SupabaseService extends ChangeNotifier {
       }
 
       // Fetch health log
-      final healthRes = await http.get(Uri.parse("$_baseUrl/api/sync-health?date=$date"));
+      final healthRes = await http.get(Uri.parse("$_baseUrl/api/sync-health?date=$date$userIdParam"));
       if (healthRes.statusCode == 200) {
         final data = jsonDecode(healthRes.body);
         if (data['log'] != null) {
@@ -66,7 +71,7 @@ class SupabaseService extends ChangeNotifier {
       }
 
       // Fetch stats
-      final statsRes = await http.get(Uri.parse("$_baseUrl/api/stats/summary"));
+      final statsRes = await http.get(Uri.parse("$_baseUrl/api/stats/summary?$userIdParam"));
       if (statsRes.statusCode == 200) {
         final data = jsonDecode(statsRes.body);
         _currentStreak = data['streak'] ?? 0;
@@ -87,17 +92,17 @@ class SupabaseService extends ChangeNotifier {
   void _useLocalDefaultTasks(String date) {
     if (_tasks.isEmpty) {
       _tasks = [
-        TaskModel(id: '1', title: 'Wake Up & Morning Protocol', category: 'routine', targetDate: date, startTime: '07:00', isCompleted: false),
-        TaskModel(id: '2', title: 'Hydration Goal: 4-5L Water', category: 'health', targetDate: date, autoMetric: 'water_4l', isCompleted: false),
-        TaskModel(id: '3', title: 'Sleep Recovery: 7-8 Hours', category: 'health', targetDate: date, autoMetric: 'sleep_7h', isCompleted: false),
-        TaskModel(id: '4', title: 'Daily Movement: 10,000 Steps', category: 'fitness', targetDate: date, autoMetric: 'steps_10k', isCompleted: false),
-        TaskModel(id: '5', title: 'Office Work Shift', category: 'routine', targetDate: date, startTime: '09:00', isCompleted: false),
-        TaskModel(id: '6', title: 'Self-Study & Revision (If Time Permits)', category: 'study', targetDate: date, isCompleted: false),
-        TaskModel(id: '7', title: 'Evening Fresh Up & Transition', category: 'routine', targetDate: date, startTime: '18:30', isCompleted: false),
-        TaskModel(id: '8', title: 'DSA & Placement Preparation Shift', category: 'career', targetDate: date, startTime: '19:00', isCompleted: false),
-        TaskModel(id: '9', title: 'DSA Practice & Japanese Language', category: 'career', targetDate: date, isCompleted: false),
-        TaskModel(id: '10', title: 'Major Project Development', category: 'career', targetDate: date, isCompleted: false),
-        TaskModel(id: '11', title: 'Night Protocol & Sleep by 11:00 PM', category: 'routine', targetDate: date, startTime: '23:00', isCompleted: false),
+        TaskModel(id: '1', title: 'Wake Up & Morning Protocol', category: 'routine', targetDate: date, startTime: '07:00', isCompleted: false, userId: currentUserId),
+        TaskModel(id: '2', title: 'Hydration Goal: 4-5L Water', category: 'health', targetDate: date, autoMetric: 'water_4l', isCompleted: false, userId: currentUserId),
+        TaskModel(id: '3', title: 'Sleep Recovery: 7-8 Hours', category: 'health', targetDate: date, autoMetric: 'sleep_7h', isCompleted: false, userId: currentUserId),
+        TaskModel(id: '4', title: 'Daily Movement: 10,000 Steps', category: 'fitness', targetDate: date, autoMetric: 'steps_10k', isCompleted: false, userId: currentUserId),
+        TaskModel(id: '5', title: 'Office Work Shift', category: 'routine', targetDate: date, startTime: '09:00', isCompleted: false, userId: currentUserId),
+        TaskModel(id: '6', title: 'Self-Study & Revision (If Time Permits)', category: 'study', targetDate: date, isCompleted: false, userId: currentUserId),
+        TaskModel(id: '7', title: 'Evening Fresh Up & Transition', category: 'routine', targetDate: date, startTime: '18:30', isCompleted: false, userId: currentUserId),
+        TaskModel(id: '8', title: 'DSA & Placement Preparation Shift', category: 'career', targetDate: date, startTime: '19:00', isCompleted: false, userId: currentUserId),
+        TaskModel(id: '9', title: 'DSA Practice & Japanese Language', category: 'career', targetDate: date, isCompleted: false, userId: currentUserId),
+        TaskModel(id: '10', title: 'Major Project Development', category: 'career', targetDate: date, isCompleted: false, userId: currentUserId),
+        TaskModel(id: '11', title: 'Night Protocol & Sleep by 11:00 PM', category: 'routine', targetDate: date, startTime: '23:00', isCompleted: false, userId: currentUserId),
       ];
     }
   }
@@ -113,18 +118,22 @@ class SupabaseService extends ChangeNotifier {
         await http.patch(
           Uri.parse("$_baseUrl/api/tasks/$taskId"),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({'isCompleted': !currentStatus}),
+          body: jsonEncode({
+            'isCompleted': !currentStatus,
+            'userId': currentUserId,
+          }),
         );
       } catch (_) {}
     }
   }
 
   Future<void> saveTask(TaskModel task, String scope) async {
-    final idx = _tasks.indexWhere((t) => t.id == task.id);
+    final scopedTask = task.copyWith(userId: currentUserId);
+    final idx = _tasks.indexWhere((t) => t.id == scopedTask.id);
     if (idx != -1) {
-      _tasks[idx] = task;
+      _tasks[idx] = scopedTask;
     } else {
-      _tasks.add(task);
+      _tasks.add(scopedTask);
     }
     _recalculateStats();
     notifyListeners();
@@ -134,12 +143,13 @@ class SupabaseService extends ChangeNotifier {
         Uri.parse("$_baseUrl/api/tasks"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'title': task.title,
-          'category': task.category,
-          'targetDate': task.targetDate,
-          'startTime': task.startTime,
-          'autoMetric': task.autoMetric,
+          'title': scopedTask.title,
+          'category': scopedTask.category,
+          'targetDate': scopedTask.targetDate,
+          'startTime': scopedTask.startTime,
+          'autoMetric': scopedTask.autoMetric,
           'scope': scope,
+          'userId': currentUserId,
         }),
       );
     } catch (_) {}
@@ -151,7 +161,7 @@ class SupabaseService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await http.delete(Uri.parse("$_baseUrl/api/tasks/$taskId"));
+      await http.delete(Uri.parse("$_baseUrl/api/tasks/$taskId?userId=$currentUserId"));
     } catch (_) {}
   }
 
@@ -163,7 +173,7 @@ class SupabaseService extends ChangeNotifier {
       newWater = (newWater + delta).clamp(0, 10000);
     }
 
-    _healthLog = _healthLog.copyWith(waterIntakeMl: newWater);
+    _healthLog = _healthLog.copyWith(waterIntakeMl: newWater, userId: currentUserId);
 
     // Auto-check water task if threshold reached
     if (newWater >= 4000) {
@@ -185,6 +195,7 @@ class SupabaseService extends ChangeNotifier {
           'steps': _healthLog.steps,
           'sleepMinutes': _healthLog.sleepMinutes,
           'gymWorkoutDone': _healthLog.gymWorkoutDone,
+          'userId': currentUserId,
         }),
       );
     } catch (_) {}
@@ -202,6 +213,7 @@ class SupabaseService extends ChangeNotifier {
       sleepMinutes: sleepMinutes,
       gymWorkoutDone: gymWorkoutDone,
       waterIntakeMl: waterIntakeMl,
+      userId: currentUserId,
     );
 
     // Auto-complete tasks based on thresholds
@@ -231,6 +243,7 @@ class SupabaseService extends ChangeNotifier {
           'sleepMinutes': sleepMinutes,
           'gymWorkoutDone': gymWorkoutDone,
           'waterIntakeMl': waterIntakeMl,
+          'userId': currentUserId,
         }),
       );
     } catch (_) {}
@@ -244,6 +257,7 @@ class SupabaseService extends ChangeNotifier {
         body: jsonEncode({
           'type': 'test',
           'topic': topic,
+          'userId': currentUserId,
         }),
       );
     } catch (_) {}
