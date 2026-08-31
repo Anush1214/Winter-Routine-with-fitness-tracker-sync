@@ -8,6 +8,8 @@ import 'home_quest_screen.dart';
 import 'profile_screen.dart';
 import 'notification_settings_modal.dart';
 import 'quest_editor_modal.dart';
+import 'smartwatch_sync_sheet.dart';
+import '../widgets/sung_jinwoo_assistant_dialog.dart';
 import '../widgets/consistency_heatmap_widget.dart';
 import '../widgets/expedition_matrix.dart';
 import '../widgets/holographic_frame.dart';
@@ -35,6 +37,29 @@ class _MainShellScreenState extends State<MainShellScreen> {
           service.saveTask(savedTask, scope);
         },
       ),
+    );
+  }
+
+  void _openVoiceCompanion() {
+    final service = context.read<SupabaseService>();
+    SungJinwooAssistantDialog.show(
+      context,
+      tasks: service.tasks,
+      onTriggerAction: () {
+        final pending = service.tasks.where((t) => !t.isCompleted).toList();
+        if (pending.isNotEmpty) {
+          service.toggleTask(pending.first.id, false);
+        }
+      },
+    );
+  }
+
+  void _openSmartwatchSync() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => const SmartwatchSyncSheet(),
     );
   }
 
@@ -168,6 +193,8 @@ class _MainShellScreenState extends State<MainShellScreen> {
               setState(() => _currentTabIndex = index);
             },
             onAddQuest: _openTaskEditor,
+            onOpenVoiceCompanion: _openVoiceCompanion,
+            onOpenWatchSync: _openSmartwatchSync,
             userPhotoUrl: user?.photoUrl,
           ),
         ],
