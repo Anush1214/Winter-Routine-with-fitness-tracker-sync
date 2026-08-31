@@ -3,7 +3,7 @@ import { prisma, localStore, isDbConnected } from "../lib/prisma";
 export async function getTasksAndHealth(dateParam: string, userId: string = "default_hunter") {
   if (isDbConnected && prisma) {
     const targetDate = new Date(`${dateParam}T00:00:00Z`);
-    const [tasks, healthLog] = await Promise.all([
+    const [fetchedTasks, healthLog] = await Promise.all([
       prisma.task.findMany({
         where: { targetDate, userId },
         orderBy: [{ startTime: "asc" }, { createdAt: "asc" }],
@@ -17,6 +17,8 @@ export async function getTasksAndHealth(dateParam: string, userId: string = "def
         },
       }),
     ]);
+
+    let tasks = fetchedTasks;
 
     if (tasks.length === 0) {
       const year = new Date().getFullYear();
