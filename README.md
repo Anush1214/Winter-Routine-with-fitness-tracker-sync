@@ -1,62 +1,105 @@
-# ❄️ WINTER ARC 2026 // 4-Month Personal Productivity Protocol
+# ❄️ SOLO LEVELING // WINTER ARC PROTOCOL 2026
 
-> Strict 4-Month Daily Transformation PWA (September 1 to December 31) with Smartwatch Health Auto-Sync, Dynamic Routine Management, and Zero-Cost Native Mobile Push Notifications powered 24/7 by Supabase PostgreSQL.
+> Strict 4-Month Transformation System Protocol (September 1 to December 31) with **Native Flutter Mobile Companion App**, **Smartwatch Health Auto-Sync**, **Dynamic Routine Management**, and **Built-in Offline Native System Push Notifications** powered 24/7 by Supabase PostgreSQL.
+
+---
+
+## 📱 Mobile APK Installation & Testing Guide (Android)
+
+You can download and install the native Android APK directly onto your phone without needing any local Flutter or Android SDK setup!
+
+### ⚡ Method 1: Download from GitHub Actions (Easiest - 1 Click)
+
+1. Open your GitHub Repository on your phone's browser or laptop:  
+   🔗 **[GitHub Actions Workflows](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions)**
+2. Click on the latest workflow run (e.g. `ci: add GitHub Actions workflow to auto-build and release Flutter APK`).
+3. Scroll down to the **Artifacts** section and tap **`Winter-Arc-Solo-Leveling-App`** to download the `.zip` containing the `app-release.apk`.
+4. Extract the zip and tap **`app-release.apk`** to install on your phone.
+   - *If prompted with "Install from unknown sources", tap **Settings $\rightarrow$ Allow from this source**.*
+5. Open the **Winter Arc Protocol** app!
+
+---
+
+### 💻 Method 2: Build APK Locally via Laptop Terminal
+
+If you want to compile the APK directly on your machine:
+
+1. **Install Android Command-line Tools / Android Studio**:
+   - Download [Android Studio](https://developer.android.com/studio).
+   - In Android Studio $\rightarrow$ **Settings / SDK Manager** $\rightarrow$ **SDK Tools** $\rightarrow$ Check **"Android SDK Command-line Tools"** and click **Apply**.
+   - Accept licenses in terminal:
+     ```powershell
+     flutter doctor --android-licenses
+     ```
+2. **Build Release APK**:
+   ```powershell
+   cd mobile
+   flutter pub get
+   flutter build apk --release
+   ```
+3. Your compiled `.apk` will be generated at:  
+   📁 `mobile/build/app/outputs/flutter-apk/app-release.apk`
+4. Send this file to your phone via Google Drive, WhatsApp, Telegram, or USB cable and tap **Install**.
+
+---
+
+### 🔔 Standalone Native Notifications (NO 3rd party apps needed!)
+
+The Flutter app includes a **Native On-Device Notification & Alarm Engine** (`flutter_local_notifications` + Android `AlarmManager`):
+- **100% Offline**: Fires system alerts even if the app is closed, phone is locked, or there is no internet.
+- **Smartwatch Vibration**: Native notifications automatically mirror to your **CMF Watch Pro 2** (or any Bluetooth smartwatch via the companion watch app).
+- **Daily Built-in Schedule**:
+  - **🌅 07:00 AM IST:** `⚡ [ SYSTEM NOTIFICATION : DAILY QUEST ISSUED ]` (Morning Protocol)
+  - **⚔️ 06:30 PM IST:** `⚔️ [ SYSTEM QUEST : PLACEMENT & DSA SHIFT ]` (DSA & Japanese)
+  - **⚠️ 10:30 PM IST:** `⚠️ [ CAUTION : PENALTY QUEST WARNING ]` (Night Warning)
 
 ---
 
 ## 📁 Project Architecture & Clean Folder Separation
 
-The project is cleanly separated into `frontend` and `backend`:
-
 ```
-├── frontend/                     # Client Components, UI, Audio Synthesizer, Utilities & Styles
+├── frontend/                     # Next.js React Client, Holographic Solo Leveling UI & Procedural Audio
 │   ├── components/               # Header, DateCarousel, DailyProgressCard, RoutineSection, 
-│   │                             # TaskItem, HabitCounters, ConsistencyHeatmap, TaskModal,
-│   │                             # NotificationSettingsModal, SmartwatchSyncModal
+│   │                             # HabitCounters, ConsistencyHeatmap, TaskModal, SmartwatchSyncModal
+│   ├── lib/                      # Procedural Web Audio API sound synthesizer & utilities
+│   └── styles/globals.css        # Solo Leveling obsidian glassmorphism & HUD neon styles
+│
+├── mobile/                       # Native Flutter & Dart Mobile Companion App
 │   ├── lib/
-│   │   ├── audio.ts              # Web Audio API synthesized sounds (clicks, water, fanfare)
-│   │   └── utils.ts              # Timeline, categories, date helpers
-│   └── styles/
-│       └── globals.css           # Winter Arc cyber-frost theme & neon glow styling
+│   │   ├── main.dart             # App entry point with dark holographic theme & Provider
+│   │   ├── core/theme/           # Obsidian Void #02050E, Neon Cyan #00F0FF, Mana Blue
+│   │   ├── services/
+│   │   │   ├── notification_service.dart # Native on-device offline alarms & notifications
+│   │   │   ├── health_service.dart       # HealthKit / Health Connect sync
+│   │   │   └── supabase_service.dart     # Real-time state manager & API sync
+│   │   └── presentation/         # Animated Solo Leveling HUD frames, gauges & 4 quest sections
+│   └── pubspec.yaml              # Mobile dependencies & assets
 │
 ├── backend/                      # Services, Prisma Database, Smartwatch Sync, Automations
 │   ├── prisma/
 │   │   ├── schema.prisma         # Supabase PostgreSQL models (Task, HealthLog, UserSettings)
 │   │   └── seed.ts               # Seeding script for all 122 days (Sept 1 - Dec 31)
-│   ├── services/
-│   │   ├── tasksService.ts       # Task CRUD & scope propagation engine
-│   │   ├── healthSyncService.ts  # Smartwatch auto-metric ingest & auto-checking
-│   │   ├── waterService.ts       # Hydration tracking & 4L auto-check
-│   │   ├── notificationService.ts# Dynamic push notification compiler
-│   │   ├── settingsService.ts    # User notification schedules & goal preferences
-│   │   └── statsService.ts       # 4-month heatmap & streak statistics
-│   ├── lib/
-│   │   ├── prisma.ts             # Resilient Prisma client with Supabase pooling & local fallback
-│   │   └── notifications.ts      # ntfy.sh REST API Markdown push client
-│   └── automation/
-│       ├── daily-alerts.yml      # GitHub Actions scheduled workflow (01:30, 13:00, 17:00 UTC)
-│       └── smartwatch-shortcuts.json # Apple Health & Tasker setup payload
+│   ├── services/                 # Tasks, Health Sync, Hydration, Notifications & Stats
+│   └── automation/               # GitHub Actions workflows & Smartwatch shortcuts
 │
-├── public/                       # PWA Manifest, Service Worker & Icons
-├── src/app/api/                  # Next.js App Router API endpoints linking to backend/services
-└── .env.example                  # Environment template for Supabase, ntfy & cron secrets
+└── src/app/api/                  # Next.js App Router API endpoints with CORS enabled
 ```
 
 ---
 
-## ⚡ Quick Start (Local Development)
+## ⚡ Quick Start (Web Development)
 
 1. **Install dependencies:**
    ```bash
    npm install
    ```
-
-2. **Generate Prisma Client:**
+2. **Push database schema to Supabase:**
    ```bash
    npm run prisma:generate
+   npm run prisma:push
+   npm run prisma:seed
    ```
-
-3. **Start the Next.js development server:**
+3. **Start local dev server:**
    ```bash
    npm run dev
    ```
@@ -64,27 +107,15 @@ The project is cleanly separated into `frontend` and `backend`:
 
 ---
 
-## 🗄️ Database Setup with Supabase (Free Tier PostgreSQL)
+## 📱 Quick Start (Flutter Mobile App)
 
-1. Create a free project on [Supabase](https://supabase.com).
-2. Go to **Project Settings** > **Database** > **Connection Pooling**.
-3. Copy the **Transaction Mode (port 6543)** string to `DATABASE_URL` in `.env.local`.
-4. Copy the **Session/Direct Mode (port 5432)** string to `DIRECT_URL` in `.env.local`.
-5. Push the schema and seed all 122 days:
-   ```bash
-   npm run prisma:push
-   npm run prisma:seed
-   ```
-
----
-
-## 📱 Mobile Push Notifications (ntfy.sh - 100% Free)
-
-1. Install the free **ntfy app** from the App Store (iOS) or Play Store (Android).
-2. Open the **Alerts Hub** inside the Winter Arc app.
-3. Set your private topic name (e.g., `winter-arc-yourname`).
-4. Click the link or scan the QR code to subscribe on your phone in 1 click!
-5. Test your notifications instantly using the **Send Test Alert** button in the app.
+```bash
+cd mobile
+flutter pub get
+flutter run -d chrome      # Preview in browser with live reload
+flutter run -d windows     # Run native desktop app
+flutter run                # Run on connected Android / iOS device
+```
 
 ---
 
@@ -104,18 +135,7 @@ curl -X POST https://your-winter-arc-app.vercel.app/api/sync-health \
   }'
 ```
 
-- **Steps >= 10,000** automatically marks `10k steps` task as complete.
-- **Sleep >= 420 mins (7 hrs)** automatically marks `7-8hr Sleep` task as complete.
-- **Gym Workout Done = true** automatically marks `From sept 5th gym 6-7` task as complete.
-- **Water >= 4000ml** automatically marks `4-5l water` task as complete.
-
----
-
-## ⏰ Automated Cron Alerts (GitHub Actions)
-
-Scheduled in `.github/workflows/daily-alerts.yml` at:
-- `30 1 * * *` (07:00 AM IST) -> Morning Briefing
-- `0 13 * * *` (06:30 PM IST) -> Evening DSA & Placement Prep Shift
-- `0 17 * * *` (10:30 PM IST) -> Nightly Wrap-up & Sleep 11 PM Prep
-
-Add `CRON_SECRET` and `NEXT_PUBLIC_APP_URL` to your GitHub Repository Secrets.
+- **Steps >= 10,000** $\rightarrow$ Auto-completes `Daily Movement: 10,000 Steps`.
+- **Sleep >= 420 mins (7 hrs)** $\rightarrow$ Auto-completes `Sleep Recovery: 7-8 Hours`.
+- **Gym Workout Done = true** $\rightarrow$ Auto-completes `Gym Workout Session (06:00 - 07:00)`.
+- **Water >= 4000ml** $\rightarrow$ Auto-completes `Hydration Goal: 4-5L Water`.

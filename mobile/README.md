@@ -1,59 +1,40 @@
 # ❄️ Solo Leveling Winter Arc — Flutter Mobile App
 
-> Native Flutter & Dart mobile application for the 4-Month Winter Arc Protocol (September 1 to December 31) featuring animated Solo Leveling "System" holographic UI, Smartwatch Health Auto-Sync, and real-time Supabase PostgreSQL integration.
+> Native Flutter & Dart mobile application for the 4-Month Winter Arc Protocol (September 1 to December 31) featuring animated Solo Leveling "System" holographic UI, Smartwatch Health Auto-Sync, Built-in Offline Native Alarms/Notifications, and real-time Supabase PostgreSQL integration.
 
 ---
 
-## 📁 Architecture & Clean Structure
+## 📱 How to Download & Install the APK on Your Android Phone
 
+### ⚡ Option 1: 1-Click Cloud Download from GitHub (Recommended)
+1. Visit your repository's [GitHub Actions tab](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions) on your phone or PC.
+2. Select the latest build and tap **`Winter-Arc-Solo-Leveling-App`** under **Artifacts** to download the `.zip`.
+3. Extract and tap **`app-release.apk`** to install on your Android device!
+
+### 💻 Option 2: Build Locally on Your PC
+```powershell
+cd mobile
+flutter pub get
+flutter build apk --release
 ```
-winter_arc_mobile/
-├── pubspec.yaml                  # Flutter dependencies (supabase_flutter, provider, health, audioplayers)
-├── README.md                     # Setup and running guide
-└── lib/
-    ├── main.dart                 # Application entry point with dark holographic theme
-    ├── core/
-    │   ├── theme/
-    │   │   ├── solo_colors.dart  # Obsidian #02050E, Neon Cyan #00F0FF, Mana Blue, Penalty Crimson
-    │   │   └── solo_typography.dart # Futuristic Google Fonts typography
-    │   ├── utils/
-    │   │   └── timeline_utils.dart # 122-Day math (Sept 1 — Dec 31)
-    │   └── audio/
-    │       └── sound_service.dart  # Procedural haptics & audio triggers
-    ├── models/
-    │   ├── task_model.dart       # Quest objective schema
-    │   └── health_log_model.dart # Steps, Sleep, Water, Gym logs
-    ├── services/
-    │   ├── supabase_service.dart # Real-time state manager & REST API sync
-    │   └── health_service.dart   # Apple Health & Android Health Connect auto-sync
-    └── presentation/
-        ├── widgets/
-        │   ├── holographic_frame.dart   # CustomPainter glowing corner brackets & scanlines
-        │   ├── mana_circular_ring.dart  # Animated sweeping circular mana gauge
-        │   ├── hydration_wave_card.dart # Vitality water chamber with quick-log buttons
-        │   ├── quest_objective_tile.dart# Holographic quest tile with electric checkmark
-        │   ├── hunter_rank_badge.dart   # Dynamic E-Rank to S-Rank Monarch emblem
-        │   ├── penalty_warning_banner.dart # Pulsating crimson penalty alert
-        │   └── expedition_matrix.dart   # 122-Day 4-month animated grid matrix
-        └── screens/
-            ├── home_quest_screen.dart   # Main dashboard screen
-            ├── quest_editor_modal.dart  # Modal to add/edit routine objectives
-            └── smartwatch_sync_sheet.dart # Health sync bottom sheet
-```
+The APK is generated at:
+`mobile/build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 
-## ⚡ Getting Started (Running the App)
+## 🔔 Built-In Offline Native Notifications
 
-1. **Install dependencies:**
-   ```bash
-   flutter pub get
-   ```
+The app does **not require any 3rd party apps**. It schedules native OS alarms with Android `AlarmManager`:
+- **07:00 AM IST:** `⚡ [ SYSTEM NOTIFICATION : DAILY QUEST ISSUED ]`
+- **06:30 PM IST:** `⚔️ [ SYSTEM QUEST : PLACEMENT & DSA SHIFT ]`
+- **10:30 PM IST:** `⚠️ [ CAUTION : PENALTY QUEST WARNING ]`
 
-2. **Run on Android / iOS Simulator / Real Device:**
-   ```bash
-   flutter run
-   ```
+---
 
-3. **Connect to your live backend:**
-   Open `lib/services/supabase_service.dart` and set `_baseUrl` to your hosted Vercel URL (e.g. `https://your-app.vercel.app`).
+## ⚡ Running in Development Mode
+
+```powershell
+flutter run -d chrome    # Web preview with hot reload
+flutter run -d windows   # Windows desktop app
+flutter run              # Plugged-in Android/iOS device
+```
