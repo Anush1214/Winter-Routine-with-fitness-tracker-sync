@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "37819138819-ec9f2o5oso5jnm5vouqjjc9ro6mksu2k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.winter_arc_mobile",
+            "certificate_hash": "af872c75ac23a31b3d7827b6ae0bc13b8ef20922"
+          }
+        },
+        {
           "client_id": "37819138819-q9b5he2c1s3s5gbha7rae867q7jldkek.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
