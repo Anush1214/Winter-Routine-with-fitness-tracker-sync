@@ -519,7 +519,11 @@ class _SungJinwooAssistantDialogState extends State<SungJinwooAssistantDialog>
                           ),
                           GestureDetector(
                             onTap: () {
-                              SoundService().playVictory();
+                              SoundService().speakCharacter(
+                                text: quote,
+                                isJapanese: _selectedLang == JinwooVoiceLang.japanese,
+                                isJinwoo: _selectedPersona == CompanionPersona.sungJinwoo,
+                              );
                             },
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
