@@ -4,27 +4,46 @@
 
 ---
 
-## 📱 How to Download & Install the APK on Your Android Phone
+## 📱 How to Download & Install the Mobile APK on Your Android Phone
 
-### ⚡ Option 1: 1-Click Cloud Download from GitHub (Recommended)
-1. Visit your repository's [GitHub Actions tab](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions) on your phone or PC.
-2. Select the latest build and tap **`Winter-Arc-Solo-Leveling-App`** under **Artifacts** to download the `.zip`.
-3. Extract and tap **`app-release.apk`** to install on your Android device!
+### ⚡ Step-by-Step APK Download Guide (GitHub Actions):
 
-### 💻 Option 2: Build Locally on Your PC
+1. **Open GitHub Actions on Your Phone or PC**:  
+   👉 **[GitHub Actions Workflows](https://github.com/Anush1214/Winter-Routine-with-fitness-tracker-sync/actions)**
+
+2. **Select the Latest Successful Run**:  
+   Tap on the top workflow run that has a **green checkmark (✅)**.
+
+3. **Download the APK Artifact**:  
+   Scroll down to the **Artifacts** section at the bottom:  
+   👉 Tap **`Winter-Arc-Solo-Leveling-App`** to download the `.zip`.
+
+4. **Install on Your Phone**:
+   - Extract the `.zip` file in your Downloads folder.
+   - Tap on **`app-release.apk`** $\rightarrow$ Tap **Install**.
+   - If prompted with *"Install from unknown sources"*, tap **Settings $\rightarrow$ Allow from this source**.
+   - If Google Play Protect shows a prompt, tap **Install anyway**.
+
+5. **Open the App**:
+   - Open the **Winter Arc Protocol** app and allow notifications to receive daily quest alerts!
+
+---
+
+## 💻 Building the APK Locally on Your PC
+
 ```powershell
 cd mobile
 flutter pub get
-flutter build apk --release
+flutter build apk --release --no-tree-shake-icons
 ```
-The APK is generated at:
-`mobile/build/app/outputs/flutter-apk/app-release.apk`
+The compiled APK is generated at:  
+📁 `mobile/build/app/outputs/flutter-apk/app-release.apk`
 
 ---
 
 ## 🔔 Built-In Offline Native Notifications
 
-The app does **not require any 3rd party apps**. It schedules native OS alarms with Android `AlarmManager`:
+The app does **not require any 3rd party apps**. It schedules native OS alarms directly with Android `AlarmManager`:
 - **07:00 AM IST:** `⚡ [ SYSTEM NOTIFICATION : DAILY QUEST ISSUED ]`
 - **06:30 PM IST:** `⚔️ [ SYSTEM QUEST : PLACEMENT & DSA SHIFT ]`
 - **10:30 PM IST:** `⚠️ [ CAUTION : PENALTY QUEST WARNING ]`
