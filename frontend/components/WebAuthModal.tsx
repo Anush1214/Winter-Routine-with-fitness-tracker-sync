@@ -9,16 +9,22 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
 } from "@/src/lib/firebase";
-import { Shield, Sparkles, X, Mail, Lock, User, Code, AlertCircle, Loader2, Zap } from "lucide-react";
+import { Shield, X, Mail, Lock, User, Code, AlertCircle, Loader2, Zap } from "lucide-react";
 import { audio } from "../lib/audio";
 
 interface WebAuthModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
+  canClose?: boolean;
   onSuccess: (user: { uid: string; email: string; displayName: string; photoUrl?: string; provider: string }) => void;
 }
 
-export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const WebAuthModal: React.FC<WebAuthModalProps> = ({
+  isOpen,
+  onClose,
+  canClose = false,
+  onSuccess,
+}) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,19 +49,13 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
           photoUrl: res.user.photoURL || undefined,
           provider: "google",
         });
-        onClose();
-        return;
+        if (onClose) onClose();
+      } else {
+        setErrorMsg("Google Sign-In was cancelled or failed. Please try again.");
       }
     } catch (err: any) {
-      console.warn("Google web sign-in fallback:", err);
-      // Seamless guest google login if domain isn't authorized yet
-      onSuccess({
-        uid: `google_${Date.now()}`,
-        email: "hunter.google@winterarc.solo",
-        displayName: "Shadow Hunter (Google)",
-        provider: "google",
-      });
-      onClose();
+      console.error("Google Web Auth error:", err);
+      setErrorMsg(err.message || "Google Sign-In failed. Please verify popup permissions and try again.");
     } finally {
       setLoadingProvider(null);
     }
@@ -76,18 +76,13 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
           photoUrl: res.user.photoURL || undefined,
           provider: "github",
         });
-        onClose();
-        return;
+        if (onClose) onClose();
+      } else {
+        setErrorMsg("GitHub Sign-In was cancelled or failed. Please try again.");
       }
     } catch (err: any) {
-      console.warn("GitHub web sign-in fallback:", err);
-      onSuccess({
-        uid: `github_${Date.now()}`,
-        email: "hunter.github@winterarc.solo",
-        displayName: "Monarch of Shadows (GitHub)",
-        provider: "github",
-      });
-      onClose();
+      console.error("GitHub Web Auth error:", err);
+      setErrorMsg(err.message || "GitHub Sign-In failed. Please verify your credentials and try again.");
     } finally {
       setLoadingProvider(null);
     }
@@ -95,8 +90,13 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setErrorMsg("Please enter both email and security key.");
+    if (!email.trim() || !password.trim()) {
+      setErrorMsg("Please enter both player email identifier and secret security key.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setErrorMsg("Secret security key must be at least 6 characters.");
       return;
     }
 
@@ -106,34 +106,32 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
 
     try {
       if (isSignUp) {
-        const res = await createUserWithEmailAndPassword(auth, email, password);
+        const res = await createUserWithEmailAndPassword(auth, email.trim(), password.trim());
         onSuccess({
           uid: res.user.uid,
-          email: res.user.email || email,
-          displayName: codename || email.split("@")[0].toUpperCase(),
+          email: res.user.email || email.trim(),
+          displayName: codename.trim() || email.split("@")[0].toUpperCase(),
           provider: "email",
         });
       } else {
-        const res = await signInWithEmailAndPassword(auth, email, password);
+        const res = await signInWithEmailAndPassword(auth, email.trim(), password.trim());
         onSuccess({
           uid: res.user.uid,
-          email: res.user.email || email,
+          email: res.user.email || email.trim(),
           displayName: res.user.displayName || email.split("@")[0].toUpperCase(),
           provider: "email",
         });
       }
-      onClose();
+      if (onClose) onClose();
     } catch (err: any) {
-      // Robust local hunter profile fallback if Firebase remote API key is unavailable
-      const uid = `hunter_${email.replace(/[^a-zA-Z0-9]/g, "_")}`;
-      const name = isSignUp && codename ? codename : email.split("@")[0].toUpperCase();
-      onSuccess({
-        uid,
-        email,
-        displayName: name,
-        provider: "email",
-      });
-      onClose();
+      console.error("Email auth error:", err);
+      if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+        setErrorMsg("Invalid email identifier or security key. Check your credentials.");
+      } else if (err.code === "auth/email-already-in-use") {
+        setErrorMsg("This email is already registered. Please switch to Hunter Sign In.");
+      } else {
+        setErrorMsg(err.message || "Authentication failed. Please verify your credentials and try again.");
+      }
     } finally {
       setLoadingProvider(null);
     }
@@ -147,23 +145,25 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
       displayName: "Shadow Hunter",
       provider: "guest",
     });
-    onClose();
+    if (onClose) onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg animate-fade-in">
       <div className="relative w-full max-w-md bg-[#02050E] border-2 border-cyan-400/80 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,240,255,0.35)] overflow-hidden">
         {/* Glowing Background Radial */}
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-violet-600/20 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-xl bg-slate-900/80 border border-cyan-500/30 text-slate-400 hover:text-cyan-300 hover:border-cyan-400 transition-all"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {/* Close Button (only available if user is already authenticated) */}
+        {canClose && onClose && (
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 rounded-xl bg-slate-900/80 border border-cyan-500/30 text-slate-400 hover:text-cyan-300 hover:border-cyan-400 transition-all"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
 
         {/* Top Emblem */}
         <div className="flex flex-col items-center text-center mb-6">
@@ -177,13 +177,14 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
             HUNTER AWAKENING PORTAL
           </h2>
           <p className="text-xs font-mono text-slate-400 mt-1">
-            Identify your Hunter credentials to synchronize your daily quests.
+            Identify your Hunter credentials to access your daily quests.
           </p>
         </div>
 
         {/* Social OAuth Buttons */}
         <div className="grid grid-cols-2 gap-3 mb-5">
           <button
+            type="button"
             onClick={handleGoogleLogin}
             disabled={loadingProvider !== null}
             className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-900/90 border border-red-500/50 hover:border-red-400 hover:bg-slate-800/90 text-white text-xs font-mono font-bold transition-all shadow-[0_0_10px_rgba(239,68,68,0.15)] disabled:opacity-50"
@@ -199,6 +200,7 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
           </button>
 
           <button
+            type="button"
             onClick={handleGitHubLogin}
             disabled={loadingProvider !== null}
             className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-900/90 border border-cyan-500/50 hover:border-cyan-400 hover:bg-slate-800/90 text-white text-xs font-mono font-bold transition-all shadow-[0_0_10px_rgba(0,240,255,0.15)] disabled:opacity-50"
@@ -225,7 +227,10 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
         <div className="grid grid-cols-2 gap-2 p-1 rounded-xl bg-slate-950 border border-cyan-500/20 mb-4">
           <button
             type="button"
-            onClick={() => setIsSignUp(false)}
+            onClick={() => {
+              setIsSignUp(false);
+              setErrorMsg(null);
+            }}
             className={`py-1.5 text-xs font-mono font-bold rounded-lg transition-all ${
               !isSignUp
                 ? "bg-cyan-950/90 border border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(0,240,255,0.3)]"
@@ -236,7 +241,10 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
           </button>
           <button
             type="button"
-            onClick={() => setIsSignUp(true)}
+            onClick={() => {
+              setIsSignUp(true);
+              setErrorMsg(null);
+            }}
             className={`py-1.5 text-xs font-mono font-bold rounded-lg transition-all ${
               isSignUp
                 ? "bg-cyan-950/90 border border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(0,240,255,0.3)]"
@@ -296,9 +304,9 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
           </div>
 
           {errorMsg && (
-            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-red-950/60 border border-red-500/50 text-red-300 text-xs font-mono">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400" />
-              <span>{errorMsg}</span>
+            <div className="flex items-start gap-2 p-2.5 rounded-xl bg-red-950/80 border border-red-500/60 text-red-300 text-xs font-mono">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400 mt-0.5" />
+              <span className="leading-relaxed">{errorMsg}</span>
             </div>
           )}
 
@@ -317,7 +325,7 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({ isOpen, onClose, onS
           </button>
         </form>
 
-        {/* Guest Mode Trigger */}
+        {/* Explicit Guest Mode Trigger */}
         <div className="mt-4 pt-3 border-t border-slate-800 text-center">
           <button
             type="button"

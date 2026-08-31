@@ -75,6 +75,14 @@ export default function WinterArcDashboard() {
     } catch (_) {}
   }, []);
 
+  const handleSplashComplete = () => {
+    setSplashComplete(true);
+    // If not authenticated, immediately prompt for login!
+    if (!hunterUser) {
+      setAuthModalOpen(true);
+    }
+  };
+
   const activeUserId = hunterUser?.uid || "default_hunter";
 
   // 1. Fetch tasks & health for selected date & user
@@ -308,7 +316,7 @@ export default function WinterArcDashboard() {
   const totalCount = tasks.length;
 
   if (!splashComplete) {
-    return <WebAriseSplash onComplete={() => setSplashComplete(true)} />;
+    return <WebAriseSplash onComplete={handleSplashComplete} />;
   }
 
   return (
@@ -407,9 +415,10 @@ export default function WinterArcDashboard() {
         onSyncSuccess={handleSmartwatchSyncSuccess}
       />
 
-      {/* Web Auth Modal */}
+      {/* Web Auth Modal (Strict Gate) */}
       <WebAuthModal
-        isOpen={authModalOpen}
+        isOpen={authModalOpen || !hunterUser}
+        canClose={Boolean(hunterUser)}
         onClose={() => setAuthModalOpen(false)}
         onSuccess={handleAuthSuccess}
       />
