@@ -132,6 +132,83 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  void _showAvatarPicker() {
+    SoundService().playClick();
+    final presets = [
+      {'name': 'Shadow Monarch', 'url': 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80'},
+      {'name': 'Igris Bloodred', 'url': 'https://images.unsplash.com/photo-1563089145-599997674d42?w=150&auto=format&fit=crop&q=80'},
+      {'name': 'Beru Ant King', 'url': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80'},
+      {'name': 'Grand Marshal', 'url': 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=150&auto=format&fit=crop&q=80'},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF02050E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        side: BorderSide(color: SoloColors.neonCyan, width: 1.5),
+      ),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'CHOOSE HUNTER AVATAR',
+                  style: SoloTypography.systemTitle.copyWith(fontSize: 14, color: SoloColors.neonCyan),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: SoloColors.textMuted, size: 18),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: presets.map((p) {
+                return GestureDetector(
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await AuthService().updatePhotoUrl(p['url']!);
+                    SoundService().playChime();
+                    setState(() {});
+                  },
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.6), width: 1.5),
+                          image: DecorationImage(
+                            image: NetworkImage(p['url']!),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        p['name']!.split(' ').first,
+                        style: SoloTypography.systemTag.copyWith(fontSize: 9, color: Colors.white70),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _confirmSignOut() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -291,23 +368,46 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child: child,
                   );
                 },
-                child: CircleAvatar(
-                  radius: 48,
-                  backgroundColor: const Color(0xFF1E293B),
-                  backgroundImage: user.photoUrl != null
-                      ? NetworkImage(user.photoUrl!)
-                      : null,
-                  child: user.photoUrl == null
-                      ? Text(
-                          user.displayName.isNotEmpty
-                              ? user.displayName[0].toUpperCase()
-                              : '?',
-                          style: SoloTypography.monoValue.copyWith(
-                            fontSize: 36,
-                            color: rankColor,
-                          ),
-                        )
-                      : null,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 48,
+                      backgroundColor: const Color(0xFF1E293B),
+                      backgroundImage: user.photoUrl != null
+                          ? NetworkImage(user.photoUrl!)
+                          : null,
+                      child: user.photoUrl == null
+                          ? Text(
+                              user.displayName.isNotEmpty
+                                  ? user.displayName[0].toUpperCase()
+                                  : '?',
+                              style: SoloTypography.monoValue.copyWith(
+                                fontSize: 36,
+                                color: rankColor,
+                              ),
+                            )
+                          : null,
+                    ),
+                    GestureDetector(
+                      onTap: _showAvatarPicker,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: SoloColors.neonCyan, width: 1.5),
+                          boxShadow: [
+                            BoxShadow(
+                              color: SoloColors.neonCyan.withValues(alpha: 0.5),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(Icons.camera_alt, color: SoloColors.neonCyan, size: 14),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 14),

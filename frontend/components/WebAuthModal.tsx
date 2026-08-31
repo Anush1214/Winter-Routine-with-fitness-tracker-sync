@@ -167,8 +167,12 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({
 
         {/* Top Emblem */}
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/30 via-violet-900/30 to-slate-950 border border-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.4)] mb-3">
-            <Shield className="w-7 h-7 text-cyan-300 animate-pulse" />
+          <div className="w-16 h-16 rounded-2xl bg-slate-950 border-2 border-cyan-400 p-0.5 overflow-hidden flex items-center justify-center shadow-[0_0_25px_rgba(0,240,255,0.5)] mb-3">
+            <img
+              src="/app_logo.jpg"
+              alt="Winter Arc Protocol"
+              className="w-full h-full object-cover rounded-xl"
+            />
           </div>
           <span className="text-[10px] font-mono font-extrabold uppercase tracking-widest text-cyan-400">
             SOLO LEVELING // SYSTEM

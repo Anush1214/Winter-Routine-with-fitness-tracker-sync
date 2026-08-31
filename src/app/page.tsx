@@ -161,6 +161,15 @@ export default function WinterArcDashboard() {
     } catch (_) {}
   };
 
+  const handleUpdatePhoto = (newPhotoUrl: string) => {
+    if (!hunterUser) return;
+    const updated = { ...hunterUser, photoUrl: newPhotoUrl };
+    setHunterUser(updated);
+    try {
+      localStorage.setItem("winter_arc_hunter_user", JSON.stringify(updated));
+    } catch (_) {}
+  };
+
   // Toggle task completed
   const handleToggleTask = async (id: string, current: boolean) => {
     const newStatus = !current;
@@ -432,6 +441,7 @@ export default function WinterArcDashboard() {
           streakDays={currentStreak}
           onSignOut={handleSignOut}
           onUpdateName={handleUpdateName}
+          onUpdatePhoto={handleUpdatePhoto}
         />
       )}
     </div>

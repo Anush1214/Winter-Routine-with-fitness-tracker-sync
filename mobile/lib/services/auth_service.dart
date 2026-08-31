@@ -360,6 +360,35 @@ class AuthService extends ChangeNotifier {
     }
   }
 
+  /// Update the hunter's profile avatar photo URL
+  Future<void> updatePhotoUrl(String newPhotoUrl) async {
+    if (newPhotoUrl.trim().isEmpty) return;
+
+    if (_isFirebaseAvailable && fb.FirebaseAuth.instance.currentUser != null) {
+      try {
+        await fb.FirebaseAuth.instance.currentUser!.updatePhotoURL(newPhotoUrl.trim());
+      } catch (_) {}
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('hunter_photo', newPhotoUrl.trim());
+
+    if (_currentUser != null) {
+      _currentUser = HunterUser(
+        uid: _currentUser!.uid,
+        email: _currentUser!.email,
+        displayName: _currentUser!.displayName,
+        photoUrl: newPhotoUrl.trim(),
+        rank: _currentUser!.rank,
+        provider: _currentUser!.provider,
+        isAnonymous: _currentUser!.isAnonymous,
+        createdAt: _currentUser!.createdAt,
+      );
+      _authController.add(_currentUser);
+      notifyListeners();
+    }
+  }
+
   /// Sign out and clear session
   Future<void> signOut() async {
     if (_isFirebaseAvailable) {

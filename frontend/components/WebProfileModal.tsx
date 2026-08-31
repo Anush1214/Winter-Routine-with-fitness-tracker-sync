@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { X, User, Mail, Fingerprint, Calendar, Flame, LogOut, Trash2, Check, Edit2 } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { X, User, Fingerprint, Flame, LogOut, Check, Edit2, Camera, Sparkles, Upload } from "lucide-react";
 import { audio } from "../lib/audio";
 
 interface WebProfileModalProps {
@@ -17,7 +17,31 @@ interface WebProfileModalProps {
   streakDays: number;
   onSignOut: () => void;
   onUpdateName: (newName: string) => void;
+  onUpdatePhoto: (newPhotoUrl: string) => void;
 }
+
+const HUNTER_AVATAR_PRESETS = [
+  {
+    name: "Shadow Monarch",
+    url: "/app_logo.jpg",
+  },
+  {
+    name: "Sung Jin-Woo",
+    url: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    name: "Igris the Bloodred",
+    url: "https://images.unsplash.com/photo-1563089145-599997674d42?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    name: "Beru Ant King",
+    url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80",
+  },
+  {
+    name: "Grand Marshal Bellion",
+    url: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=150&auto=format&fit=crop&q=80",
+  },
+];
 
 export const WebProfileModal: React.FC<WebProfileModalProps> = ({
   isOpen,
@@ -26,9 +50,12 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
   streakDays,
   onSignOut,
   onUpdateName,
+  onUpdatePhoto,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user.displayName);
+  const [showAvatarPresets, setShowAvatarPresets] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
@@ -36,6 +63,31 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
     if (!name.trim()) return;
     onUpdateName(name.trim());
     setIsEditing(false);
+    audio.playLevelUp();
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check size < 4MB
+    if (file.size > 4 * 1024 * 1024) {
+      alert("Image size should be less than 4MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      onUpdatePhoto(dataUrl);
+      audio.playLevelUp();
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSelectPreset = (url: string) => {
+    onUpdatePhoto(url);
+    setShowAvatarPresets(false);
     audio.playLevelUp();
   };
 
@@ -51,7 +103,7 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-md bg-[#02050E] border-2 border-cyan-400/80 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,240,255,0.35)] overflow-hidden">
+      <div className="relative w-full max-w-md bg-[#02050E] border-2 border-cyan-400/80 rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,240,255,0.35)] overflow-hidden max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-xl bg-slate-900/80 border border-cyan-500/30 text-slate-400 hover:text-cyan-300 hover:border-cyan-400 transition-all"
@@ -59,25 +111,77 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
           <X className="w-4 h-4" />
         </button>
 
-        {/* Profile Avatar */}
+        {/* Hidden File Input for Custom Image Upload */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileUpload}
+        />
+
+        {/* Profile Avatar with Edit Overlay */}
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="relative w-20 h-20 rounded-full border-2 border-cyan-400 p-1 shadow-[0_0_25px_rgba(0,240,255,0.5)] mb-3">
-            {user.photoUrl ? (
-              <img
-                src={user.photoUrl}
-                alt={user.displayName}
-                className="w-full h-full rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-cyan-300 font-black text-2xl font-mono">
-                {user.displayName.charAt(0).toUpperCase()}
-              </div>
-            )}
+          <div className="relative group">
+            <div className="w-24 h-24 rounded-full border-2 border-cyan-400 p-1 shadow-[0_0_25px_rgba(0,240,255,0.5)] overflow-hidden bg-slate-950">
+              {user.photoUrl ? (
+                <img
+                  src={user.photoUrl}
+                  alt={user.displayName}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full rounded-full bg-slate-900 flex items-center justify-center text-cyan-300 font-black text-3xl font-mono">
+                  {user.displayName.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+
+            {/* Change Avatar Button */}
+            <button
+              onClick={() => setShowAvatarPresets(!showAvatarPresets)}
+              title="Change Hunter Avatar"
+              className="absolute bottom-0 right-0 p-2 rounded-full bg-cyan-950 border border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(0,240,255,0.6)] hover:scale-110 hover:bg-cyan-900 transition-all"
+            >
+              <Camera className="w-3.5 h-3.5" />
+            </button>
           </div>
+
+          {/* Avatar Selector Dropdown / Grid */}
+          {showAvatarPresets && (
+            <div className="mt-3 p-3 rounded-2xl bg-slate-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(0,240,255,0.2)] animate-fade-in w-full">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-cyan-400" />
+                  CHOOSE HUNTER AVATAR
+                </span>
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-1 text-[10px] font-mono font-bold text-violet-300 bg-violet-950/80 px-2 py-1 rounded border border-violet-500/40 hover:border-violet-400"
+                >
+                  <Upload className="w-2.5 h-2.5" />
+                  <span>Upload Custom</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-5 gap-2">
+                {HUNTER_AVATAR_PRESETS.map((preset, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => handleSelectPreset(preset.url)}
+                    title={preset.name}
+                    className="relative rounded-xl border border-slate-700 hover:border-cyan-400 overflow-hidden group aspect-square bg-slate-900 transition-all hover:scale-105"
+                  >
+                    <img src={preset.url} alt={preset.name} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Editable Hunter Codename */}
           {isEditing ? (
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-3">
               <input
                 type="text"
                 value={name}
@@ -94,7 +198,7 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
           ) : (
             <div
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 cursor-pointer group mt-1"
+              className="flex items-center gap-2 cursor-pointer group mt-3"
             >
               <h2 className="text-xl font-black font-['Outfit'] uppercase text-white glow-text-system group-hover:text-cyan-300 transition-colors">
                 {user.displayName}

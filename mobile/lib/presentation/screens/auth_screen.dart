@@ -161,8 +161,15 @@ class _AuthScreenState extends State<AuthScreen> {
                       ),
                     ],
                   ),
-                  child: const Center(
-                    child: Icon(Icons.shield_outlined, color: SoloColors.neonCyan, size: 34),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(14),
+                    child: Image.asset(
+                      'assets/app_logo.jpg',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Center(
+                        child: Icon(Icons.shield_outlined, color: SoloColors.neonCyan, size: 34),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),

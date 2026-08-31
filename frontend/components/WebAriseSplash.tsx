@@ -64,8 +64,12 @@ export const WebAriseSplash: React.FC<WebAriseSplashProps> = ({ onComplete }) =>
 
       {/* Center Monarch Emblem */}
       <div className="relative z-10 flex flex-col items-center justify-center my-auto">
-        <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-gradient-to-br from-cyan-500/30 via-violet-900/30 to-slate-950 border-2 border-cyan-400 flex items-center justify-center shadow-[0_0_40px_rgba(0,240,255,0.4)] animate-pulse">
-          <Shield className="w-14 h-14 sm:w-18 sm:h-18 text-cyan-300 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)]" />
+        <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-3xl bg-slate-950 border-2 border-cyan-400 p-1 flex items-center justify-center shadow-[0_0_40px_rgba(0,240,255,0.6)] animate-pulse overflow-hidden">
+          <img
+            src="/app_logo.jpg"
+            alt="Winter Arc Protocol"
+            className="w-full h-full object-cover rounded-2xl"
+          />
           <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-violet-400 animate-spin" />
         </div>
 

@@ -121,10 +121,14 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="system-window rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         {/* Left: System Identification & Hunter Title */}
         <div className="flex items-center gap-3.5">
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500/30 via-blue-900/40 to-slate-950 border border-cyan-400 shadow-[0_0_20px_rgba(0,240,255,0.35)]">
-            <Crown className="w-6 h-6 text-cyan-300 animate-pulse" />
-            <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-cyan-400 animate-ping" />
-            <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-cyan-400" />
+          <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-slate-950 border border-cyan-400 p-0.5 shadow-[0_0_20px_rgba(0,240,255,0.4)] overflow-hidden">
+            <img
+              src="/app_logo.jpg"
+              alt="Winter Arc Logo"
+              className="w-full h-full object-cover rounded-lg"
+            />
+            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
+            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-400" />
           </div>
 
             <div>
