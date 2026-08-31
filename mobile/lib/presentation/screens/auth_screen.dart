@@ -137,40 +137,6 @@ class _AuthScreenState extends State<AuthScreen> {
       backgroundColor: SoloColors.obsidianVoid,
       body: Stack(
         children: [
-          // Full Immersive Shadow Monarch Hero Background Header
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 380,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                Image.asset(
-                  'assets/app_logo.jpg',
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                  errorBuilder: (_, __, ___) => const SizedBox(),
-                ),
-                // Seamless Dark Gradient Fade
-                Container(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        Color(0x88090414),
-                        Color(0xFF090414),
-                      ],
-                      stops: [0.0, 0.65, 1.0],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
@@ -179,7 +145,42 @@ class _AuthScreenState extends State<AuthScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(height: 180),
+                    // Grand Glowing Shadow Monarch Logo Hero
+                    Container(
+                      width: 170,
+                      height: 170,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        border: Border.all(
+                          color: const Color(0xFFC084FC).withValues(alpha: 0.8),
+                          width: 2.0,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFA855F7).withValues(alpha: 0.55),
+                            blurRadius: 36,
+                            spreadRadius: 2,
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.8),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(30),
+                        child: Image.asset(
+                          'assets/app_logo.jpg',
+                          fit: BoxFit.cover,
+                          alignment: Alignment.center,
+                          errorBuilder: (_, __, ___) => const Center(
+                            child: Icon(Icons.flash_on, color: Color(0xFFC084FC), size: 60),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
 
                     // Cinematic "YOUR AWAKENING BEGINS NOW!" Title
                     ShaderMask(

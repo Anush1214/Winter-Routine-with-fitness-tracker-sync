@@ -145,17 +145,7 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg animate-fade-in">
-      <div className="relative w-full max-w-md bg-[#090414] border-2 border-purple-400/80 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(192,132,252,0.35)]">
-        {/* Full Immersive Shadow Monarch Background Banner */}
-        <div className="relative w-full h-44 overflow-hidden">
-          <img
-            src="/app_logo.jpg"
-            alt="Solo Leveling Awakening"
-            className="w-full h-full object-cover object-top"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#090414]/60 to-[#090414]" />
-        </div>
-
+      <div className="relative w-full max-w-md bg-[#090414] border-2 border-purple-400/80 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(192,132,252,0.35)] p-6 sm:p-8">
         {/* Close Button */}
         {canClose && onClose && (
           <button
@@ -166,9 +156,16 @@ export const WebAuthModal: React.FC<WebAuthModalProps> = ({
           </button>
         )}
 
-        <div className="p-6 sm:p-8 pt-0">
-          {/* Header Title */}
+        <div className="p-6 sm:p-8 pt-8">
+          {/* Glowing Shadow Monarch Logo Hero Card */}
           <div className="flex flex-col items-center text-center mb-6">
+            <div className="w-32 h-32 rounded-3xl bg-slate-950 border-2 border-purple-400 p-0.5 overflow-hidden flex items-center justify-center shadow-[0_0_35px_rgba(192,132,252,0.55)] mb-4">
+              <img
+                src="/app_logo.jpg"
+                alt="Solo Leveling Awakening"
+                className="w-full h-full object-cover rounded-[22px]"
+              />
+            </div>
             <h2 className="text-2xl font-black font-serif uppercase tracking-wider text-white bg-gradient-to-b from-white via-purple-100 to-purple-400 bg-clip-text text-transparent mt-1">
               YOUR AWAKENING<br />BEGINS NOW!
             </h2>
