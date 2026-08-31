@@ -34,16 +34,18 @@ jobs:
           flutter pub get
           dart run flutter_launcher_icons
 
-      - name: Generate Signing Keystore
+      - name: Generate Permanent Signing Keystore
         run: |
-          mkdir -p ~/.android
-          if [ ! -f ~/.android/debug.keystore ]; then
-            keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          mkdir -p mobile/android/app
+          if [ ! -f mobile/android/app/upload-keystore.jks ]; then
+            keytool -genkey -v -keystore mobile/android/app/upload-keystore.jks -storepass androiddebug -alias upload -keypass androiddebug -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Winter Arc Hunter,O=Solo Leveling,C=US"
           fi
           echo "=== SHA-1 FINGERPRINT ==="
-          keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep "SHA1:" || true
-          SHA1_VAL=$(keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android | grep "SHA1:" | awk '{print $2}')
+          keytool -list -v -keystore mobile/android/app/upload-keystore.jks -alias upload -storepass androiddebug -keypass androiddebug | grep "SHA1:" || true
+          SHA1_VAL=$(keytool -list -v -keystore mobile/android/app/upload-keystore.jks -alias upload -storepass androiddebug -keypass androiddebug | grep "SHA1:" | awk '{print $2}')
+          SHA256_VAL=$(keytool -list -v -keystore mobile/android/app/upload-keystore.jks -alias upload -storepass androiddebug -keypass androiddebug | grep "SHA256:" | awk '{print $2}')
           echo "SHA1_VAL=$SHA1_VAL" >> $GITHUB_ENV
+          echo "SHA256_VAL=$SHA256_VAL" >> $GITHUB_ENV
 
       - name: Build Release APK
         run: |

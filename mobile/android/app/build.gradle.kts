@@ -25,9 +25,26 @@ android {
         multiDexEnabled = true
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = file("upload-keystore.jks")
+            if (keystoreFile.exists()) {
+                storeFile = keystoreFile
+                storePassword = "androiddebug"
+                keyAlias = "upload"
+                keyPassword = "androiddebug"
+            } else {
+                storeFile = file(System.getProperty("user.home") + "/.android/debug.keystore")
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
