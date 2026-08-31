@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
@@ -132,6 +134,77 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
+  Future<void> _pickFromGallery() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        await AuthService().updatePhotoUrl(base64String);
+        SoundService().playChime();
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to pick image: $e'),
+            backgroundColor: SoloColors.penaltyCrimson,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickFromCamera() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        final bytes = await pickedFile.readAsBytes();
+        final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        await AuthService().updatePhotoUrl(base64String);
+        SoundService().playChime();
+        if (mounted) setState(() {});
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to capture photo: $e'),
+            backgroundColor: SoloColors.penaltyCrimson,
+          ),
+        );
+      }
+    }
+  }
+
+  ImageProvider? _buildAvatarImage(String? photoUrl) {
+    if (photoUrl == null || photoUrl.isEmpty) return null;
+    if (photoUrl.startsWith('data:image')) {
+      try {
+        final base64Data = photoUrl.split(',').last;
+        return MemoryImage(base64Decode(base64Data));
+      } catch (_) {
+        return null;
+      }
+    }
+    return NetworkImage(photoUrl);
+  }
+
   void _showAvatarPicker() {
     SoundService().playClick();
     final presets = [
@@ -158,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'CHOOSE HUNTER AVATAR',
+                  'CHANGE HUNTER AVATAR',
                   style: SoloTypography.systemTitle.copyWith(fontSize: 14, color: SoloColors.neonCyan),
                 ),
                 IconButton(
@@ -167,7 +240,60 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
+
+            // Device Gallery & Camera Upload Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _pickFromGallery();
+                    },
+                    icon: const Icon(Icons.photo_library, size: 16, color: SoloColors.neonCyan),
+                    label: Text(
+                      'DEVICE GALLERY',
+                      style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0B192C),
+                      side: const BorderSide(color: SoloColors.neonCyan, width: 1.2),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _pickFromCamera();
+                    },
+                    icon: const Icon(Icons.camera_alt, size: 16, color: SoloColors.manaViolet),
+                    label: Text(
+                      'TAKE PHOTO',
+                      style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0B192C),
+                      side: const BorderSide(color: SoloColors.manaViolet, width: 1.2),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 16),
+            Text(
+              'OR SELECT SOLO LEVELING PRESET',
+              style: SoloTypography.systemTag.copyWith(fontSize: 9, color: SoloColors.textMuted),
+            ),
+            const SizedBox(height: 10),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: presets.map((p) {
@@ -202,7 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                 );
               }).toList(),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -374,9 +500,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     CircleAvatar(
                       radius: 48,
                       backgroundColor: const Color(0xFF1E293B),
-                      backgroundImage: user.photoUrl != null
-                          ? NetworkImage(user.photoUrl!)
-                          : null,
+                      backgroundImage: _buildAvatarImage(user.photoUrl),
                       child: user.photoUrl == null
                           ? Text(
                               user.displayName.isNotEmpty

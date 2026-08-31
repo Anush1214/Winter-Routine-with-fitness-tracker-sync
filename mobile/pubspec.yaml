@@ -36,6 +36,9 @@ dependencies:
   # Smartwatch & Health Ingestion (Apple Health, Health Connect, Nothing X)
   health: ^11.0.0
   
+  # Image Picker for Custom Profile Avatars
+  image_picker: ^1.1.2
+  
   # Utilities
   intl: ^0.19.0
   shared_preferences: ^2.2.3

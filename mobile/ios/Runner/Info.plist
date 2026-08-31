@@ -35,6 +35,12 @@
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
 	<string>Winter Arc reads health metrics to update your daily quest progress.</string>
 
+	<!-- Photo Library and Camera for Custom Profile Avatars -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Winter Arc needs access to your photo library so you can choose a custom Hunter avatar.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Winter Arc needs access to your camera so you can take a profile photo.</string>
+
 	<!-- Background Modes for Alarms and Fetch -->
 	<key>UIBackgroundModes</key>
 	<array>

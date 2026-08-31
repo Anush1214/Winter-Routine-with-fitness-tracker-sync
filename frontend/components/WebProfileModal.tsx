@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { X, User, Fingerprint, Flame, LogOut, Check, Edit2, Camera, Sparkles, Upload } from "lucide-react";
+import { X, User, Fingerprint, Flame, LogOut, Check, Edit2, Camera, Sparkles, Upload, Image as ImageIcon } from "lucide-react";
 import { audio } from "../lib/audio";
 
 interface WebProfileModalProps {
@@ -54,7 +54,7 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user.displayName);
-  const [showAvatarPresets, setShowAvatarPresets] = useState(false);
+  const [showAvatarOptions, setShowAvatarOptions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -70,9 +70,8 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check size < 4MB
-    if (file.size > 4 * 1024 * 1024) {
-      alert("Image size should be less than 4MB");
+    if (file.size > 8 * 1024 * 1024) {
+      alert("Image size should be less than 8MB");
       return;
     }
 
@@ -80,6 +79,7 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
     reader.onload = () => {
       const dataUrl = reader.result as string;
       onUpdatePhoto(dataUrl);
+      setShowAvatarOptions(false);
       audio.playLevelUp();
     };
     reader.readAsDataURL(file);
@@ -87,7 +87,7 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
 
   const handleSelectPreset = (url: string) => {
     onUpdatePhoto(url);
-    setShowAvatarPresets(false);
+    setShowAvatarOptions(false);
     audio.playLevelUp();
   };
 
@@ -111,7 +111,7 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
           <X className="w-4 h-4" />
         </button>
 
-        {/* Hidden File Input for Custom Image Upload */}
+        {/* Hidden File Input for Custom Device Upload */}
         <input
           type="file"
           ref={fileInputRef}
@@ -120,10 +120,14 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
           onChange={handleFileUpload}
         />
 
-        {/* Profile Avatar with Edit Overlay */}
+        {/* Profile Avatar with Edit Trigger */}
         <div className="flex flex-col items-center text-center mb-6">
           <div className="relative group">
-            <div className="w-24 h-24 rounded-full border-2 border-cyan-400 p-1 shadow-[0_0_25px_rgba(0,240,255,0.5)] overflow-hidden bg-slate-950">
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              title="Click to change profile picture from device"
+              className="w-24 h-24 rounded-full border-2 border-cyan-400 p-1 shadow-[0_0_25px_rgba(0,240,255,0.5)] overflow-hidden bg-slate-950 cursor-pointer hover:border-cyan-300 transition-all"
+            >
               {user.photoUrl ? (
                 <img
                   src={user.photoUrl}
@@ -137,9 +141,9 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
               )}
             </div>
 
-            {/* Change Avatar Button */}
+            {/* Quick Camera Trigger */}
             <button
-              onClick={() => setShowAvatarPresets(!showAvatarPresets)}
+              onClick={() => setShowAvatarOptions(!showAvatarOptions)}
               title="Change Hunter Avatar"
               className="absolute bottom-0 right-0 p-2 rounded-full bg-cyan-950 border border-cyan-400 text-cyan-300 shadow-[0_0_10px_rgba(0,240,255,0.6)] hover:scale-110 hover:bg-cyan-900 transition-all"
             >
@@ -147,23 +151,34 @@ export const WebProfileModal: React.FC<WebProfileModalProps> = ({
             </button>
           </div>
 
-          {/* Avatar Selector Dropdown / Grid */}
-          {showAvatarPresets && (
-            <div className="mt-3 p-3 rounded-2xl bg-slate-950 border border-cyan-500/30 shadow-[0_0_20px_rgba(0,240,255,0.2)] animate-fade-in w-full">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-cyan-400" />
-                  CHOOSE HUNTER AVATAR
+          {/* Change Avatar Options Panel */}
+          {showAvatarOptions && (
+            <div className="mt-4 p-4 rounded-2xl bg-slate-950 border border-cyan-500/40 shadow-[0_0_25px_rgba(0,240,255,0.25)] animate-fade-in w-full text-left">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                  CUSTOMIZE HUNTER AVATAR
                 </span>
                 <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1 text-[10px] font-mono font-bold text-violet-300 bg-violet-950/80 px-2 py-1 rounded border border-violet-500/40 hover:border-violet-400"
+                  onClick={() => setShowAvatarOptions(false)}
+                  className="text-slate-500 hover:text-slate-300 p-1"
                 >
-                  <Upload className="w-2.5 h-2.5" />
-                  <span>Upload Custom</span>
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
 
+              {/* 1. Pick from Device Button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full mb-3 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-slate-950 font-black text-xs font-mono uppercase shadow-[0_0_15px_rgba(0,240,255,0.4)] transition-all transform active:scale-95"
+              >
+                <Upload className="w-4 h-4 stroke-[2.5]" />
+                <span>CHOOSE PHOTO FROM YOUR DEVICE</span>
+              </button>
+
+              {/* 2. Presets Grid */}
+              <div className="text-[9px] font-mono text-slate-400 uppercase mb-2">OR SELECT PRESET CHARACTER:</div>
               <div className="grid grid-cols-5 gap-2">
                 {HUNTER_AVATAR_PRESETS.map((preset, idx) => (
                   <button
