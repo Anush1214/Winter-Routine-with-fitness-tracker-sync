@@ -5,6 +5,7 @@ import 'core/theme/solo_colors.dart';
 import 'services/supabase_service.dart';
 import 'services/notification_service.dart';
 import 'services/auth_service.dart';
+import 'presentation/screens/arise_splash_screen.dart';
 import 'presentation/screens/home_quest_screen.dart';
 import 'presentation/screens/auth_screen.dart';
 
@@ -28,8 +29,15 @@ void main() async {
   runApp(const WinterArcMobileApp());
 }
 
-class WinterArcMobileApp extends StatelessWidget {
+class WinterArcMobileApp extends StatefulWidget {
   const WinterArcMobileApp({super.key});
+
+  @override
+  State<WinterArcMobileApp> createState() => _WinterArcMobileAppState();
+}
+
+class _WinterArcMobileAppState extends State<WinterArcMobileApp> {
+  bool _splashComplete = false;
 
   @override
   Widget build(BuildContext context) {
@@ -52,14 +60,22 @@ class WinterArcMobileApp extends StatelessWidget {
           ),
           useMaterial3: true,
         ),
-        home: Consumer<AuthService>(
-          builder: (context, auth, _) {
-            if (auth.isAuthenticated) {
-              return const HomeQuestScreen();
-            }
-            return const AuthScreen();
-          },
-        ),
+        home: !_splashComplete
+            ? AriseSplashScreen(
+                onComplete: () {
+                  setState(() {
+                    _splashComplete = true;
+                  });
+                },
+              )
+            : Consumer<AuthService>(
+                builder: (context, auth, _) {
+                  if (auth.isAuthenticated) {
+                    return const HomeQuestScreen();
+                  }
+                  return const AuthScreen();
+                },
+              ),
       ),
     );
   }
