@@ -445,7 +445,8 @@ class _AuthScreenState extends State<AuthScreen> {
           isSignUp: _isSignUp,
         ),
     ],
-  );
+  ),
+);
 }
 
   Widget _buildTextField({
