@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/utils/timeline_utils.dart';
 import '../../core/audio/sound_service.dart';
+import '../../services/auth_service.dart';
 
 class DateCarouselWidget extends StatefulWidget {
   final String selectedDate;
@@ -42,6 +44,9 @@ class _DateCarouselWidgetState extends State<DateCarouselWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isFemale = context.watch<AuthService>().isFemaleTheme;
+    final themeColor = isFemale ? const Color(0xFFFBBF24) : SoloColors.neonCyan;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -50,15 +55,18 @@ class _DateCarouselWidgetState extends State<DateCarouselWidget> {
           children: [
             Row(
               children: [
-                const Icon(Icons.calendar_today_outlined, color: SoloColors.neonCyan, size: 14),
+                Icon(Icons.calendar_today_outlined, color: themeColor, size: 14),
                 const SizedBox(width: 6),
-                Text("[ 122-DAY TIMELINE CAROUSEL ]", style: SoloTypography.systemTag),
+                Text(
+                  "[ 122-DAY TIMELINE CAROUSEL ]",
+                  style: SoloTypography.systemTag.copyWith(color: themeColor),
+                ),
               ],
             ),
             Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.chevron_left, color: SoloColors.neonCyan, size: 18),
+                  icon: Icon(Icons.chevron_left, color: themeColor, size: 18),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () {
@@ -75,7 +83,7 @@ class _DateCarouselWidgetState extends State<DateCarouselWidget> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.chevron_right, color: SoloColors.neonCyan, size: 18),
+                  icon: Icon(Icons.chevron_right, color: themeColor, size: 18),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () {
@@ -110,6 +118,8 @@ class _DateCarouselWidgetState extends State<DateCarouselWidget> {
               final monthStr = DateFormat('MMM').format(d).toUpperCase();
               final dayOfMonth = d.day;
 
+              final selectedBg = isFemale ? const Color(0xFF291B08) : const Color(0xFF042F2E);
+
               return GestureDetector(
                 onTap: () {
                   SoundService().playClick();
@@ -122,17 +132,17 @@ class _DateCarouselWidgetState extends State<DateCarouselWidget> {
                   padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? const Color(0xFF042F2E)
+                        ? selectedBg
                         : SoloColors.obsidianGlass.withOpacity(0.8),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isSelected ? SoloColors.neonCyan : SoloColors.neonCyan.withOpacity(0.2),
+                      color: isSelected ? themeColor : themeColor.withOpacity(0.2),
                       width: isSelected ? 1.5 : 0.8,
                     ),
                     boxShadow: isSelected
                         ? [
                             BoxShadow(
-                              color: SoloColors.neonCyan.withOpacity(0.4),
+                              color: themeColor.withOpacity(0.4),
                               blurRadius: 12,
                             ),
                           ]
@@ -145,7 +155,7 @@ class _DateCarouselWidgetState extends State<DateCarouselWidget> {
                         "DAY $dayNum",
                         style: SoloTypography.systemTag.copyWith(
                           fontSize: 8,
-                          color: isSelected ? SoloColors.neonCyan : SoloColors.textDim,
+                          color: isSelected ? themeColor : SoloColors.textDim,
                         ),
                       ),
                       Text(
@@ -161,7 +171,7 @@ class _DateCarouselWidgetState extends State<DateCarouselWidget> {
                           color: rate >= 100
                               ? SoloColors.rankEmerald
                               : rate > 0
-                                  ? SoloColors.manaBlue
+                                  ? (isFemale ? const Color(0xFFD97706) : SoloColors.manaBlue)
                                   : SoloColors.obsidianVoid,
                           borderRadius: BorderRadius.circular(4),
                         ),

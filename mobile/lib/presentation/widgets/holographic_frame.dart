@@ -6,6 +6,7 @@ class HolographicFrame extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final bool hasGlow;
   final double cornerSize;
+  final Color? borderColor;
 
   const HolographicFrame({
     super.key,
@@ -13,14 +14,18 @@ class HolographicFrame extends StatelessWidget {
     this.padding,
     this.hasGlow = true,
     this.cornerSize = 10.0,
+    this.borderColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveColor = borderColor ?? SoloColors.neonCyan;
+
     return CustomPaint(
       painter: _HolographicPainter(
         hasGlow: hasGlow,
         cornerSize: cornerSize,
+        bracketColor: effectiveColor,
       ),
       child: Container(
         padding: padding ?? const EdgeInsets.all(16.0),
@@ -28,13 +33,13 @@ class HolographicFrame extends StatelessWidget {
           color: SoloColors.obsidianGlass.withOpacity(0.85),
           borderRadius: BorderRadius.circular(16.0),
           border: Border.all(
-            color: SoloColors.neonCyan.withOpacity(0.3),
+            color: effectiveColor.withOpacity(0.3),
             width: 1.0,
           ),
           boxShadow: hasGlow
               ? [
                   BoxShadow(
-                    color: SoloColors.neonCyan.withOpacity(0.12),
+                    color: effectiveColor.withOpacity(0.12),
                     blurRadius: 20,
                     spreadRadius: -2,
                   ),
@@ -50,13 +55,18 @@ class HolographicFrame extends StatelessWidget {
 class _HolographicPainter extends CustomPainter {
   final bool hasGlow;
   final double cornerSize;
+  final Color bracketColor;
 
-  _HolographicPainter({required this.hasGlow, required this.cornerSize});
+  _HolographicPainter({
+    required this.hasGlow,
+    required this.cornerSize,
+    this.bracketColor = SoloColors.neonCyan,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final bracketPaint = Paint()
-      ..color = SoloColors.neonCyan
+      ..color = bracketColor
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
 
@@ -78,5 +88,6 @@ class _HolographicPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _HolographicPainter oldDelegate) =>
+      oldDelegate.bracketColor != bracketColor;
 }

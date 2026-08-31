@@ -2,12 +2,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
 import '../../services/auth_service.dart';
 import '../widgets/holographic_frame.dart';
-import '../widgets/hunter_rank_badge.dart';
 import '../widgets/sung_jinwoo_assistant_dialog.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -53,18 +53,17 @@ class _ProfileScreenState extends State<ProfileScreen>
     return 'E-RANK INITIATE';
   }
 
-  Color _getRankColor(int streak, bool isFemale) {
-    if (isFemale) return const Color(0xFFFBBF24);
-    if (streak >= 100) return const Color(0xFFFFD700);
-    if (streak >= 75) return const Color(0xFFFF6B35);
-    if (streak >= 50) return const Color(0xFFA855F7);
-    if (streak >= 30) return const Color(0xFFC084FC);
-    if (streak >= 14) return const Color(0xFFE9D5FF);
-    return const Color(0xFFA89BB9);
+  String _getRankBadge(int streak) {
+    if (streak >= 100) return 'S-RANK';
+    if (streak >= 75) return 'A-RANK';
+    if (streak >= 50) return 'B-RANK';
+    if (streak >= 30) return 'C-RANK';
+    if (streak >= 14) return 'D-RANK';
+    return 'E-RANK';
   }
 
   String _getProviderLabel(String provider) {
-    switch (provider) {
+    switch (provider.toLowerCase()) {
       case 'google':
         return 'GOOGLE / GMAIL';
       case 'github':
@@ -72,39 +71,9 @@ class _ProfileScreenState extends State<ProfileScreen>
       case 'email':
         return 'EMAIL / PASSWORD';
       case 'guest':
-        return 'GUEST (ANONYMOUS)';
+        return 'GUEST SHADOW HUNTER';
       default:
         return provider.toUpperCase();
-    }
-  }
-
-  IconData _getProviderIcon(String provider) {
-    switch (provider) {
-      case 'google':
-        return Icons.g_mobiledata;
-      case 'github':
-        return Icons.code;
-      case 'email':
-        return Icons.email_outlined;
-      case 'guest':
-        return Icons.flash_on;
-      default:
-        return Icons.person;
-    }
-  }
-
-  Color _getProviderColor(String provider) {
-    switch (provider) {
-      case 'google':
-        return const Color(0xFFEA4335);
-      case 'github':
-        return const Color(0xFF38BDF8);
-      case 'email':
-        return const Color(0xFFC084FC);
-      case 'guest':
-        return const Color(0xFFFBBF24);
-      default:
-        return const Color(0xFFA89BB9);
     }
   }
 
@@ -287,7 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final auth = AuthService();
+    final auth = context.watch<AuthService>();
     final user = auth.currentUser;
     if (user == null) {
       return const Scaffold(
@@ -298,8 +267,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     final isFemale = auth.isFemaleTheme;
     final themeColor = isFemale ? const Color(0xFFFBBF24) : const Color(0xFFC084FC);
-    final rankColor = _getRankColor(widget.streakDays, isFemale);
+    final themeShadow = isFemale ? const Color(0xFFF59E0B) : const Color(0xFFA855F7);
+    final rankBadge = _getRankBadge(widget.streakDays);
     final rankTitle = _getRankTitle(widget.streakDays);
+    final formattedDate = DateFormat('MMM dd, yyyy • hh:mm a').format(user.createdAt);
 
     return Scaffold(
       backgroundColor: isFemale ? const Color(0xFF140B02) : const Color(0xFF090414),
@@ -330,14 +301,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                   Expanded(
                     child: Text(
                       'HUNTER PROFILE',
-                      style: SoloTypography.systemTag.copyWith(fontSize: 14, letterSpacing: 2, color: Colors.white),
+                      style: SoloTypography.systemTag.copyWith(
+                        fontSize: 14,
+                        letterSpacing: 2,
+                        color: themeColor,
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
 
-              // Profile Avatar & Identity
+              // Profile Avatar with Glow
               AnimatedBuilder(
                 animation: _glowController,
                 builder: (context, child) {
@@ -348,7 +323,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: rankColor.withValues(alpha: glow),
+                          color: themeShadow.withValues(alpha: glow),
                           blurRadius: 30,
                           spreadRadius: 2,
                         ),
@@ -367,7 +342,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       child: user.photoUrl == null
                           ? Text(
                               user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?',
-                              style: SoloTypography.monoValue.copyWith(fontSize: 36, color: rankColor),
+                              style: SoloTypography.monoValue.copyWith(fontSize: 36, color: themeColor),
                             )
                           : null,
                     ),
@@ -419,7 +394,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            user.displayName.toUpperCase(),
+                            user.displayName,
                             style: SoloTypography.systemTitle.copyWith(fontSize: 18, color: Colors.white),
                           ),
                           const SizedBox(width: 6),
@@ -432,11 +407,204 @@ class _ProfileScreenState extends State<ProfileScreen>
                 user.email,
                 style: SoloTypography.bodyMuted.copyWith(fontSize: 11, color: Colors.white60),
               ),
+              const SizedBox(height: 8),
+
+              // Rank Badge and Title
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isFemale ? const Color(0xFF291B08) : const Color(0xFF1E1038),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.5)),
+                ),
+                child: Text(
+                  rankBadge,
+                  style: TextStyle(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.w900,
+                    color: themeColor,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                rankTitle,
+                style: SoloTypography.systemTag.copyWith(fontSize: 9.5, color: Colors.white70),
+              ),
               const SizedBox(height: 16),
 
-              // ─── 1. GENDER & AURA THEME SELECTION ─────────────────
+              // ─── EXACT ORIGINAL HUNTER DETAILS CARD ──────────────────
               HolographicFrame(
                 padding: const EdgeInsets.all(16),
+                borderColor: themeColor,
+                child: Column(
+                  children: [
+                    // 1. AUTH PROVIDER
+                    _buildOriginalProfileRow(
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF450A0A),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Center(
+                          child: Text("G", style: TextStyle(color: Color(0xFFEF4444), fontWeight: FontWeight.bold, fontSize: 14)),
+                        ),
+                      ),
+                      label: "AUTH PROVIDER",
+                      value: _getProviderLabel(user.provider),
+                    ),
+                    const Divider(color: Color(0x22C084FC), height: 20),
+
+                    // 2. HUNTER UID
+                    _buildOriginalProfileRow(
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: isFemale ? const Color(0xFF451A03) : const Color(0xFF2E1065),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(Icons.fingerprint, color: themeColor, size: 18),
+                      ),
+                      label: "HUNTER UID",
+                      value: user.uid.length > 20 ? "${user.uid.substring(0, 20)}..." : user.uid,
+                    ),
+                    const Divider(color: Color(0x22C084FC), height: 20),
+
+                    // 3. AWAKENED ON
+                    _buildOriginalProfileRow(
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E1B4B),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.calendar_today_rounded, color: Color(0xFF818CF8), size: 16),
+                      ),
+                      label: "AWAKENED ON",
+                      value: formattedDate,
+                    ),
+                    const Divider(color: Color(0x22C084FC), height: 20),
+
+                    // 4. ACTIVE STREAK
+                    _buildOriginalProfileRow(
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF451A03),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.local_fire_department, color: Color(0xFFF97316), size: 18),
+                      ),
+                      label: "ACTIVE STREAK",
+                      value: "${widget.streakDays} DAYS",
+                    ),
+                    const Divider(color: Color(0x22C084FC), height: 20),
+
+                    // 5. ACCOUNT TYPE
+                    _buildOriginalProfileRow(
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF022C22),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.verified_user_rounded, color: Color(0xFF10B981), size: 18),
+                      ),
+                      label: "ACCOUNT TYPE",
+                      value: "VERIFIED HUNTER",
+                    ),
+                    const Divider(color: Color(0x22C084FC), height: 20),
+
+                    // 6. FIREBASE STATUS
+                    _buildOriginalProfileRow(
+                      icon: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF064E3B),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.cloud_done_rounded, color: Color(0xFF34D399), size: 18),
+                      ),
+                      label: "FIREBASE STATUS",
+                      value: "CONNECTED",
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Sign Out Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    SoundService().playClick();
+                    await auth.signOut();
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  icon: Icon(Icons.logout_rounded, color: themeColor, size: 18),
+                  label: Text(
+                    "SIGN OUT",
+                    style: TextStyle(
+                      color: themeColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF130A24),
+                    side: BorderSide(color: themeColor.withValues(alpha: 0.5), width: 1.2),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Delete Account Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    SoundService().playClick();
+                    await auth.deleteAccount();
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFFEF4444), size: 18),
+                  label: const Text(
+                    "DELETE ACCOUNT",
+                    style: TextStyle(
+                      color: Color(0xFFEF4444),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1C0A0A),
+                    side: const BorderSide(color: Color(0xFF7F1D1D), width: 1.0),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // ─── 3 NEW ADDITIONS DIRECTLY BELOW (NO CHANGES TO ORIGINAL UI) ───
+
+              // 1. AURA THEME & HUNTER GENDER SWITCHER
+              HolographicFrame(
+                padding: const EdgeInsets.all(16),
+                borderColor: themeColor,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -471,19 +639,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   width: !isFemale ? 1.8 : 1.0,
                                 ),
                               ),
-                              child: Column(
+                              child: const Column(
                                 children: [
-                                  const Text("👑", style: TextStyle(fontSize: 22)),
-                                  const SizedBox(height: 4),
-                                  const Text(
+                                  Text("👑", style: TextStyle(fontSize: 22)),
+                                  SizedBox(height: 4),
+                                  Text(
                                     "MALE (SHADOW MONARCH)",
                                     style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: Colors.white),
                                     textAlign: TextAlign.center,
                                   ),
-                                  const SizedBox(height: 2),
+                                  SizedBox(height: 2),
                                   Text(
                                     "Sung Jin-Woo Purple",
-                                    style: TextStyle(fontSize: 8.5, color: const Color(0xFFC084FC)),
+                                    style: TextStyle(fontSize: 8.5, color: Color(0xFFC084FC)),
                                   ),
                                 ],
                               ),
@@ -509,19 +677,19 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   width: isFemale ? 1.8 : 1.0,
                                 ),
                               ),
-                              child: Column(
+                              child: const Column(
                                 children: [
-                                  const Text("⚔️", style: TextStyle(fontSize: 22)),
-                                  const SizedBox(height: 4),
-                                  const Text(
+                                  Text("⚔️", style: TextStyle(fontSize: 22)),
+                                  SizedBox(height: 4),
+                                  Text(
                                     "FEMALE (S-RANK DANCER)",
                                     style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: Colors.white),
                                     textAlign: TextAlign.center,
                                   ),
-                                  const SizedBox(height: 2),
+                                  SizedBox(height: 2),
                                   Text(
                                     "Cha Hae-In Radiant Gold",
-                                    style: TextStyle(fontSize: 8.5, color: const Color(0xFFFDE047)),
+                                    style: TextStyle(fontSize: 8.5, color: Color(0xFFFDE047)),
                                   ),
                                 ],
                               ),
@@ -535,9 +703,10 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               const SizedBox(height: 14),
 
-              // ─── 2. COMPANION VOICE SETTINGS & DIALOGUE CARD ──────
+              // 2. VOICE COMPANION & DIALOGUE CARD
               HolographicFrame(
                 padding: const EdgeInsets.all(16),
+                borderColor: themeColor,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -595,50 +764,48 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               const SizedBox(height: 14),
 
-              // ─── 3. HUNTER STATUS CARD ────────────────────────────
+              // 3. SOUND FX & MUTE TOGGLE
               HolographicFrame(
                 padding: const EdgeInsets.all(16),
-                child: Column(
+                borderColor: themeColor,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('CURRENT RANK', style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white60)),
-                        Text('DISCIPLINE STREAK', style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white60)),
+                        Icon(
+                          SoundService().isSoundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                          color: themeColor,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "SYSTEM SOUND FX",
+                              style: SoloTypography.systemTitle.copyWith(fontSize: 12, color: Colors.white),
+                            ),
+                            Text(
+                              SoundService().isSoundEnabled ? "Haptic cues & voice feedback active" : "Audio muted",
+                              style: SoloTypography.bodyMuted.copyWith(fontSize: 10),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(rankTitle, style: SoloTypography.systemTitle.copyWith(fontSize: 13, color: rankColor)),
-                        Text('${widget.streakDays} DAYS', style: SoloTypography.monoValue.copyWith(fontSize: 18, color: rankColor)),
-                      ],
+                    Switch(
+                      value: SoundService().isSoundEnabled,
+                      activeColor: themeColor,
+                      activeTrackColor: themeShadow.withValues(alpha: 0.4),
+                      inactiveThumbColor: Colors.grey,
+                      inactiveTrackColor: Colors.white10,
+                      onChanged: (val) {
+                        SoundService().toggleSound();
+                        setState(() {});
+                      },
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // ─── 4. LOGOUT & ACCOUNT CONTROLS ─────────────────────
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () async {
-                    SoundService().playClick();
-                    await auth.signOut();
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  icon: const Icon(Icons.logout, color: Colors.redAccent, size: 16),
-                  label: const Text(
-                    "LOG OUT HUNTER SESSION",
-                    style: TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Colors.redAccent, width: 1.2),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
                 ),
               ),
               const SizedBox(height: 90),
@@ -646,6 +813,45 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildOriginalProfileRow({
+    required Widget icon,
+    required String label,
+    required String value,
+  }) {
+    return Row(
+      children: [
+        icon,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.2,
+                  color: Colors.white54,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  fontFamily: 'monospace',
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

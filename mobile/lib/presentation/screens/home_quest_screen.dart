@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../services/auth_service.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/utils/timeline_utils.dart';
@@ -94,6 +95,9 @@ class _HomeQuestScreenState extends State<HomeQuestScreen> {
   @override
   Widget build(BuildContext context) {
     final service = context.watch<SupabaseService>();
+    final auth = context.watch<AuthService>();
+    final isFemale = auth.isFemaleTheme;
+    final themeColor = isFemale ? const Color(0xFFFBBF24) : SoloColors.neonCyan;
     final selectedDate = DateTime.tryParse(service.selectedDate) ?? DateTime.now();
     final dayNum = TimelineUtils.getDayNumber(selectedDate);
     final daysRemaining = TimelineUtils.getDaysRemaining(selectedDate);
@@ -103,12 +107,12 @@ class _HomeQuestScreenState extends State<HomeQuestScreen> {
     final percentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0.0;
 
     return Scaffold(
-      backgroundColor: SoloColors.obsidianVoid,
+      backgroundColor: isFemale ? const Color(0xFF140B02) : SoloColors.obsidianVoid,
       body: SafeArea(
         child: service.isLoading && service.tasks.isEmpty
-            ? const Center(child: CircularProgressIndicator(color: SoloColors.neonCyan))
+            ? Center(child: CircularProgressIndicator(color: themeColor))
             : RefreshIndicator(
-                color: SoloColors.neonCyan,
+                color: themeColor,
                 backgroundColor: SoloColors.obsidianVoid,
                 onRefresh: () => service.loadDateData(service.selectedDate),
                 child: SingleChildScrollView(
@@ -138,6 +142,7 @@ class _HomeQuestScreenState extends State<HomeQuestScreen> {
                       // 3. Main Solo Leveling Quest Progress Card
                       HolographicFrame(
                         padding: const EdgeInsets.all(16),
+                        borderColor: themeColor,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -149,22 +154,22 @@ class _HomeQuestScreenState extends State<HomeQuestScreen> {
                                     Container(
                                       width: 6,
                                       height: 6,
-                                      decoration: const BoxDecoration(
-                                        color: SoloColors.neonCyan,
+                                      decoration: BoxDecoration(
+                                        color: themeColor,
                                         shape: BoxShape.circle,
                                       ),
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
                                       "[ SYSTEM NOTIFICATION : QUEST WINDOW ]",
-                                      style: SoloTypography.systemTag,
+                                      style: SoloTypography.systemTag.copyWith(color: themeColor),
                                     ),
                                   ],
                                 ),
                                 Text(
                                   TimelineUtils.formatDisplayDate(selectedDate),
                                   style: SoloTypography.bodyMuted.copyWith(
-                                    color: SoloColors.neonCyan,
+                                    color: themeColor,
                                     fontSize: 10,
                                   ),
                                 ),
@@ -198,7 +203,7 @@ class _HomeQuestScreenState extends State<HomeQuestScreen> {
                                         "$completedTasks / $totalTasks OBJECTIVES CLEARED",
                                         style: SoloTypography.systemTag.copyWith(
                                           fontSize: 10,
-                                          color: SoloColors.electricSky,
+                                          color: isFemale ? const Color(0xFFFDE047) : SoloColors.electricSky,
                                         ),
                                       ),
                                       const SizedBox(height: 4),

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
+import '../../services/auth_service.dart';
 import 'holographic_frame.dart';
 
 class HabitCountersWidget extends StatefulWidget {
@@ -35,6 +37,11 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isFemale = context.watch<AuthService>().isFemaleTheme;
+    final themeColor = isFemale ? const Color(0xFFFBBF24) : const Color(0xFFC084FC);
+    final themeGlow = isFemale ? const Color(0xFFF59E0B) : const Color(0xFFA855F7);
+    final themeHighlight = isFemale ? const Color(0xFFFDE047) : const Color(0xFFE9D5FF);
+
     final waterPercent = (widget.waterIntakeMl / 4500).clamp(0.0, 1.0);
     final stepsPercent = (widget.steps / 10000).clamp(0.0, 1.0);
     final sleepHours = (widget.sleepMinutes / 60).toStringAsFixed(1);
@@ -47,6 +54,7 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
         // 1. Vitality - Hydration Chamber Card
         HolographicFrame(
           padding: const EdgeInsets.all(16),
+          borderColor: themeColor,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -58,18 +66,27 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: SoloColors.obsidianVoid,
+                          color: isFemale ? const Color(0xFF291B08) : SoloColors.obsidianVoid,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: SoloColors.neonCyan.withOpacity(0.4)),
+                          border: Border.all(color: themeColor.withValues(alpha: 0.5)),
                         ),
-                        child: const Icon(Icons.water_drop, color: SoloColors.neonCyan, size: 16),
+                        child: Icon(Icons.water_drop, color: themeColor, size: 16),
                       ),
                       const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("[ STAT: VITALITY ]", style: SoloTypography.systemTag),
-                          Text("Hydration Chamber", style: SoloTypography.questTitle.copyWith(fontSize: 14)),
+                          Text(
+                            "[ STAT: VITALITY ]",
+                            style: SoloTypography.systemTag.copyWith(color: themeColor),
+                          ),
+                          Text(
+                            "Hydration Chamber",
+                            style: SoloTypography.questTitle.copyWith(
+                              fontSize: 14,
+                              color: isFemale ? const Color(0xFFFEF08A) : Colors.white,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -77,13 +94,13 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: SoloColors.obsidianVoid,
+                      color: isFemale ? const Color(0xFF291B08) : SoloColors.obsidianVoid,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: SoloColors.neonCyan.withOpacity(0.4)),
+                      border: Border.all(color: themeColor.withValues(alpha: 0.5)),
                     ),
                     child: Text(
                       "${(waterPercent * 100).toInt()}%",
-                      style: SoloTypography.systemTag,
+                      style: SoloTypography.systemTag.copyWith(color: themeColor),
                     ),
                   ),
                 ],
@@ -95,24 +112,27 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                 children: [
                   Text(
                     widget.waterIntakeMl.toString(),
-                    style: SoloTypography.monoValue.copyWith(fontSize: 26),
+                    style: SoloTypography.monoValue.copyWith(
+                      fontSize: 26,
+                      color: isFemale ? const Color(0xFFFDE047) : Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     "/ 4500 ml",
-                    style: SoloTypography.bodyMuted.copyWith(color: SoloColors.neonCyan),
+                    style: SoloTypography.bodyMuted.copyWith(color: themeColor),
                   ),
                 ],
               ),
               const SizedBox(height: 10),
-              // Fluid bar
+              // Fluid bar (Dynamic Theme Gradient)
               Container(
                 height: 18,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: SoloColors.obsidianVoid,
+                  color: isFemale ? const Color(0xFF1E1005) : SoloColors.obsidianVoid,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: SoloColors.neonCyan.withOpacity(0.3)),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.35)),
                 ),
                 child: Stack(
                   children: [
@@ -121,13 +141,15 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                       child: Container(
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(4),
-                          gradient: const LinearGradient(
-                            colors: [SoloColors.neonCyan, SoloColors.manaBlue, SoloColors.electricSky],
+                          gradient: LinearGradient(
+                            colors: isFemale
+                                ? [const Color(0xFFF59E0B), const Color(0xFFFBBF24), const Color(0xFFFEF08A)]
+                                : [const Color(0xFF7E22CE), const Color(0xFFA855F7), const Color(0xFFE9D5FF)],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: SoloColors.neonCyan.withOpacity(0.4),
-                              blurRadius: 8,
+                              color: themeGlow.withValues(alpha: 0.6),
+                              blurRadius: 10,
                             ),
                           ],
                         ),
@@ -142,6 +164,7 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                   Expanded(
                     child: _ActionButton(
                       label: "+250ml",
+                      themeColor: themeColor,
                       onTap: () {
                         SoundService().playWaterDrop();
                         widget.onUpdateWater(250, 'increment');
@@ -152,6 +175,7 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                   Expanded(
                     child: _ActionButton(
                       label: "+500ml",
+                      themeColor: themeColor,
                       onTap: () {
                         SoundService().playWaterDrop();
                         widget.onUpdateWater(500, 'increment');
@@ -163,6 +187,7 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                     child: _ActionButton(
                       label: "-250ml",
                       isNegative: true,
+                      themeColor: themeColor,
                       onTap: () {
                         SoundService().playClick();
                         widget.onUpdateWater(-250, 'increment');
@@ -179,6 +204,7 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
         // 2. Strength - Step & Movement Card
         HolographicFrame(
           padding: const EdgeInsets.all(16),
+          borderColor: themeColor,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -190,18 +216,27 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: SoloColors.obsidianVoid,
+                          color: isFemale ? const Color(0xFF291B08) : SoloColors.obsidianVoid,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: SoloColors.neonCyan.withOpacity(0.4)),
+                          border: Border.all(color: themeColor.withValues(alpha: 0.5)),
                         ),
-                        child: const Icon(Icons.directions_walk, color: SoloColors.neonCyan, size: 16),
+                        child: Icon(Icons.directions_walk, color: themeColor, size: 16),
                       ),
                       const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("[ STAT: STRENGTH ]", style: SoloTypography.systemTag),
-                          Text("Movement Gauge", style: SoloTypography.questTitle.copyWith(fontSize: 14)),
+                          Text(
+                            "[ STAT: STRENGTH ]",
+                            style: SoloTypography.systemTag.copyWith(color: themeColor),
+                          ),
+                          Text(
+                            "Movement Gauge",
+                            style: SoloTypography.questTitle.copyWith(
+                              fontSize: 14,
+                              color: isFemale ? const Color(0xFFFEF08A) : Colors.white,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -209,13 +244,13 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: SoloColors.obsidianVoid,
+                      color: isFemale ? const Color(0xFF291B08) : SoloColors.obsidianVoid,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: SoloColors.neonCyan.withOpacity(0.4)),
+                      border: Border.all(color: themeColor.withValues(alpha: 0.5)),
                     ),
                     child: Text(
                       "${(stepsPercent * 100).toInt()}%",
-                      style: SoloTypography.systemTag,
+                      style: SoloTypography.systemTag.copyWith(color: themeColor),
                     ),
                   ),
                 ],
@@ -227,12 +262,15 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                 children: [
                   Text(
                     widget.steps.toString(),
-                    style: SoloTypography.monoValue.copyWith(fontSize: 26),
+                    style: SoloTypography.monoValue.copyWith(
+                      fontSize: 26,
+                      color: isFemale ? const Color(0xFFFDE047) : Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     "/ 10,000 steps",
-                    style: SoloTypography.bodyMuted.copyWith(color: SoloColors.neonCyan),
+                    style: SoloTypography.bodyMuted.copyWith(color: themeColor),
                   ),
                 ],
               ),
@@ -241,22 +279,24 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                 height: 16,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: SoloColors.obsidianVoid,
+                  color: isFemale ? const Color(0xFF1E1005) : SoloColors.obsidianVoid,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: SoloColors.neonCyan.withOpacity(0.3)),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.35)),
                 ),
                 child: FractionallySizedBox(
                   widthFactor: stepsPercent,
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
-                      gradient: const LinearGradient(
-                        colors: [SoloColors.neonCyan, SoloColors.manaBlue],
+                      gradient: LinearGradient(
+                        colors: isFemale
+                            ? [const Color(0xFFEA580C), const Color(0xFFF59E0B), const Color(0xFFFDE047)]
+                            : [const Color(0xFF6B21A8), const Color(0xFFA855F7), const Color(0xFFC084FC)],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: SoloColors.neonCyan.withOpacity(0.4),
-                          blurRadius: 8,
+                          color: themeGlow.withValues(alpha: 0.6),
+                          blurRadius: 10,
                         ),
                       ],
                     ),
@@ -270,15 +310,18 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: SoloColors.obsidianVoid,
+                        color: isFemale ? const Color(0xFF291B08) : SoloColors.obsidianVoid,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: SoloColors.neonCyan.withOpacity(0.2)),
+                        border: Border.all(color: themeColor.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text("DISTANCE", style: SoloTypography.bodyMuted.copyWith(fontSize: 8)),
-                          Text("$kmWalked km", style: SoloTypography.systemTag.copyWith(color: SoloColors.neonCyan)),
+                          Text(
+                            "$kmWalked km",
+                            style: SoloTypography.systemTag.copyWith(color: themeColor),
+                          ),
                         ],
                       ),
                     ),
@@ -288,15 +331,18 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: SoloColors.obsidianVoid,
+                        color: isFemale ? const Color(0xFF291B08) : SoloColors.obsidianVoid,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: SoloColors.neonCyan.withOpacity(0.2)),
+                        border: Border.all(color: themeColor.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text("BURNED", style: SoloTypography.bodyMuted.copyWith(fontSize: 8)),
-                          Text("$caloriesBurned kcal", style: SoloTypography.systemTag.copyWith(color: SoloColors.flameOrange)),
+                          Text(
+                            "$caloriesBurned kcal",
+                            style: SoloTypography.systemTag.copyWith(color: const Color(0xFFF97316)),
+                          ),
                         ],
                       ),
                     ),
@@ -311,6 +357,7 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
         // 3. Perception - Sleep Recovery Chamber
         HolographicFrame(
           padding: const EdgeInsets.all(16),
+          borderColor: themeColor,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -322,18 +369,27 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: SoloColors.obsidianVoid,
+                          color: isFemale ? const Color(0xFF291B08) : SoloColors.obsidianVoid,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: SoloColors.neonCyan.withOpacity(0.4)),
+                          border: Border.all(color: themeColor.withValues(alpha: 0.5)),
                         ),
-                        child: const Icon(Icons.nightlight_round, color: SoloColors.manaViolet, size: 16),
+                        child: Icon(Icons.nightlight_round, color: themeColor, size: 16),
                       ),
                       const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("[ STAT: RECOVERY ]", style: SoloTypography.systemTag.copyWith(color: SoloColors.manaViolet)),
-                          Text("Restoration Chamber", style: SoloTypography.questTitle.copyWith(fontSize: 14)),
+                          Text(
+                            "[ STAT: RECOVERY ]",
+                            style: SoloTypography.systemTag.copyWith(color: themeColor),
+                          ),
+                          Text(
+                            "Restoration Chamber",
+                            style: SoloTypography.questTitle.copyWith(
+                              fontSize: 14,
+                              color: isFemale ? const Color(0xFFFEF08A) : Colors.white,
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -341,13 +397,13 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: SoloColors.obsidianVoid,
+                      color: isFemale ? const Color(0xFF291B08) : SoloColors.obsidianVoid,
                       borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: SoloColors.manaViolet.withOpacity(0.4)),
+                      border: Border.all(color: themeColor.withValues(alpha: 0.5)),
                     ),
                     child: Text(
                       "${(sleepPercent * 100).toInt()}%",
-                      style: SoloTypography.systemTag.copyWith(color: SoloColors.manaViolet),
+                      style: SoloTypography.systemTag.copyWith(color: themeColor),
                     ),
                   ),
                 ],
@@ -359,12 +415,15 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                 children: [
                   Text(
                     "${sleepHours}h",
-                    style: SoloTypography.monoValue.copyWith(fontSize: 26),
+                    style: SoloTypography.monoValue.copyWith(
+                      fontSize: 26,
+                      color: isFemale ? const Color(0xFFFDE047) : Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     "(${widget.sleepMinutes} mins / 7h)",
-                    style: SoloTypography.bodyMuted.copyWith(color: SoloColors.manaViolet),
+                    style: SoloTypography.bodyMuted.copyWith(color: themeColor),
                   ),
                 ],
               ),
@@ -373,22 +432,24 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                 height: 16,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: SoloColors.obsidianVoid,
+                  color: isFemale ? const Color(0xFF1E1005) : SoloColors.obsidianVoid,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: SoloColors.manaViolet.withOpacity(0.3)),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.35)),
                 ),
                 child: FractionallySizedBox(
                   widthFactor: sleepPercent,
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(4),
-                      gradient: const LinearGradient(
-                        colors: [SoloColors.manaViolet, SoloColors.neonCyan],
+                      gradient: LinearGradient(
+                        colors: isFemale
+                            ? [const Color(0xFFD97706), const Color(0xFFFBBF24), const Color(0xFFFEF08A)]
+                            : [const Color(0xFF581C87), const Color(0xFFA855F7), const Color(0xFFE9D5FF)],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: SoloColors.manaViolet.withOpacity(0.4),
-                          blurRadius: 8,
+                          color: themeGlow.withValues(alpha: 0.6),
+                          blurRadius: 10,
                         ),
                       ],
                     ),
@@ -400,9 +461,9 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: SoloColors.obsidianVoid,
+                  color: isFemale ? const Color(0xFF291B08) : SoloColors.obsidianVoid,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: SoloColors.manaViolet.withOpacity(0.2)),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -412,7 +473,7 @@ class _HabitCountersWidgetState extends State<HabitCountersWidget> {
                       widget.sleepMinutes >= 420 ? "[ OPTIMAL RECOVERY ]" : "[ BELOW THRESHOLD ]",
                       style: SoloTypography.systemTag.copyWith(
                         fontSize: 9,
-                        color: widget.sleepMinutes >= 420 ? SoloColors.rankEmerald : SoloColors.monarchGold,
+                        color: widget.sleepMinutes >= 420 ? const Color(0xFF10B981) : themeHighlight,
                       ),
                     ),
                   ],
@@ -430,11 +491,13 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final bool isNegative;
+  final Color themeColor;
 
   const _ActionButton({
     required this.label,
     required this.onTap,
     this.isNegative = false,
+    this.themeColor = const Color(0xFFC084FC),
   });
 
   @override
@@ -448,15 +511,15 @@ class _ActionButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: isNegative
-                ? SoloColors.textDim.withOpacity(0.3)
-                : SoloColors.neonCyan.withOpacity(0.4),
+                ? SoloColors.textDim.withValues(alpha: 0.3)
+                : themeColor.withValues(alpha: 0.5),
           ),
         ),
         child: Center(
           child: Text(
             label,
             style: SoloTypography.systemTag.copyWith(
-              color: isNegative ? SoloColors.textDim : SoloColors.neonCyan,
+              color: isNegative ? SoloColors.textDim : themeColor,
               fontSize: 11,
             ),
           ),

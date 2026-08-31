@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
 import '../../models/task_model.dart';
 import '../../models/health_log_model.dart';
+import '../../services/auth_service.dart';
 import 'holographic_frame.dart';
 import 'quest_objective_tile.dart';
 
@@ -27,6 +29,8 @@ class RoutineSectionsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isFemale = context.watch<AuthService>().isFemaleTheme;
+    final themeColor = isFemale ? const Color(0xFFFBBF24) : SoloColors.neonCyan;
     // 4 Distinct Solo Leveling Quest Categories
     final morningTasks = <TaskModel>[];
     final daytimeTasks = <TaskModel>[];
@@ -88,7 +92,7 @@ class RoutineSectionsWidget extends StatelessWidget {
           title: "QUEST PART I : MORNING AWAKENING",
           timeframe: "06:00 — 08:30",
           icon: Icons.wb_sunny_outlined,
-          color: SoloColors.electricSky,
+          color: isFemale ? const Color(0xFFF59E0B) : SoloColors.electricSky,
           tasks: morningTasks,
           categoryKey: 'routine',
         ),
@@ -98,7 +102,7 @@ class RoutineSectionsWidget extends StatelessWidget {
           title: "QUEST PART II : DAYTIME ATTRIBUTES & DISCIPLINE",
           timeframe: "09:00 — 18:00",
           icon: Icons.shield_outlined,
-          color: SoloColors.neonCyan,
+          color: isFemale ? const Color(0xFFFDE047) : SoloColors.neonCyan,
           tasks: daytimeTasks,
           categoryKey: 'fitness',
         ),
@@ -108,7 +112,7 @@ class RoutineSectionsWidget extends StatelessWidget {
           title: "QUEST PART III : EVENING PLACEMENT & SKILL DUNGEON",
           timeframe: "18:30 — 21:30",
           icon: Icons.code,
-          color: SoloColors.monarchGold,
+          color: isFemale ? const Color(0xFFD97706) : SoloColors.monarchGold,
           tasks: eveningTasks,
           categoryKey: 'career',
         ),
@@ -118,7 +122,7 @@ class RoutineSectionsWidget extends StatelessWidget {
           title: "QUEST PART IV : NIGHT PROTOCOL & RECOVERY",
           timeframe: "21:30 — 23:00",
           icon: Icons.nightlight_round,
-          color: SoloColors.manaViolet,
+          color: isFemale ? const Color(0xFFF59E0B) : SoloColors.manaViolet,
           tasks: nightTasks,
           categoryKey: 'routine',
         ),
@@ -129,7 +133,7 @@ class RoutineSectionsWidget extends StatelessWidget {
             title: "ADDITIONAL HUNTER OBJECTIVES",
             timeframe: "ALL-DAY",
             icon: Icons.star_border,
-            color: SoloColors.flameOrange,
+            color: isFemale ? const Color(0xFFFDE047) : SoloColors.flameOrange,
             tasks: unclassified,
             categoryKey: 'custom',
           ),
@@ -209,9 +213,9 @@ class RoutineSectionsWidget extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: SoloColors.obsidianVoid,
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: SoloColors.neonCyan.withOpacity(0.4)),
+                        border: Border.all(color: color.withOpacity(0.4)),
                       ),
-                      child: const Icon(Icons.add, color: SoloColors.neonCyan, size: 14),
+                      child: Icon(Icons.add, color: color, size: 14),
                     ),
                   ),
                 ],

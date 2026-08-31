@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/audio/sound_service.dart';
@@ -33,24 +34,14 @@ class FloatingGlassNavbar extends StatefulWidget {
 class _FloatingGlassNavbarState extends State<FloatingGlassNavbar>
     with SingleTickerProviderStateMixin {
   late AnimationController _flameController;
-  late Animation<double> _glowAnimation;
-  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _flameController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
-
-    _glowAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(parent: _flameController, curve: Curves.easeInOut),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.96, end: 1.05).animate(
-      CurvedAnimation(parent: _flameController, curve: Curves.easeInOut),
-    );
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
   }
 
   @override
@@ -78,14 +69,12 @@ class _FloatingGlassNavbarState extends State<FloatingGlassNavbar>
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(40),
             boxShadow: [
-              // Liquid Ambient Glow
               BoxShadow(
                 color: themeShadow.withValues(alpha: 0.35),
                 blurRadius: 36,
                 spreadRadius: -2,
                 offset: const Offset(0, 12),
               ),
-              // Physics Depth Shadow
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.8),
                 blurRadius: 28,
@@ -210,83 +199,87 @@ class _FloatingGlassNavbarState extends State<FloatingGlassNavbar>
                             ),
                           ),
 
-                        // 🔥 4. CENTER 3D MOVING GLOWING STREAK FLAMES ORB
-                        AnimatedBuilder(
-                          animation: _flameController,
-                          builder: (context, child) {
-                            return Transform.scale(
-                              scale: _scaleAnimation.value,
-                              child: GestureDetector(
-                                onTap: () {
-                                  SoundService().playVictory();
-                                  if (widget.onStreakTap != null) {
-                                    widget.onStreakTap!();
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        const Color(0xFFEA580C),
-                                        const Color(0xFFF97316),
-                                        const Color(0xFFFBBF24),
-                                      ],
-                                      begin: Alignment.bottomCenter,
-                                      end: Alignment.topCenter,
-                                    ),
-                                    borderRadius: BorderRadius.circular(22),
-                                    border: Border.all(
-                                      color: const Color(0xFFFDE047),
-                                      width: 1.6,
-                                    ),
-                                    boxShadow: [
-                                      // 3D Depth Shadow
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.8),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                      // Pulsating Flame Glow
-                                      BoxShadow(
-                                        color: const Color(0xFFF97316).withValues(
-                                          alpha: _glowAnimation.value * 0.75,
-                                        ),
-                                        blurRadius: 16 * _glowAnimation.value,
-                                        spreadRadius: 2 * _glowAnimation.value,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Text(
-                                        "🔥",
-                                        style: TextStyle(fontSize: 13),
-                                      ),
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        "${widget.streakDays}D",
-                                        style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w900,
-                                          color: Colors.white,
-                                          letterSpacing: 0.5,
-                                          shadows: [
-                                            Shadow(
-                                              color: Colors.black,
-                                              blurRadius: 4,
-                                              offset: Offset(1, 1),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
+                        // 🔥 4. CENTER REAL ANIMATED BURNING FIRE FLAMES STREAK ORB
+                        GestureDetector(
+                          onTap: () {
+                            SoundService().playVictory();
+                            if (widget.onStreakTap != null) {
+                              widget.onStreakTap!();
+                            }
                           },
+                          child: AnimatedBuilder(
+                            animation: _flameController,
+                            builder: (context, child) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF7C2D12),
+                                      Color(0xFFC2410C),
+                                      Color(0xFFEA580C),
+                                      Color(0xFFFBBF24),
+                                    ],
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                  ),
+                                  borderRadius: BorderRadius.circular(22),
+                                  border: Border.all(
+                                    color: const Color(0xFFFDE047),
+                                    width: 1.8,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.8),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                    BoxShadow(
+                                      color: const Color(0xFFF97316).withValues(
+                                        alpha: 0.6 + 0.3 * math.sin(_flameController.value * 2 * math.pi),
+                                      ),
+                                      blurRadius: 16 + 6 * math.sin(_flameController.value * 2 * math.pi),
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Custom Multi-Layered Flame Particle Animation
+                                    SizedBox(
+                                      width: 18,
+                                      height: 22,
+                                      child: CustomPaint(
+                                        painter: _BurningFlamePainter(progress: _flameController.value),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      "${widget.streakDays}D",
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                        letterSpacing: 0.8,
+                                        shadows: [
+                                          Shadow(
+                                            color: Colors.black,
+                                            blurRadius: 4,
+                                            offset: Offset(1, 1),
+                                          ),
+                                          Shadow(
+                                            color: Color(0xFFEA580C),
+                                            blurRadius: 8,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                         ),
 
                         // 5. Add Quest Button
@@ -338,7 +331,7 @@ class _FloatingGlassNavbarState extends State<FloatingGlassNavbar>
                           onTap: widget.onOpenWatchSync,
                         ),
 
-                        // 7. Profile / Hunter Status & Voice Settings
+                        // 7. Profile / Hunter Status & Settings
                         _LiquidNavItem(
                           icon: Icons.person_rounded,
                           tooltip: "Profile",
@@ -423,4 +416,98 @@ class _LiquidNavItem extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Dynamic Multi-Layer Animated Fire Flame CustomPainter
+class _BurningFlamePainter extends CustomPainter {
+  final double progress;
+
+  _BurningFlamePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    final center = Offset(w / 2, h * 0.85);
+
+    final p1 = progress * 2 * math.pi;
+    final p2 = (progress + 0.35) * 2 * math.pi;
+
+    // 1. Outer Crimson / Red Flare
+    final outerPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          const Color(0xFFEF4444).withValues(alpha: 0.9),
+          const Color(0xFFB91C1C).withValues(alpha: 0.4),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: w));
+
+    final outerPath = Path();
+    outerPath.moveTo(w * 0.15, h * 0.9);
+    outerPath.quadraticBezierTo(
+      w * 0.05 + math.sin(p1) * 2,
+      h * 0.4,
+      w * 0.5 + math.sin(p1) * 3,
+      h * 0.05 + math.cos(p1) * 2,
+    );
+    outerPath.quadraticBezierTo(
+      w * 0.95 + math.cos(p2) * 2,
+      h * 0.4,
+      w * 0.85,
+      h * 0.9,
+    );
+    outerPath.close();
+    canvas.drawPath(outerPath, outerPaint);
+
+    // 2. Middle Golden / Amber Licking Flame
+    final midPaint = Paint()
+      ..shader = const LinearGradient(
+        colors: [Color(0xFFEA580C), Color(0xFFFBBF24)],
+        begin: Alignment.bottomCenter,
+        end: Alignment.topCenter,
+      ).createShader(Rect.fromLTWH(0, 0, w, h));
+
+    final midPath = Path();
+    midPath.moveTo(w * 0.25, h * 0.85);
+    midPath.quadraticBezierTo(
+      w * 0.15 + math.cos(p2) * 2,
+      h * 0.45,
+      w * 0.48 + math.cos(p1) * 2,
+      h * 0.18 + math.sin(p2) * 2,
+    );
+    midPath.quadraticBezierTo(
+      w * 0.85 + math.sin(p1) * 2,
+      h * 0.45,
+      w * 0.75,
+      h * 0.85,
+    );
+    midPath.close();
+    canvas.drawPath(midPath, midPaint);
+
+    // 3. Inner White-Hot Core Spark
+    final corePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.95)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+
+    final corePath = Path();
+    corePath.moveTo(w * 0.35, h * 0.8);
+    corePath.quadraticBezierTo(
+      w * 0.3,
+      h * 0.55,
+      w * 0.5 + math.sin(p1) * 1.5,
+      h * 0.35 + math.cos(p1) * 1.5,
+    );
+    corePath.quadraticBezierTo(
+      w * 0.7,
+      h * 0.55,
+      w * 0.65,
+      h * 0.8,
+    );
+    corePath.close();
+    canvas.drawPath(corePath, corePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _BurningFlamePainter oldDelegate) => true;
 }

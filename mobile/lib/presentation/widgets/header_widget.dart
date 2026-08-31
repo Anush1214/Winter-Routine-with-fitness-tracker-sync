@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
@@ -56,33 +57,42 @@ class _HeaderWidgetState extends State<HeaderWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthService>();
+    final isFemale = auth.isFemaleTheme;
+    final themeColor = isFemale ? const Color(0xFFFBBF24) : const Color(0xFFC084FC);
+    final themeShadow = isFemale ? const Color(0xFFF59E0B) : const Color(0xFFA855F7);
+    final systemTitle = isFemale ? "S-Rank Dancer" : "Shadow Monarch";
+
     final date = DateTime.tryParse(widget.currentDate) ?? DateTime.now();
     final dayNum = TimelineUtils.getDayNumber(date);
-    final hunter = AuthService().currentUser;
-    final hunterName = hunter?.displayName ?? "Sung Jin-Woo";
+    final hunter = auth.currentUser;
+    final hunterName = hunter?.displayName ?? systemTitle;
 
     return HolographicFrame(
       padding: const EdgeInsets.all(16),
+      borderColor: themeColor,
       child: Column(
         children: [
           // Top Identity Row
           Row(
             children: [
-              // Glowing Crown Emblem
+              // Glowing Crown / S-Rank Emblem
               Container(
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0x5500F0FF), Color(0x330284C7), Color(0x2202050E)],
+                  gradient: LinearGradient(
+                    colors: isFemale
+                        ? [const Color(0x66FDE047), const Color(0x44F59E0B), const Color(0x221E1005)]
+                        : [const Color(0x5500F0FF), const Color(0x330284C7), const Color(0x2202050E)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: SoloColors.neonCyan, width: 1.5),
+                  border: Border.all(color: themeColor, width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: SoloColors.neonCyan.withValues(alpha: 0.35),
+                      color: themeShadow.withValues(alpha: 0.4),
                       blurRadius: 16,
                     ),
                   ],
@@ -90,15 +100,19 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    const Icon(Icons.workspace_premium, color: SoloColors.neonCyan, size: 26),
+                    Icon(
+                      isFemale ? Icons.workspace_premium_rounded : Icons.workspace_premium,
+                      color: themeColor,
+                      size: 26,
+                    ),
                     Positioned(
                       top: 4,
                       right: 4,
                       child: Container(
                         width: 8,
                         height: 8,
-                        decoration: const BoxDecoration(
-                          color: SoloColors.neonCyan,
+                        decoration: BoxDecoration(
+                          color: themeColor,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -116,13 +130,13 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF042F2E),
+                            color: isFemale ? const Color(0xFF291B08) : const Color(0xFF042F2E),
                             borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.5)),
+                            border: Border.all(color: themeColor.withValues(alpha: 0.5)),
                           ),
                           child: Text(
                             "[ SYSTEM : $hunterName ]",
-                            style: SoloTypography.systemTag.copyWith(fontSize: 8),
+                            style: SoloTypography.systemTag.copyWith(fontSize: 8, color: themeColor),
                           ),
                         ),
                       ],
@@ -130,7 +144,10 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                     const SizedBox(height: 3),
                     Text(
                       "WINTER ARC PROTOCOL",
-                      style: SoloTypography.systemTitle.copyWith(fontSize: 16),
+                      style: SoloTypography.systemTitle.copyWith(
+                        fontSize: 16,
+                        color: isFemale ? const Color(0xFFFEF08A) : Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Row(
@@ -139,7 +156,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                           "LEVEL $dayNum / 122",
                           style: SoloTypography.systemTag.copyWith(
                             fontSize: 10,
-                            color: SoloColors.electricSky,
+                            color: isFemale ? const Color(0xFFFDE047) : SoloColors.electricSky,
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -169,10 +186,10 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                   height: 36,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.6), width: 1.5),
+                    border: Border.all(color: themeColor.withValues(alpha: 0.6), width: 1.5),
                     boxShadow: [
                       BoxShadow(
-                        color: SoloColors.neonCyan.withValues(alpha: 0.2),
+                        color: themeShadow.withValues(alpha: 0.3),
                         blurRadius: 10,
                       ),
                     ],
@@ -188,7 +205,7 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                             hunterName.isNotEmpty ? hunterName[0].toUpperCase() : '?',
                             style: SoloTypography.systemTag.copyWith(
                               fontSize: 14,
-                              color: SoloColors.neonCyan,
+                              color: themeColor,
                             ),
                           )
                         : null,
@@ -198,26 +215,23 @@ class _HeaderWidgetState extends State<HeaderWidget> {
             ],
           ),
           const SizedBox(height: 14),
-          const Divider(color: Color(0x3300F0FF), height: 1),
+          Divider(color: themeColor.withValues(alpha: 0.25), height: 1),
           const SizedBox(height: 12),
 
-          // Controls & Action Buttons Bar
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          // Streamlined Top Controls: ONLY STREAK AND TIME
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Streak Badge
+              // 1. Streak Flame Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFF431407),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: SoloColors.flameOrange.withValues(alpha: 0.5)),
+                  border: Border.all(color: SoloColors.flameOrange.withValues(alpha: 0.6)),
                   boxShadow: [
                     BoxShadow(
-                      color: SoloColors.flameOrange.withValues(alpha: 0.2),
+                      color: SoloColors.flameOrange.withValues(alpha: 0.25),
                       blurRadius: 8,
                     ),
                   ],
@@ -225,127 +239,43 @@ class _HeaderWidgetState extends State<HeaderWidget> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.local_fire_department, color: SoloColors.flameOrange, size: 14),
-                    const SizedBox(width: 4),
+                    const Icon(Icons.local_fire_department, color: SoloColors.flameOrange, size: 15),
+                    const SizedBox(width: 5),
                     Text(
                       "${widget.activeStreak}D STREAK",
-                      style: SoloTypography.systemTag.copyWith(color: SoloColors.flameOrange),
+                      style: SoloTypography.systemTag.copyWith(
+                        color: SoloColors.flameOrange,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 10),
 
-              // Live IST Clock
+              // 2. Live IST Clock
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: SoloColors.obsidianVoid,
+                  color: const Color(0xFF090314),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.3)),
+                  border: Border.all(color: themeColor.withValues(alpha: 0.35)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.access_time, color: SoloColors.neonCyan, size: 12),
-                    const SizedBox(width: 4),
-                    Text(_timeStr, style: SoloTypography.systemTag.copyWith(fontSize: 10)),
+                    Icon(Icons.access_time_filled_rounded, color: themeColor, size: 14),
+                    const SizedBox(width: 6),
+                    Text(
+                      _timeStr,
+                      style: SoloTypography.systemTag.copyWith(
+                        fontSize: 10.5,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
-                ),
-              ),
-
-              // Sound Toggle
-              GestureDetector(
-                onTap: () {
-                  SoundService().toggleSound();
-                  setState(() {});
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: SoloColors.obsidianVoid,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
-                  ),
-                  child: Icon(
-                    SoundService().isSoundEnabled ? Icons.volume_up : Icons.volume_off,
-                    color: SoundService().isSoundEnabled ? SoloColors.neonCyan : SoloColors.textDim,
-                    size: 16,
-                  ),
-                ),
-              ),
-
-              // Alerts Hub
-              GestureDetector(
-                onTap: widget.onOpenNotificationModal,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: SoloColors.obsidianVoid,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.notifications_none, color: SoloColors.neonCyan, size: 14),
-                      const SizedBox(width: 4),
-                      Text("Alerts", style: SoloTypography.systemTag.copyWith(fontSize: 10)),
-                    ],
-                  ),
-                ),
-              ),
-
-              // Smartwatch Sync
-              GestureDetector(
-                onTap: widget.onOpenSmartwatchModal,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: SoloColors.obsidianVoid,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: SoloColors.manaViolet.withValues(alpha: 0.5)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.watch_outlined, color: SoloColors.manaViolet, size: 14),
-                      const SizedBox(width: 4),
-                      Text("Watch Sync", style: SoloTypography.systemTag.copyWith(color: SoloColors.manaViolet, fontSize: 10)),
-                    ],
-                  ),
-                ),
-              ),
-
-              // + Add Quest Button
-              GestureDetector(
-                onTap: widget.onOpenTaskModal,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: SoloColors.buttonCyanGradient,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: SoloColors.neonCyan.withValues(alpha: 0.4),
-                        blurRadius: 10,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.add, color: SoloColors.obsidianVoid, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        "+ Add Quest",
-                        style: SoloTypography.systemTag.copyWith(
-                          color: SoloColors.obsidianVoid,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ],

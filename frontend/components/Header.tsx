@@ -3,16 +3,10 @@
 import React, { useState, useEffect } from "react";
 import {
   Shield,
-  Bell,
-  Watch,
-  Plus,
-  Volume2,
-  VolumeX,
   Flame,
   Clock,
   DownloadCloud,
   Crown,
-  Sparkles,
 } from "lucide-react";
 import { audio } from "../lib/audio";
 import { getWinterArcDaysRemaining } from "../lib/utils";
@@ -29,6 +23,7 @@ interface HeaderProps {
     displayName: string;
     photoUrl?: string;
     provider: string;
+    gender?: string;
   } | null;
   onOpenProfile?: () => void;
   onOpenAuth?: () => void;
@@ -46,13 +41,10 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuth,
   onOpenGeminiAI,
 }) => {
-  const [soundEnabled, setSoundEnabled] = useState(true);
   const [istTimeStr, setIstTimeStr] = useState<string>("");
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   useEffect(() => {
-    setSoundEnabled(audio.isEnabled());
-
     const updateClock = () => {
       const now = new Date();
       setIstTimeStr(
@@ -81,11 +73,6 @@ export const Header: React.FC<HeaderProps> = ({
     };
   }, []);
 
-  const handleToggleSound = () => {
-    const next = audio.toggleSound();
-    setSoundEnabled(next);
-  };
-
   const handleInstallPWA = async () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
@@ -95,160 +82,129 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const timeline = getWinterArcDaysRemaining(new Date(`${currentDate}T12:00:00`));
-
-  // Determine Hunter Rank based on streak/day
-  let hunterRank = "E-RANK";
-  let rankColor = "text-slate-400 border-slate-700 bg-slate-900";
-  if (activeStreak >= 30) {
-    hunterRank = "S-RANK MONARCH";
-    rankColor = "text-cyan-300 border-cyan-400 bg-cyan-950/80 shadow-[0_0_12px_rgba(0,240,255,0.4)]";
-  } else if (activeStreak >= 20) {
-    hunterRank = "A-RANK";
-    rankColor = "text-violet-300 border-violet-400 bg-violet-950/80";
-  } else if (activeStreak >= 10) {
-    hunterRank = "B-RANK";
-    rankColor = "text-amber-300 border-amber-400 bg-amber-950/80";
-  } else if (activeStreak >= 5) {
-    hunterRank = "C-RANK";
-    rankColor = "text-emerald-300 border-emerald-400 bg-emerald-950/80";
-  } else if (activeStreak >= 1) {
-    hunterRank = "D-RANK";
-    rankColor = "text-sky-300 border-sky-400 bg-sky-950/80";
-  }
+  const currentLevel = 1;
+  const isFemale = hunterUser?.gender === "female";
+  const systemName = isFemale ? "S-Rank Dancer" : "Shadow Monarch";
 
   return (
-    <header className="w-full mb-6">
-      {/* Solo Leveling System Header Bar */}
-      <div className="system-window rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        {/* Left: System Identification & Hunter Title */}
-        <div className="flex items-center gap-3.5">
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-slate-950 border border-cyan-400 p-0.5 shadow-[0_0_20px_rgba(0,240,255,0.4)] overflow-hidden">
-            <img
-              src="/app_logo.jpg"
-              alt="Winter Arc Logo"
-              className="w-full h-full object-cover rounded-lg"
-            />
-            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping" />
-            <div className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-cyan-400" />
-          </div>
+    <header className={`relative z-10 w-full px-4 sm:px-6 py-4 backdrop-blur-xl border-b ${
+      isFemale ? "bg-[#140b02]/90 border-amber-500/40" : "bg-[#090414]/90 border-purple-500/30"
+    }`}>
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        {/* Left: Branding & Identity */}
+        <div className="flex items-center gap-3.5 w-full md:w-auto justify-between md:justify-start">
+          <div className="flex items-center gap-3">
+            <div className={`relative flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br p-0.5 shadow-lg ${
+              isFemale
+                ? "from-amber-400 via-yellow-500 to-amber-700 shadow-[0_0_20px_rgba(251,191,36,0.4)]"
+                : "from-blue-500 via-purple-600 to-purple-900 shadow-[0_0_20px_rgba(168,85,247,0.4)]"
+            }`}>
+              <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                <Crown className={`w-6 h-6 ${isFemale ? "text-amber-400 animate-pulse" : "text-cyan-400 animate-pulse"}`} />
+              </div>
+            </div>
 
             <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-mono font-black uppercase tracking-widest text-cyan-400 bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/40">
-                [ SYSTEM : {hunterUser ? hunterUser.displayName.toUpperCase() : "ACTIVE"} ]
-              </span>
-              <h1 className="text-xl sm:text-2xl font-black tracking-wider uppercase font-['Outfit'] text-white glow-text-system">
+              <div className="flex items-center gap-2">
+                <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-widest border ${
+                  isFemale
+                    ? "bg-amber-950/80 text-amber-300 border-amber-500/40"
+                    : "bg-purple-950/80 text-purple-300 border-purple-500/30"
+                }`}>
+                  [ SYSTEM : {hunterUser?.displayName || systemName} ]
+                </span>
+              </div>
+              <h1 className={`text-xl sm:text-2xl font-black font-['Outfit'] uppercase tracking-wider ${
+                isFemale ? "text-amber-200" : "text-white"
+              }`}>
                 WINTER ARC PROTOCOL
               </h1>
+              <p className="text-[11px] font-mono text-slate-400">
+                LEVEL {currentLevel} / 122 • <span className={`font-bold ${isFemale ? "text-amber-400" : "text-purple-400"}`}>E-RANK</span> • SEPT 1 – DEC 31
+              </p>
             </div>
+          </div>
 
-            <div className="flex items-center gap-2 mt-1 text-xs text-slate-300 font-mono">
-              <span className="text-cyan-300 font-bold">LEVEL {timeline.dayNumber} / 122</span>
-              <span className="text-slate-600">•</span>
-              <span className={`px-2 py-0.2 text-[10px] font-extrabold rounded border ${rankColor}`}>
-                {hunterRank}
-              </span>
-              <span className="text-slate-600 hidden sm:inline">•</span>
-              <span className="text-slate-400 hidden sm:inline">SEPT 1 — DEC 31</span>
-            </div>
+          {/* Profile Button on Mobile Right */}
+          <div className="md:hidden">
+            {hunterUser ? (
+              <button
+                onClick={onOpenProfile}
+                className={`p-1 rounded-xl bg-slate-950 border ${
+                  isFemale ? "border-amber-400" : "border-purple-400"
+                }`}
+              >
+                {hunterUser.photoUrl ? (
+                  <img
+                    src={hunterUser.photoUrl}
+                    alt={hunterUser.displayName}
+                    className="w-8 h-8 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-purple-950 flex items-center justify-center text-purple-300 font-bold font-mono text-xs">
+                    {hunterUser.displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={onOpenAuth}
+                className="px-3 py-1 rounded-lg bg-slate-900 border border-purple-500/50 text-purple-300 text-xs font-mono font-bold"
+              >
+                Login
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Right: Controls & Actions */}
-        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto justify-between sm:justify-end">
-          {/* Streak Badge */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-950/60 border border-orange-500/40 text-orange-300 text-xs font-bold font-mono shadow-[0_0_10px_rgba(249,115,22,0.2)]">
-            <Flame className="w-3.5 h-3.5 fill-orange-400 text-orange-400 animate-bounce" />
+        {/* Right Action Bar: STREAMLINED TO ONLY STREAK & TIME (Controls in bottom navbar) */}
+        <div className="flex items-center flex-wrap gap-2.5 justify-center md:justify-end w-full md:w-auto">
+          {/* Streak Flame Badge */}
+          <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-amber-950/80 border border-amber-500/50 text-amber-300 font-mono font-bold text-xs shadow-[0_0_12px_rgba(245,158,11,0.25)]">
+            <Flame className="w-4 h-4 text-amber-400 fill-amber-400 animate-pulse" />
             <span>{activeStreak}D STREAK</span>
           </div>
 
-          {/* Live IST System Clock */}
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-950/80 border border-cyan-500/20 text-cyan-300 text-xs font-mono">
-            <Clock className="w-3.5 h-3.5 text-cyan-400" />
+          {/* Live IST Clock */}
+          <div className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-950 border text-xs font-mono font-bold ${
+            isFemale ? "border-amber-500/40 text-amber-200" : "border-purple-500/30 text-purple-200"
+          }`}>
+            <Clock className={`w-3.5 h-3.5 ${isFemale ? "text-amber-400" : "text-purple-400"}`} />
             <span>{istTimeStr}</span>
           </div>
 
-          {/* Sound FX */}
-          <button
-            onClick={handleToggleSound}
-            aria-label="Toggle Sound"
-            className="p-2 rounded-lg bg-slate-950/80 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:shadow-[0_0_10px_rgba(0,240,255,0.3)] transition-all"
-            title={soundEnabled ? "System Audio: ON" : "System Audio: MUTED"}
-          >
-            {soundEnabled ? (
-              <Volume2 className="w-4 h-4 text-cyan-400" />
+          {/* Hunter Profile Avatar / Login (Desktop) */}
+          <div className="hidden md:block">
+            {hunterUser ? (
+              <button
+                onClick={onOpenProfile}
+                title={`Hunter Profile (${hunterUser.displayName})`}
+                className={`flex items-center gap-1.5 p-1 rounded-xl bg-slate-950 border shadow-lg hover:scale-105 transition-all ${
+                  isFemale ? "border-amber-400 shadow-amber-500/20" : "border-purple-400 shadow-purple-500/20"
+                }`}
+              >
+                {hunterUser.photoUrl ? (
+                  <img
+                    src={hunterUser.photoUrl}
+                    alt={hunterUser.displayName}
+                    className="w-8 h-8 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-lg bg-purple-950 flex items-center justify-center text-purple-300 font-bold font-mono text-xs">
+                    {hunterUser.displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </button>
             ) : (
-              <VolumeX className="w-4 h-4 text-slate-600" />
+              <button
+                onClick={onOpenAuth}
+                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-slate-900 border border-purple-500/50 hover:border-purple-400 text-purple-300 text-xs font-mono font-bold transition-all"
+              >
+                <Shield className="w-3.5 h-3.5 text-purple-400" />
+                <span>Login</span>
+              </button>
             )}
-          </button>
-
-          {/* ✨ Gemini AI Intelligence Hub */}
-          {onOpenGeminiAI && (
-            <button
-              onClick={onOpenGeminiAI}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white text-xs font-mono font-bold hover:shadow-[0_0_15px_rgba(155,114,203,0.6)] transition-all transform active:scale-95 border border-white/30"
-            >
-              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-              <span>Gemini AI</span>
-            </button>
-          )}
-
-          {/* Alerts / Notifications */}
-          <button
-            onClick={onOpenNotificationModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950/80 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 text-xs font-mono font-bold hover:shadow-[0_0_10px_rgba(0,240,255,0.3)] transition-all"
-          >
-            <Bell className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden xs:inline">Alerts Hub</span>
-          </button>
-
-          {/* Smartwatch Sync */}
-          <button
-            onClick={onOpenSmartwatchModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950/80 border border-violet-500/40 hover:border-violet-400 text-violet-300 text-xs font-mono font-bold hover:shadow-[0_0_10px_rgba(139,92,246,0.3)] transition-all"
-          >
-            <Watch className="w-3.5 h-3.5 text-violet-400" />
-            <span className="hidden xs:inline">Watch Sync</span>
-          </button>
-
-          {/* Add Routine */}
-          <button
-            onClick={onOpenTaskModal}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs font-mono shadow-[0_0_15px_rgba(0,240,255,0.5)] transition-all transform active:scale-95"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[3]" />
-            <span>+ Add Quest</span>
-          </button>
-
-          {/* Hunter Profile / Login Avatar */}
-          {hunterUser ? (
-            <button
-              onClick={onOpenProfile}
-              title={`Hunter Profile (${hunterUser.displayName})`}
-              className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-950 border border-cyan-400/80 shadow-[0_0_12px_rgba(0,240,255,0.3)] hover:scale-105 transition-all"
-            >
-              {hunterUser.photoUrl ? (
-                <img
-                  src={hunterUser.photoUrl}
-                  alt={hunterUser.displayName}
-                  className="w-7 h-7 rounded-lg object-cover"
-                />
-              ) : (
-                <div className="w-7 h-7 rounded-lg bg-cyan-950 flex items-center justify-center text-cyan-300 font-bold font-mono text-xs">
-                  {hunterUser.displayName.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </button>
-          ) : (
-            <button
-              onClick={onOpenAuth}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 border border-cyan-500/50 hover:border-cyan-400 text-cyan-300 text-xs font-mono font-bold hover:shadow-[0_0_12px_rgba(0,240,255,0.4)] transition-all"
-            >
-              <Shield className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Login</span>
-            </button>
-          )}
+          </div>
 
           {/* PWA Install */}
           {deferredPrompt && (

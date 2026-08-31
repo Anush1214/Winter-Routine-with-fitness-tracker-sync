@@ -119,58 +119,89 @@ class _MainShellScreenState extends State<MainShellScreen> {
   }
 
   Widget _buildStatsMatrixView(SupabaseService service) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF581C87).withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFA855F7)),
-                ),
-                child: const Icon(Icons.show_chart_rounded, color: Color(0xFFC084FC), size: 20),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "EXPEDITION MATRIX",
-                    style: SoloTypography.systemTitle.copyWith(fontSize: 18),
-                  ),
-                  Text(
-                    "122-Day Awakening & Consistency Telemetry",
-                    style: SoloTypography.bodyMuted.copyWith(fontSize: 11),
+    final isFemale = context.watch<AuthService>().isFemaleTheme;
+    final themeColor = isFemale ? const Color(0xFFFBBF24) : const Color(0xFFC084FC);
+    final themeShadow = isFemale ? const Color(0xFFF59E0B) : const Color(0xFFA855F7);
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            // Full-Width Title Header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isFemale
+                    ? const Color(0xFF291B08).withValues(alpha: 0.9)
+                    : const Color(0xFF0F0720).withValues(alpha: 0.9),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: themeColor.withValues(alpha: 0.4)),
+                boxShadow: [
+                  BoxShadow(
+                    color: themeShadow.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
-            ],
-          ),
-          const SizedBox(height: 18),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: themeShadow.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: themeColor),
+                    ),
+                    child: Icon(Icons.show_chart_rounded, color: themeColor, size: 24),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "EXPEDITION MATRIX",
+                          style: SoloTypography.systemTitle.copyWith(
+                            fontSize: 20,
+                            color: isFemale ? const Color(0xFFFEF08A) : Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "122-Day Awakening & Consistency Telemetry",
+                          style: SoloTypography.bodyMuted.copyWith(fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 18),
 
-          // Streak & Heatmap Matrix
-          ConsistencyHeatmapWidget(
-            heatmapRates: service.heatmapRates,
-            selectedDate: service.selectedDate,
-            onSelectDate: (d) => service.selectDate(d),
-          ),
-          const SizedBox(height: 16),
+            // Streak & Heatmap Matrix
+            ConsistencyHeatmapWidget(
+              heatmapRates: service.heatmapRates,
+              selectedDate: service.selectedDate,
+              onSelectDate: (d) => service.selectDate(d),
+            ),
+            const SizedBox(height: 16),
 
-          // Expedition Matrix
-          ExpeditionMatrix(
-            heatmapRates: service.heatmapRates,
-            selectedDate: service.selectedDate,
-            onSelectDate: (d) => service.selectDate(d),
-          ),
-          const SizedBox(height: 100),
-        ],
+            // Expedition Matrix
+            ExpeditionMatrix(
+              heatmapRates: service.heatmapRates,
+              selectedDate: service.selectedDate,
+              onSelectDate: (d) => service.selectDate(d),
+            ),
+            const SizedBox(height: 100),
+          ],
+        ),
       ),
     );
   }

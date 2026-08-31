@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/solo_colors.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
 import '../../models/task_model.dart';
+import '../../services/auth_service.dart';
 
 class QuestObjectiveTile extends StatelessWidget {
   final TaskModel task;
@@ -20,11 +22,14 @@ class QuestObjectiveTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color categoryColor = SoloColors.neonCyan;
-    if (task.category == 'fitness') categoryColor = SoloColors.electricSky;
-    if (task.category == 'career') categoryColor = SoloColors.monarchGold;
+    final isFemale = context.watch<AuthService>().isFemaleTheme;
+    final themeColor = isFemale ? const Color(0xFFFBBF24) : SoloColors.neonCyan;
+
+    Color categoryColor = themeColor;
+    if (task.category == 'fitness') categoryColor = isFemale ? const Color(0xFFF59E0B) : SoloColors.electricSky;
+    if (task.category == 'career') categoryColor = isFemale ? const Color(0xFFFDE047) : SoloColors.monarchGold;
     if (task.category == 'health') categoryColor = SoloColors.rankEmerald;
-    if (task.category == 'study') categoryColor = SoloColors.manaViolet;
+    if (task.category == 'study') categoryColor = isFemale ? const Color(0xFFD97706) : SoloColors.manaViolet;
 
     return GestureDetector(
       onTap: () {
@@ -46,15 +51,15 @@ class QuestObjectiveTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: task.isCompleted
-                ? SoloColors.neonCyan.withOpacity(0.2)
-                : SoloColors.neonCyan.withOpacity(0.4),
+                ? themeColor.withOpacity(0.2)
+                : themeColor.withOpacity(0.4),
             width: 1,
           ),
           boxShadow: task.isCompleted
               ? []
               : [
                   BoxShadow(
-                    color: SoloColors.neonCyan.withOpacity(0.08),
+                    color: themeColor.withOpacity(0.08),
                     blurRadius: 10,
                   ),
                 ],
@@ -67,22 +72,22 @@ class QuestObjectiveTile extends StatelessWidget {
               height: 22,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
-                color: task.isCompleted ? SoloColors.neonCyan : SoloColors.obsidianVoid,
+                color: task.isCompleted ? themeColor : SoloColors.obsidianVoid,
                 border: Border.all(
-                  color: task.isCompleted ? Colors.white : SoloColors.neonCyan.withOpacity(0.6),
+                  color: task.isCompleted ? Colors.white : themeColor.withOpacity(0.6),
                   width: 1.5,
                 ),
                 boxShadow: task.isCompleted
                     ? [
                         BoxShadow(
-                          color: SoloColors.neonCyan.withOpacity(0.8),
+                          color: themeColor.withOpacity(0.8),
                           blurRadius: 8,
                         ),
                       ]
                     : [],
               ),
               child: task.isCompleted
-                  ? const Icon(Icons.check, size: 14, color: SoloColors.obsidianVoid)
+                  ? Icon(Icons.check, size: 14, color: isFemale ? Colors.black : SoloColors.obsidianVoid)
                   : null,
             ),
             const SizedBox(width: 10),
@@ -127,12 +132,12 @@ class QuestObjectiveTile extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: SoloColors.obsidianVoid,
                             borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: SoloColors.neonCyan.withOpacity(0.3)),
+                            border: Border.all(color: themeColor.withOpacity(0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.access_time, size: 9, color: SoloColors.neonCyan),
+                              Icon(Icons.access_time, size: 9, color: themeColor),
                               const SizedBox(width: 3),
                               Text(
                                 task.startTime!,
@@ -145,18 +150,18 @@ class QuestObjectiveTile extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1E1B4B),
+                            color: isFemale ? const Color(0xFF291B08) : const Color(0xFF1E1B4B),
                             borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: SoloColors.manaViolet.withOpacity(0.5)),
+                            border: Border.all(color: (isFemale ? const Color(0xFFD97706) : SoloColors.manaViolet).withOpacity(0.5)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.watch_outlined, size: 9, color: SoloColors.manaViolet),
+                              Icon(Icons.watch_outlined, size: 9, color: isFemale ? const Color(0xFFD97706) : SoloColors.manaViolet),
                               const SizedBox(width: 3),
                               Text(
                                 "AUTO-SYNC",
-                                style: SoloTypography.systemTag.copyWith(fontSize: 8, color: SoloColors.manaViolet),
+                                style: SoloTypography.systemTag.copyWith(fontSize: 8, color: isFemale ? const Color(0xFFD97706) : SoloColors.manaViolet),
                               ),
                             ],
                           ),

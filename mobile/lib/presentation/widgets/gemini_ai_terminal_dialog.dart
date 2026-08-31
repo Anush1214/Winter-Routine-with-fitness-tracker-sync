@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../core/theme/solo_typography.dart';
 import '../../core/audio/sound_service.dart';
 import '../../models/task_model.dart';
-import 'holographic_frame.dart';
+import '../../services/auth_service.dart';
 
 class GeminiChatMessage {
   final String text;
@@ -46,6 +47,7 @@ class GeminiAiTerminalDialog extends StatefulWidget {
     this.waterMl = 3200,
   });
 
+  /// Open as a FULL-SCREEN page instead of a popup dialog
   static void show(
     BuildContext context, {
     required List<TaskModel> tasks,
@@ -53,13 +55,23 @@ class GeminiAiTerminalDialog extends StatefulWidget {
     int waterMl = 3200,
   }) {
     SoundService().playRobotClick();
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withValues(alpha: 0.85),
-      builder: (_) => GeminiAiTerminalDialog(
-        tasks: tasks,
-        streak: streak,
-        waterMl: waterMl,
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => GeminiAiTerminalDialog(
+          tasks: tasks,
+          streak: streak,
+          waterMl: waterMl,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 1),
+              end: Offset.zero,
+            ).animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 400),
       ),
     );
   }
@@ -289,262 +301,276 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthService>();
+    final isFemale = auth.isFemaleTheme;
     final completedCount = widget.tasks.where((t) => t.isCompleted).length;
 
-    return Center(
-      child: Material(
-        color: Colors.transparent,
-        child: Container(
-          width: MediaQuery.of(context).size.width * 0.94,
-          constraints: const BoxConstraints(maxWidth: 520, maxHeight: 680),
-          margin: const EdgeInsets.symmetric(horizontal: 14),
-          child: HolographicFrame(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Header with Authentic Gemini Sparkle Logo & Memory Controls
-                Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
+    // Theme-aware colors
+    final geminiAccent = const Color(0xFF9B72CB);
+    final bgColor = isFemale ? const Color(0xFF140B02) : const Color(0xFF090414);
+    final chatBgColor = isFemale ? const Color(0xFF0A0603) : const Color(0xFF07030E);
+    final userBubbleBg = isFemale ? const Color(0xFF78350F).withValues(alpha: 0.85) : const Color(0xFF581C87).withValues(alpha: 0.85);
+    final userBubbleBorder = isFemale ? const Color(0xFFFBBF24).withValues(alpha: 0.8) : const Color(0xFFC084FC).withValues(alpha: 0.8);
+
+    return Scaffold(
+      backgroundColor: bgColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ─── TOP APP BAR ───────────────────────────────────
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: bgColor,
+                border: Border(
+                  bottom: BorderSide(color: geminiAccent.withValues(alpha: 0.25)),
+                ),
+              ),
+              child: Row(
+                children: [
+                  // Back Button
+                  GestureDetector(
+                    onTap: () {
+                      SoundService().playClick();
+                      Navigator.of(context).pop();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF4285F4), Color(0xFF9B72CB), Color(0xFFD96570)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(13),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF9B72CB).withValues(alpha: 0.6),
-                            blurRadius: 18,
-                          ),
-                        ],
+                        color: Colors.black38,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: geminiAccent.withValues(alpha: 0.4)),
                       ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.auto_awesome,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
+                      child: Icon(Icons.arrow_back_ios_new, color: geminiAccent, size: 16),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFF1E1038),
-                                  borderRadius: BorderRadius.circular(4),
-                                  border: Border.all(color: const Color(0xFF9B72CB)),
-                                ),
-                                child: const Text(
-                                  "MEMORY ON • GEMINI FLASH",
-                                  style: TextStyle(
-                                    fontSize: 8,
-                                    color: Color(0xFFC084FC),
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            "GEMINI AI INTELLIGENCE HUB",
-                            style: SoloTypography.systemTitle.copyWith(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                          ),
-                          Text(
-                            "Telemetry: $completedCount/${widget.tasks.length} Quests • ${widget.streak}d Streak",
-                            style: SoloTypography.bodyMuted.copyWith(
-                              fontSize: 9.5,
-                              color: const Color(0xFF38BDF8),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete_sweep_rounded, color: Colors.white54, size: 20),
-                      tooltip: "Reset Memory",
-                      onPressed: _clearChatHistory,
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white70, size: 20),
-                      onPressed: () {
-                        SoundService().playClick();
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-
-                // Quick Prompt Chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _buildPromptChip(
-                        "⚡ Analyze Routine",
-                        "Analyze my today's routine and give me tactical advice on what to prioritize next.",
-                      ),
-                      const SizedBox(width: 6),
-                      _buildPromptChip(
-                        "🎯 DSA Binary Tree Plan",
-                        "Give me a step-by-step strategy to master Binary Trees and LeetCode Mediums tonight.",
-                      ),
-                      const SizedBox(width: 6),
-                      _buildPromptChip(
-                        "💧 Hydration Plan",
-                        "How can I optimize my recovery and water intake based on my 4500ml goal?",
-                      ),
-                      const SizedBox(width: 6),
-                      _buildPromptChip(
-                        "👑 Awakening Directive",
-                        "Give me an inspiring Solo Leveling System motivation to crush all daily goals.",
-                      ),
-                    ],
                   ),
-                ),
-                const SizedBox(height: 10),
+                  const SizedBox(width: 12),
 
-                // Chat Messages Container with System Rich Formatted Text
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
+                  // Gemini Logo Orb
+                  Container(
+                    width: 38,
+                    height: 38,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF07030E),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFF9B72CB).withValues(alpha: 0.3)),
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4285F4), Color(0xFF9B72CB), Color(0xFFD96570)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: geminiAccent.withValues(alpha: 0.5),
+                          blurRadius: 14,
+                        ),
+                      ],
                     ),
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      itemCount: _messages.length,
-                      itemBuilder: (context, index) {
-                        final msg = _messages[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 10),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: msg.isUser
-                                ? MainAxisAlignment.end
-                                : MainAxisAlignment.start,
-                            children: [
-                              if (!msg.isUser) ...[
-                                Container(
-                                  width: 24,
-                                  height: 24,
-                                  decoration: const BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    gradient: LinearGradient(
-                                      colors: [Color(0xFF4285F4), Color(0xFF9B72CB)],
-                                    ),
-                                  ),
-                                  child: const Icon(Icons.auto_awesome, color: Colors.white, size: 13),
-                                ),
-                                const SizedBox(width: 8),
-                              ],
-                              Flexible(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
-                                  decoration: BoxDecoration(
-                                    color: msg.isUser
-                                        ? const Color(0xFF581C87).withValues(alpha: 0.85)
-                                        : const Color(0xFF130A24),
-                                    borderRadius: BorderRadius.circular(14),
-                                    border: Border.all(
-                                      color: msg.isUser
-                                          ? const Color(0xFFC084FC).withValues(alpha: 0.8)
-                                          : const Color(0xFF9B72CB).withValues(alpha: 0.35),
-                                    ),
-                                  ),
-                                  child: _SystemFormattedMessageText(
-                                    text: msg.text,
-                                    isUser: msg.isUser,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
+                    child: const Center(
+                      child: Icon(Icons.auto_awesome, color: Colors.white, size: 20),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 10),
 
-                if (_isLoading) ...[
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const SizedBox(width: 8),
-                      const SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF9B72CB)),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Gemini is analyzing with chat memory...",
-                        style: SoloTypography.systemTag.copyWith(fontSize: 8.5, color: const Color(0xFFC084FC)),
-                      ),
-                    ],
+                  // Title & telemetry
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1E1038),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: geminiAccent),
+                              ),
+                              child: const Text(
+                                "MEMORY ON • GEMINI FLASH",
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  color: Color(0xFFC084FC),
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "GEMINI AI INTELLIGENCE HUB",
+                          style: SoloTypography.systemTitle.copyWith(fontSize: 14, color: Colors.white),
+                        ),
+                        Text(
+                          "Telemetry: $completedCount/${widget.tasks.length} Quests • ${widget.streak}d Streak",
+                          style: SoloTypography.bodyMuted.copyWith(fontSize: 9.5, color: const Color(0xFF38BDF8)),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Clear memory
+                  IconButton(
+                    icon: const Icon(Icons.delete_sweep_rounded, color: Colors.white54, size: 20),
+                    tooltip: "Reset Memory",
+                    onPressed: _clearChatHistory,
                   ),
                 ],
+              ),
+            ),
 
-                const SizedBox(height: 10),
-
-                // Input Box
-                Row(
+            // ─── QUICK PROMPT CHIPS ────────────────────────────
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
                   children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF090414),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFF9B72CB).withValues(alpha: 0.5)),
-                        ),
-                        child: TextField(
-                          controller: _textController,
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
-                          onSubmitted: _sendMessage,
-                          decoration: const InputDecoration(
-                            hintText: "Ask Gemini anything (DSA, workouts, algorithms)...",
-                            hintStyle: TextStyle(color: Colors.white38, fontSize: 11),
-                            border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    _buildPromptChip("⚡ Analyze Routine", "Analyze my today's routine and give me tactical advice on what to prioritize next."),
+                    const SizedBox(width: 6),
+                    _buildPromptChip("🎯 DSA Binary Tree Plan", "Give me a step-by-step strategy to master Binary Trees and LeetCode Mediums tonight."),
+                    const SizedBox(width: 6),
+                    _buildPromptChip("💧 Hydration Plan", "How can I optimize my recovery and water intake based on my 4500ml goal?"),
+                    const SizedBox(width: 6),
+                    _buildPromptChip("👑 Awakening Directive", "Give me an inspiring Solo Leveling System motivation to crush all daily goals."),
+                  ],
+                ),
+              ),
+            ),
+
+            // ─── CHAT MESSAGES ─────────────────────────────────
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: chatBgColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: geminiAccent.withValues(alpha: 0.25)),
+                ),
+                child: ListView.builder(
+                  controller: _scrollController,
+                  itemCount: _messages.length,
+                  itemBuilder: (context, index) {
+                    final msg = _messages[index];
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: msg.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                        children: [
+                          if (!msg.isUser) ...[
+                            Container(
+                              width: 26,
+                              height: 26,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: LinearGradient(
+                                  colors: [Color(0xFF4285F4), Color(0xFF9B72CB)],
+                                ),
+                              ),
+                              child: const Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                              decoration: BoxDecoration(
+                                color: msg.isUser ? userBubbleBg : const Color(0xFF130A24),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: msg.isUser ? userBubbleBorder : geminiAccent.withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: _SystemFormattedMessageText(
+                                text: msg.text,
+                                isUser: msg.isUser,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
+                    );
+                  },
+                ),
+              ),
+            ),
+
+            // ─── LOADING INDICATOR ─────────────────────────────
+            if (_isLoading)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Row(
+                  children: [
+                    const SizedBox(width: 8),
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF9B72CB)),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF4285F4), Color(0xFF9B72CB), Color(0xFFD96570)],
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: IconButton(
-                        icon: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
-                        onPressed: () => _sendMessage(_textController.text),
-                      ),
+                    Text(
+                      "Gemini is analyzing with chat memory...",
+                      style: SoloTypography.systemTag.copyWith(fontSize: 9, color: const Color(0xFFC084FC)),
                     ),
                   ],
                 ),
-              ],
+              ),
+
+            // ─── INPUT BAR ─────────────────────────────────────
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: bgColor,
+                border: Border(
+                  top: BorderSide(color: geminiAccent.withValues(alpha: 0.2)),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isFemale ? const Color(0xFF1A0E02) : const Color(0xFF090414),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: geminiAccent.withValues(alpha: 0.4)),
+                      ),
+                      child: TextField(
+                        controller: _textController,
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        onSubmitted: _sendMessage,
+                        decoration: const InputDecoration(
+                          hintText: "Ask Gemini anything (DSA, workouts, algorithms)...",
+                          hintStyle: TextStyle(color: Colors.white38, fontSize: 12),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF4285F4), Color(0xFF9B72CB), Color(0xFFD96570)],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: geminiAccent.withValues(alpha: 0.4),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                      onPressed: () => _sendMessage(_textController.text),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -554,7 +580,7 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
     return GestureDetector(
       onTap: () => _sendMessage(prompt),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: const Color(0xFF130926),
           borderRadius: BorderRadius.circular(8),
@@ -563,7 +589,7 @@ You have real-time awareness of the Hunter's routine telemetry and chat memory.
         child: Text(
           label,
           style: const TextStyle(
-            fontSize: 9.5,
+            fontSize: 10,
             color: Color(0xFFE9D5FF),
             fontWeight: FontWeight.bold,
           ),
@@ -590,7 +616,7 @@ class _SystemFormattedMessageText extends StatelessWidget {
         text,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 12.5,
+          fontSize: 13,
           fontWeight: FontWeight.w600,
           height: 1.4,
         ),
@@ -684,7 +710,7 @@ class _SystemFormattedMessageText extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w900,
-              fontSize: 12.5,
+              fontSize: 13,
             ),
           ),
         );
@@ -720,7 +746,7 @@ class _SystemFormattedMessageText extends StatelessWidget {
             text: token,
             style: const TextStyle(
               color: Color(0xFFE2E8F0),
-              fontSize: 12.5,
+              fontSize: 13,
               height: 1.45,
               fontWeight: FontWeight.w400,
             ),
@@ -731,7 +757,7 @@ class _SystemFormattedMessageText extends StatelessWidget {
 
     return Text.rich(
       TextSpan(children: spans),
-      style: const TextStyle(fontSize: 12.5, height: 1.45),
+      style: const TextStyle(fontSize: 13, height: 1.45),
     );
   }
 }
