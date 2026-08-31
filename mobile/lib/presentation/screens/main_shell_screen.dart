@@ -9,12 +9,11 @@ import 'profile_screen.dart';
 import 'notification_settings_modal.dart';
 import 'quest_editor_modal.dart';
 import 'smartwatch_sync_sheet.dart';
-import '../widgets/sung_jinwoo_assistant_dialog.dart';
 import '../widgets/gemini_ai_terminal_dialog.dart';
 import '../widgets/consistency_heatmap_widget.dart';
 import '../widgets/expedition_matrix.dart';
-import '../widgets/holographic_frame.dart';
 import '../../core/theme/solo_typography.dart';
+import '../../core/audio/sound_service.dart';
 
 class MainShellScreen extends StatefulWidget {
   const MainShellScreen({super.key});
@@ -51,20 +50,6 @@ class _MainShellScreenState extends State<MainShellScreen> {
     );
   }
 
-  void _openVoiceCompanion() {
-    final service = context.read<SupabaseService>();
-    SungJinwooAssistantDialog.show(
-      context,
-      tasks: service.tasks,
-      onTriggerAction: () {
-        final pending = service.tasks.where((t) => !t.isCompleted).toList();
-        if (pending.isNotEmpty) {
-          service.toggleTask(pending.first.id, false);
-        }
-      },
-    );
-  }
-
   void _openSmartwatchSync() {
     showModalBottomSheet(
       context: context,
@@ -74,14 +59,61 @@ class _MainShellScreenState extends State<MainShellScreen> {
     );
   }
 
-  void _openNotificationModal() {
-    final service = context.read<SupabaseService>();
-    showModalBottomSheet(
+  void _showStreakModal(int streakDays) {
+    SoundService().playVictory();
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => NotificationSettingsModal(
-        onTestAlert: (topic) => service.sendTestAlert(topic),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0F0720),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFFF97316), width: 1.5),
+        ),
+        title: Row(
+          children: [
+            const Text("🔥", style: TextStyle(fontSize: 22)),
+            const SizedBox(width: 8),
+            Text(
+              "HUNTER STREAK: $streakDays DAYS",
+              style: SoloTypography.systemTitle.copyWith(fontSize: 14, color: const Color(0xFFFBBF24)),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Your discipline flame burns unyielding. Continue checking off quests daily to awaken S-Rank multiplier status and maintain zero penalty strikes.",
+              style: SoloTypography.bodyMuted.copyWith(fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E0C03),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF97316).withValues(alpha: 0.5)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.bolt, color: Color(0xFFFBBF24), size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    "EXP Multiplier Active: 1.5x",
+                    style: SoloTypography.systemTag.copyWith(fontSize: 11, color: const Color(0xFFFDE047)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("CLOSE", style: TextStyle(color: Color(0xFFC084FC), fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }
@@ -148,9 +180,10 @@ class _MainShellScreenState extends State<MainShellScreen> {
     final auth = context.watch<AuthService>();
     final supabase = context.watch<SupabaseService>();
     final user = auth.currentUser;
+    final isFemale = auth.isFemaleTheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090314),
+      backgroundColor: isFemale ? const Color(0xFF140B02) : const Color(0xFF090314),
       body: Stack(
         children: [
           // Background Mana Gradient
@@ -162,7 +195,9 @@ class _MainShellScreenState extends State<MainShellScreen> {
               height: 300,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: const Color(0xFF581C87).withValues(alpha: 0.15),
+                color: isFemale
+                    ? const Color(0xFFB45309).withValues(alpha: 0.15)
+                    : const Color(0xFF581C87).withValues(alpha: 0.15),
               ),
             ),
           ),
@@ -197,17 +232,19 @@ class _MainShellScreenState extends State<MainShellScreen> {
             ],
           ),
 
-          // Floating Glassmorphic Bottom Navigation Bar
+          // Floating Glassmorphic Bottom Navigation Bar with 3D Center Flames Streak
           FloatingGlassNavbar(
             selectedIndex: _currentTabIndex,
+            streakDays: supabase.currentStreak,
             onTabSelected: (index) {
               setState(() => _currentTabIndex = index);
             },
             onAddQuest: _openTaskEditor,
-            onOpenVoiceCompanion: _openVoiceCompanion,
             onOpenWatchSync: _openSmartwatchSync,
             onOpenGeminiAi: _openGeminiAiTerminal,
+            onStreakTap: () => _showStreakModal(supabase.currentStreak),
             userPhotoUrl: user?.photoUrl,
+            isFemaleTheme: isFemale,
           ),
         ],
       ),

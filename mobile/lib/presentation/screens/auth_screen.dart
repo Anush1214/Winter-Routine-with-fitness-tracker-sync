@@ -14,6 +14,7 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   bool _isSignUp = false;
+  String _selectedGender = 'male'; // 'male' | 'female'
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -81,9 +82,18 @@ class _AuthScreenState extends State<AuthScreen> {
 
     try {
       if (_isSignUp) {
-        await AuthService().signUpWithEmail(email, password, name);
+        await AuthService().signUpWithEmail(
+          email: email,
+          password: password,
+          displayName: name,
+          gender: _selectedGender,
+        );
       } else {
-        await AuthService().signInWithEmail(email, password);
+        await AuthService().signInWithEmail(
+          email: email,
+          password: password,
+          gender: _selectedGender,
+        );
       }
     } catch (e) {
       _showError('$e');
@@ -97,7 +107,7 @@ class _AuthScreenState extends State<AuthScreen> {
     SoundService().playChime();
 
     try {
-      await AuthService().signInWithGoogle();
+      await AuthService().signInWithGoogle(gender: _selectedGender);
     } catch (e) {
       _showError('$e');
     } finally {
@@ -379,6 +389,91 @@ class _AuthScreenState extends State<AuthScreen> {
                             size: 18,
                           ),
                         ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // Gender / Persona Theme Selector
+                      Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                SoundService().playClick();
+                                setState(() => _selectedGender = 'male');
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                decoration: BoxDecoration(
+                                  color: _selectedGender == 'male'
+                                      ? const Color(0xFF581C87).withValues(alpha: 0.6)
+                                      : const Color(0xFF0F0720),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: _selectedGender == 'male'
+                                        ? const Color(0xFFC084FC)
+                                        : Colors.white24,
+                                    width: _selectedGender == 'male' ? 1.6 : 1.0,
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text("👑", style: TextStyle(fontSize: 14)),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "MALE (PURPLE)",
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                SoundService().playVictory();
+                                setState(() => _selectedGender = 'female');
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                                decoration: BoxDecoration(
+                                  color: _selectedGender == 'female'
+                                      ? const Color(0xFF78350F).withValues(alpha: 0.6)
+                                      : const Color(0xFF1E1005),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: _selectedGender == 'female'
+                                        ? const Color(0xFFFBBF24)
+                                        : Colors.white24,
+                                    width: _selectedGender == 'female' ? 1.6 : 1.0,
+                                  ),
+                                ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text("⚔️", style: TextStyle(fontSize: 14)),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "FEMALE (GOLD)",
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 18),

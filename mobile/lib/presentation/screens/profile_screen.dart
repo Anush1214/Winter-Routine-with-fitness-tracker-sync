@@ -8,6 +8,7 @@ import '../../core/audio/sound_service.dart';
 import '../../services/auth_service.dart';
 import '../widgets/holographic_frame.dart';
 import '../widgets/hunter_rank_badge.dart';
+import '../widgets/sung_jinwoo_assistant_dialog.dart';
 
 class ProfileScreen extends StatefulWidget {
   final int streakDays;
@@ -52,13 +53,14 @@ class _ProfileScreenState extends State<ProfileScreen>
     return 'E-RANK INITIATE';
   }
 
-  Color _getRankColor(int streak) {
+  Color _getRankColor(int streak, bool isFemale) {
+    if (isFemale) return const Color(0xFFFBBF24);
     if (streak >= 100) return const Color(0xFFFFD700);
     if (streak >= 75) return const Color(0xFFFF6B35);
-    if (streak >= 50) return SoloColors.manaViolet;
-    if (streak >= 30) return SoloColors.neonCyan;
-    if (streak >= 14) return SoloColors.electricSky;
-    return SoloColors.textMuted;
+    if (streak >= 50) return const Color(0xFFA855F7);
+    if (streak >= 30) return const Color(0xFFC084FC);
+    if (streak >= 14) return const Color(0xFFE9D5FF);
+    return const Color(0xFFA89BB9);
   }
 
   String _getProviderLabel(String provider) {
@@ -96,99 +98,63 @@ class _ProfileScreenState extends State<ProfileScreen>
       case 'google':
         return const Color(0xFFEA4335);
       case 'github':
-        return SoloColors.neonCyan;
+        return const Color(0xFF38BDF8);
       case 'email':
-        return SoloColors.electricSky;
+        return const Color(0xFFC084FC);
       case 'guest':
-        return SoloColors.manaViolet;
+        return const Color(0xFFFBBF24);
       default:
-        return SoloColors.textMuted;
+        return const Color(0xFFA89BB9);
     }
   }
 
-  Future<void> _saveDisplayName() async {
+  Future<void> _saveName() async {
     final newName = _nameController.text.trim();
-    if (newName.isEmpty) return;
-
-    try {
-      await AuthService().updateDisplayName(newName);
-      SoundService().playChime();
-      setState(() => _isEditing = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Hunter codename updated to: $newName'),
-            backgroundColor: const Color(0xFF042F2E),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to update name: $e'),
-            backgroundColor: SoloColors.penaltyCrimson,
-          ),
-        );
-      }
+    if (newName.isNotEmpty) {
+      await AuthService().updateProfile(displayName: newName);
     }
+    setState(() => _isEditing = false);
   }
 
   Future<void> _pickFromGallery() async {
     try {
       final picker = ImagePicker();
-      final XFile? pickedFile = await picker.pickImage(
+      final XFile? image = await picker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 512,
         maxHeight: 512,
         imageQuality: 85,
       );
-
-      if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
-        final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
-        await AuthService().updatePhotoUrl(base64String);
-        SoundService().playChime();
-        if (mounted) setState(() {});
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        final base64Image = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        await AuthService().updateProfile(photoUrl: base64Image);
+        SoundService().playVictory();
+        setState(() {});
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to pick image: $e'),
-            backgroundColor: SoloColors.penaltyCrimson,
-          ),
-        );
-      }
+      debugPrint("Error picking avatar: $e");
     }
   }
 
   Future<void> _pickFromCamera() async {
     try {
       final picker = ImagePicker();
-      final XFile? pickedFile = await picker.pickImage(
+      final XFile? photo = await picker.pickImage(
         source: ImageSource.camera,
         maxWidth: 512,
         maxHeight: 512,
         imageQuality: 85,
       );
-
-      if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
-        final base64String = 'data:image/jpeg;base64,${base64Encode(bytes)}';
-        await AuthService().updatePhotoUrl(base64String);
-        SoundService().playChime();
-        if (mounted) setState(() {});
+      if (photo != null) {
+        final bytes = await photo.readAsBytes();
+        final base64Image = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        await AuthService().updateProfile(photoUrl: base64Image);
+        SoundService().playVictory();
+        setState(() {});
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to capture photo: $e'),
-            backgroundColor: SoloColors.penaltyCrimson,
-          ),
-        );
-      }
+      debugPrint("Error taking photo: $e");
     }
   }
 
@@ -209,9 +175,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     SoundService().playClick();
     final presets = [
       {'name': 'Shadow Monarch', 'url': 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=150&auto=format&fit=crop&q=80'},
+      {'name': 'S-Rank Dancer', 'url': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'},
       {'name': 'Igris Bloodred', 'url': 'https://images.unsplash.com/photo-1563089145-599997674d42?w=150&auto=format&fit=crop&q=80'},
       {'name': 'Beru Ant King', 'url': 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80'},
-      {'name': 'Grand Marshal', 'url': 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=150&auto=format&fit=crop&q=80'},
     ];
 
     showModalBottomSheet(
@@ -219,7 +185,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       backgroundColor: const Color(0xFF02050E),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        side: BorderSide(color: SoloColors.neonCyan, width: 1.5),
+        side: BorderSide(color: Color(0xFFC084FC), width: 1.5),
       ),
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(20),
@@ -232,17 +198,15 @@ class _ProfileScreenState extends State<ProfileScreen>
               children: [
                 Text(
                   'CHANGE HUNTER AVATAR',
-                  style: SoloTypography.systemTitle.copyWith(fontSize: 14, color: SoloColors.neonCyan),
+                  style: SoloTypography.systemTitle.copyWith(fontSize: 14, color: const Color(0xFFC084FC)),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: SoloColors.textMuted, size: 18),
+                  icon: const Icon(Icons.close, color: Colors.white54, size: 18),
                   onPressed: () => Navigator.pop(ctx),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-
-            // Device Gallery & Camera Upload Buttons
             Row(
               children: [
                 Expanded(
@@ -251,14 +215,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                       Navigator.pop(ctx);
                       _pickFromGallery();
                     },
-                    icon: const Icon(Icons.photo_library, size: 16, color: SoloColors.neonCyan),
-                    label: Text(
-                      'DEVICE GALLERY',
-                      style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white),
-                    ),
+                    icon: const Icon(Icons.photo_library, size: 16, color: Color(0xFFC084FC)),
+                    label: Text('DEVICE GALLERY', style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0B192C),
-                      side: const BorderSide(color: SoloColors.neonCyan, width: 1.2),
+                      side: const BorderSide(color: Color(0xFFC084FC), width: 1.2),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
@@ -271,14 +232,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                       Navigator.pop(ctx);
                       _pickFromCamera();
                     },
-                    icon: const Icon(Icons.camera_alt, size: 16, color: SoloColors.manaViolet),
-                    label: Text(
-                      'TAKE PHOTO',
-                      style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white),
-                    ),
+                    icon: const Icon(Icons.camera_alt, size: 16, color: Color(0xFFA855F7)),
+                    label: Text('TAKE PHOTO', style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0B192C),
-                      side: const BorderSide(color: SoloColors.manaViolet, width: 1.2),
+                      side: const BorderSide(color: Color(0xFFA855F7), width: 1.2),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
@@ -286,166 +244,71 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ],
             ),
-
             const SizedBox(height: 16),
-            Text(
-              'OR SELECT SOLO LEVELING PRESET',
-              style: SoloTypography.systemTag.copyWith(fontSize: 9, color: SoloColors.textMuted),
-            ),
+            Text('OR SELECT PRESET', style: SoloTypography.systemTag.copyWith(fontSize: 9, color: Colors.white54)),
             const SizedBox(height: 10),
-
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: presets.map((p) {
                 return GestureDetector(
                   onTap: () async {
                     Navigator.pop(ctx);
-                    await AuthService().updatePhotoUrl(p['url']!);
-                    SoundService().playChime();
+                    await AuthService().updateProfile(photoUrl: p['url']);
+                    SoundService().playVictory();
                     setState(() {});
                   },
                   child: Column(
                     children: [
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.6), width: 1.5),
-                          image: DecorationImage(
-                            image: NetworkImage(p['url']!),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                      CircleAvatar(
+                        radius: 26,
+                        backgroundImage: NetworkImage(p['url']!),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        p['name']!.split(' ').first,
-                        style: SoloTypography.systemTag.copyWith(fontSize: 9, color: Colors.white70),
-                      ),
+                      const SizedBox(height: 4),
+                      Text(p['name']!, style: SoloTypography.systemTag.copyWith(fontSize: 8.5, color: Colors.white70)),
                     ],
                   ),
                 );
               }).toList(),
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _confirmSignOut() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0F172A),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
-        ),
-        title: Text(
-          'SYSTEM // SIGN OUT',
-          style: SoloTypography.systemTag.copyWith(fontSize: 14, color: SoloColors.neonCyan),
-        ),
-        content: Text(
-          'Are you sure you want to disconnect from the System? Your quest progress is saved.',
-          style: SoloTypography.bodyMuted.copyWith(fontSize: 12, color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('CANCEL', style: SoloTypography.systemTag.copyWith(fontSize: 10, color: SoloColors.textMuted)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('SIGN OUT', style: SoloTypography.systemTag.copyWith(fontSize: 10, color: SoloColors.penaltyCrimson)),
-          ),
-        ],
-      ),
+  void _openCompanionAssistant() {
+    SoundService().playLevelUp();
+    SungJinwooAssistantDialog.show(
+      context,
+      tasks: const [],
+      onTriggerAction: () {},
     );
-
-    if (confirmed == true) {
-      SoundService().playClick();
-      await AuthService().signOut();
-      if (mounted) Navigator.of(context).pop();
-    }
-  }
-
-  Future<void> _confirmDeleteAccount() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF0F172A),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: SoloColors.penaltyCrimson),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded, color: SoloColors.penaltyCrimson, size: 20),
-            const SizedBox(width: 8),
-            Text(
-              'DANGER ZONE',
-              style: SoloTypography.systemTag.copyWith(fontSize: 14, color: SoloColors.penaltyCrimson),
-            ),
-          ],
-        ),
-        content: Text(
-          'This will permanently delete your Hunter account and all associated data. This action cannot be undone.',
-          style: SoloTypography.bodyMuted.copyWith(fontSize: 12, color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('CANCEL', style: SoloTypography.systemTag.copyWith(fontSize: 10, color: SoloColors.textMuted)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('DELETE ACCOUNT', style: SoloTypography.systemTag.copyWith(fontSize: 10, color: SoloColors.penaltyCrimson)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await AuthService().deleteAccount();
-        if (mounted) Navigator.of(context).pop();
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('$e'),
-              backgroundColor: SoloColors.penaltyCrimson,
-            ),
-          );
-        }
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final user = AuthService().currentUser;
+    final auth = AuthService();
+    final user = auth.currentUser;
     if (user == null) {
       return const Scaffold(
-        backgroundColor: SoloColors.obsidianVoid,
-        body: Center(child: CircularProgressIndicator(color: SoloColors.neonCyan)),
+        backgroundColor: Color(0xFF090414),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFFC084FC))),
       );
     }
 
-    final rankColor = _getRankColor(widget.streakDays);
+    final isFemale = auth.isFemaleTheme;
+    final themeColor = isFemale ? const Color(0xFFFBBF24) : const Color(0xFFC084FC);
+    final rankColor = _getRankColor(widget.streakDays, isFemale);
     final rankTitle = _getRankTitle(widget.streakDays);
 
     return Scaffold(
-      backgroundColor: SoloColors.obsidianVoid,
+      backgroundColor: isFemale ? const Color(0xFF140B02) : const Color(0xFF090414),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Column(
             children: [
-              // ─── Top Nav Bar ─────────────────────────────
+              // Top Nav Bar
               Row(
                 children: [
                   GestureDetector(
@@ -456,25 +319,25 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: SoloColors.obsidianVoid,
+                        color: Colors.black45,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.4)),
+                        border: Border.all(color: themeColor.withValues(alpha: 0.4)),
                       ),
-                      child: const Icon(Icons.arrow_back_ios_new, color: SoloColors.neonCyan, size: 16),
+                      child: Icon(Icons.arrow_back_ios_new, color: themeColor, size: 16),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'HUNTER PROFILE',
-                      style: SoloTypography.systemTag.copyWith(fontSize: 14, letterSpacing: 2),
+                      style: SoloTypography.systemTag.copyWith(fontSize: 14, letterSpacing: 2, color: Colors.white),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20),
 
-              // ─── Profile Avatar & Identity ─────────────
+              // Profile Avatar & Identity
               AnimatedBuilder(
                 animation: _glowController,
                 builder: (context, child) {
@@ -503,13 +366,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                       backgroundImage: _buildAvatarImage(user.photoUrl),
                       child: user.photoUrl == null
                           ? Text(
-                              user.displayName.isNotEmpty
-                                  ? user.displayName[0].toUpperCase()
-                                  : '?',
-                              style: SoloTypography.monoValue.copyWith(
-                                fontSize: 36,
-                                color: rankColor,
-                              ),
+                              user.displayName.isNotEmpty ? user.displayName[0].toUpperCase() : '?',
+                              style: SoloTypography.monoValue.copyWith(fontSize: 36, color: rankColor),
                             )
                           : null,
                     ),
@@ -520,15 +378,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                         decoration: BoxDecoration(
                           color: const Color(0xFF0F172A),
                           shape: BoxShape.circle,
-                          border: Border.all(color: SoloColors.neonCyan, width: 1.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: SoloColors.neonCyan.withValues(alpha: 0.5),
-                              blurRadius: 10,
-                            ),
-                          ],
+                          border: Border.all(color: themeColor, width: 1.5),
                         ),
-                        child: const Icon(Icons.camera_alt, color: SoloColors.neonCyan, size: 14),
+                        child: Icon(Icons.camera_alt, color: themeColor, size: 14),
                       ),
                     ),
                   ],
@@ -536,7 +388,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               const SizedBox(height: 14),
 
-              // Hunter Name (editable)
+              // Hunter Name
               _isEditing
                   ? Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -550,46 +402,14 @@ class _ProfileScreenState extends State<ProfileScreen>
                             style: SoloTypography.systemTitle.copyWith(fontSize: 18),
                             decoration: InputDecoration(
                               isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: SoloColors.neonCyan),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: SoloColors.neonCyan),
-                              ),
+                              contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                              focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: themeColor)),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        GestureDetector(
-                          onTap: _saveDisplayName,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF042F2E),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: SoloColors.neonCyan),
-                            ),
-                            child: const Icon(Icons.check, color: SoloColors.neonCyan, size: 16),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        GestureDetector(
-                          onTap: () {
-                            _nameController.text = user.displayName;
-                            setState(() => _isEditing = false);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: SoloColors.obsidianVoid,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: SoloColors.textDim.withValues(alpha: 0.4)),
-                            ),
-                            child: const Icon(Icons.close, color: SoloColors.textDim, size: 16),
-                          ),
+                        IconButton(
+                          icon: Icon(Icons.check, color: themeColor, size: 20),
+                          onPressed: _saveName,
                         ),
                       ],
                     )
@@ -597,207 +417,235 @@ class _ProfileScreenState extends State<ProfileScreen>
                       onTap: () => setState(() => _isEditing = true),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
-                            user.displayName,
-                            style: SoloTypography.systemTitle.copyWith(fontSize: 20),
+                            user.displayName.toUpperCase(),
+                            style: SoloTypography.systemTitle.copyWith(fontSize: 18, color: Colors.white),
                           ),
                           const SizedBox(width: 6),
-                          Icon(Icons.edit, color: SoloColors.textDim.withValues(alpha: 0.5), size: 14),
+                          Icon(Icons.edit, color: themeColor.withValues(alpha: 0.7), size: 14),
                         ],
                       ),
                     ),
-              const SizedBox(height: 6),
-
-              Text(
-                user.email,
-                style: SoloTypography.bodyMuted.copyWith(fontSize: 12),
-              ),
-              const SizedBox(height: 10),
-
-              // Rank Badge
-              HunterRankBadge(streakDays: widget.streakDays),
               const SizedBox(height: 4),
               Text(
-                rankTitle,
-                style: SoloTypography.systemTag.copyWith(fontSize: 10, color: rankColor),
+                user.email,
+                style: SoloTypography.bodyMuted.copyWith(fontSize: 11, color: Colors.white60),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-              // ─── Info Cards ─────────────────────────────
+              // ─── 1. GENDER & AURA THEME SELECTION ─────────────────
               HolographicFrame(
                 padding: const EdgeInsets.all(16),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildInfoRow(
-                      icon: _getProviderIcon(user.provider),
-                      iconColor: _getProviderColor(user.provider),
-                      label: 'AUTH PROVIDER',
-                      value: _getProviderLabel(user.provider),
-                    ),
-                    _divider(),
-                    _buildInfoRow(
-                      icon: Icons.fingerprint,
-                      iconColor: SoloColors.neonCyan,
-                      label: 'HUNTER UID',
-                      value: user.uid.length > 20
-                          ? '${user.uid.substring(0, 20)}...'
-                          : user.uid,
-                    ),
-                    _divider(),
-                    _buildInfoRow(
-                      icon: Icons.calendar_today_outlined,
-                      iconColor: SoloColors.electricSky,
-                      label: 'AWAKENED ON',
-                      value: DateFormat('MMM d, yyyy • hh:mm a').format(user.createdAt),
-                    ),
-                    _divider(),
-                    _buildInfoRow(
-                      icon: Icons.local_fire_department,
-                      iconColor: SoloColors.flameOrange,
-                      label: 'ACTIVE STREAK',
-                      value: '${widget.streakDays} DAYS',
-                    ),
-                    _divider(),
-                    _buildInfoRow(
-                      icon: user.isAnonymous ? Icons.visibility_off : Icons.verified_user,
-                      iconColor: user.isAnonymous ? SoloColors.textMuted : Colors.green,
-                      label: 'ACCOUNT TYPE',
-                      value: user.isAnonymous ? 'ANONYMOUS GUEST' : 'VERIFIED HUNTER',
-                    ),
-                    if (AuthService().isFirebaseAvailable) ...[
-                      _divider(),
-                      _buildInfoRow(
-                        icon: Icons.cloud_done,
-                        iconColor: Colors.green,
-                        label: 'FIREBASE STATUS',
-                        value: 'CONNECTED',
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // ─── Sign Out Button ────────────────────────
-              GestureDetector(
-                onTap: _confirmSignOut,
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: SoloColors.neonCyan.withValues(alpha: 0.5)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.logout, color: SoloColors.neonCyan, size: 16),
-                      const SizedBox(width: 8),
-                      Text(
-                        'SIGN OUT',
-                        style: SoloTypography.systemTag.copyWith(
-                          fontSize: 12,
-                          color: SoloColors.neonCyan,
-                          letterSpacing: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // ─── Delete Account Button ──────────────────
-              if (!user.isAnonymous)
-                GestureDetector(
-                  onTap: _confirmDeleteAccount,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: SoloColors.obsidianVoid,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: SoloColors.penaltyCrimson.withValues(alpha: 0.4)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Row(
                       children: [
-                        Icon(Icons.delete_forever, color: SoloColors.penaltyCrimson.withValues(alpha: 0.7), size: 16),
+                        Icon(Icons.theater_comedy_rounded, color: themeColor, size: 18),
                         const SizedBox(width: 8),
                         Text(
-                          'DELETE ACCOUNT',
-                          style: SoloTypography.systemTag.copyWith(
-                            fontSize: 10,
-                            color: SoloColors.penaltyCrimson.withValues(alpha: 0.7),
-                            letterSpacing: 1.5,
+                          'AURA THEME & HUNTER GENDER',
+                          style: SoloTypography.systemTitle.copyWith(fontSize: 13, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        // Male Persona
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              SoundService().playClick();
+                              await auth.updateGender('male');
+                              setState(() {});
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: !isFemale ? const Color(0xFF581C87).withValues(alpha: 0.6) : const Color(0xFF0F0720),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: !isFemale ? const Color(0xFFC084FC) : Colors.white24,
+                                  width: !isFemale ? 1.8 : 1.0,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Text("👑", style: TextStyle(fontSize: 22)),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    "MALE (SHADOW MONARCH)",
+                                    style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: Colors.white),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "Sung Jin-Woo Purple",
+                                    style: TextStyle(fontSize: 8.5, color: const Color(0xFFC084FC)),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        // Female Persona
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () async {
+                              SoundService().playVictory();
+                              await auth.updateGender('female');
+                              setState(() {});
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: isFemale ? const Color(0xFF78350F).withValues(alpha: 0.6) : const Color(0xFF1E1005),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: isFemale ? const Color(0xFFFBBF24) : Colors.white24,
+                                  width: isFemale ? 1.8 : 1.0,
+                                ),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Text("⚔️", style: TextStyle(fontSize: 22)),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    "FEMALE (S-RANK DANCER)",
+                                    style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: Colors.white),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    "Cha Hae-In Radiant Gold",
+                                    style: TextStyle(fontSize: 8.5, color: const Color(0xFFFDE047)),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // ─── 2. COMPANION VOICE SETTINGS & DIALOGUE CARD ──────
+              HolographicFrame(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.record_voice_over_rounded, color: themeColor, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              'VOICE COMPANION & DIALOGUE',
+                              style: SoloTypography.systemTitle.copyWith(fontSize: 13, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: themeColor.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: themeColor),
+                          ),
+                          child: const Text(
+                            "DUAL JP/EN",
+                            style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Authentic anime voices for Sung Jin-Woo (Taito Ban / Aleks Le) and Cha Hae-In (Reina Ueda / Michelle Rojas) with golden-yellow subtitles.",
+                      style: SoloTypography.bodyMuted.copyWith(fontSize: 11, color: Colors.white70),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _openCompanionAssistant,
+                        icon: const Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 18),
+                        label: const Text(
+                          "OPEN COMPANION & TEST VOICES",
+                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isFemale ? const Color(0xFFD97706) : const Color(0xFF7E22CE),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // ─── 3. HUNTER STATUS CARD ────────────────────────────
+              HolographicFrame(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('CURRENT RANK', style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white60)),
+                        Text('DISCIPLINE STREAK', style: SoloTypography.systemTag.copyWith(fontSize: 10, color: Colors.white60)),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(rankTitle, style: SoloTypography.systemTitle.copyWith(fontSize: 13, color: rankColor)),
+                        Text('${widget.streakDays} DAYS', style: SoloTypography.monoValue.copyWith(fontSize: 18, color: rankColor)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 14),
+
+              // ─── 4. LOGOUT & ACCOUNT CONTROLS ─────────────────────
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () async {
+                    SoundService().playClick();
+                    await auth.signOut();
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.logout, color: Colors.redAccent, size: 16),
+                  label: const Text(
+                    "LOG OUT HUNTER SESSION",
+                    style: TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.redAccent, width: 1.2),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
-              const SizedBox(height: 30),
+              ),
+              const SizedBox(height: 90),
             ],
           ),
         ),
       ),
     );
   }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required Color iconColor,
-    required String label,
-    required String value,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: iconColor.withValues(alpha: 0.3)),
-            ),
-            child: Icon(icon, color: iconColor, size: 16),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: SoloTypography.systemTag.copyWith(
-                    fontSize: 8,
-                    color: SoloColors.textMuted,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  value,
-                  style: SoloTypography.bodyMuted.copyWith(
-                    fontSize: 12,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _divider() => Divider(
-        color: SoloColors.neonCyan.withValues(alpha: 0.1),
-        height: 1,
-      );
 }
