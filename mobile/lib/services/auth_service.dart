@@ -163,23 +163,35 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  /// Google / Gmail Sign In — requires Firebase
+  /// Google / Gmail Sign In — works across Web, Android, and iOS
   Future<void> signInWithGoogle() async {
     _requireFirebase('Google Sign-In');
 
     try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) {
-        throw AuthException('Google Sign-In was cancelled.');
+      fb.UserCredential userCredential;
+
+      if (kIsWeb) {
+        // On Web: use standard Firebase Popup flow
+        final googleProvider = fb.GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        userCredential = await fb.FirebaseAuth.instance.signInWithPopup(googleProvider);
+      } else {
+        // On Android / iOS: use native GoogleSignIn plugin
+        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) {
+          throw AuthException('Google Sign-In was cancelled.');
+        }
+
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        final fb.AuthCredential credential = fb.GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        userCredential = await fb.FirebaseAuth.instance.signInWithCredential(credential);
       }
 
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final fb.AuthCredential credential = fb.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await fb.FirebaseAuth.instance.signInWithCredential(credential);
       if (userCredential.user == null) {
         throw AuthException('Google Sign-In failed: no user returned from Firebase.');
       }
@@ -187,9 +199,9 @@ class AuthService extends ChangeNotifier {
       final user = userCredential.user!;
       await _saveUserSession(
         uid: user.uid,
-        email: user.email ?? googleUser.email,
-        name: user.displayName ?? googleUser.displayName ?? 'Google Hunter',
-        photoUrl: user.photoURL ?? googleUser.photoUrl,
+        email: user.email ?? 'hunter@gmail.com',
+        name: user.displayName ?? 'Google Hunter',
+        photoUrl: user.photoURL,
         provider: 'google',
         createdAt: user.metadata.creationTime,
       );
@@ -197,17 +209,25 @@ class AuthService extends ChangeNotifier {
       throw AuthException(_mapFirebaseError(e.code), code: e.code);
     } catch (e) {
       if (e is AuthException) rethrow;
-      throw AuthException('Google Sign-In failed: $e');
+      throw AuthException('Google Sign-In error: $e');
     }
   }
 
-  /// GitHub Sign In — requires Firebase
+  /// GitHub Sign In — works across Web, Android, and iOS
   Future<void> signInWithGitHub() async {
     _requireFirebase('GitHub Sign-In');
 
     try {
       final githubProvider = fb.GithubAuthProvider();
-      final userCredential = await fb.FirebaseAuth.instance.signInWithProvider(githubProvider);
+      githubProvider.addScope('read:user');
+      githubProvider.addScope('user:email');
+
+      fb.UserCredential userCredential;
+      if (kIsWeb) {
+        userCredential = await fb.FirebaseAuth.instance.signInWithPopup(githubProvider);
+      } else {
+        userCredential = await fb.FirebaseAuth.instance.signInWithProvider(githubProvider);
+      }
 
       if (userCredential.user == null) {
         throw AuthException('GitHub Sign-In failed: no user returned from Firebase.');
@@ -217,7 +237,7 @@ class AuthService extends ChangeNotifier {
       await _saveUserSession(
         uid: user.uid,
         email: user.email ?? 'hunter@github.com',
-        name: user.displayName ?? 'GitHub Hunter',
+        name: user.displayName ?? 'GitHub Monarch',
         photoUrl: user.photoURL,
         provider: 'github',
         createdAt: user.metadata.creationTime,
@@ -226,7 +246,7 @@ class AuthService extends ChangeNotifier {
       throw AuthException(_mapFirebaseError(e.code), code: e.code);
     } catch (e) {
       if (e is AuthException) rethrow;
-      throw AuthException('GitHub Sign-In failed: $e');
+      throw AuthException('GitHub Sign-In error: $e');
     }
   }
 
