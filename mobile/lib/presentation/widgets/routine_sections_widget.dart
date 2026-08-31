@@ -28,44 +28,59 @@ class RoutineSectionsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 4 Distinct Solo Leveling Quest Categories
-    final morningTasks = tasks.where((t) {
-      if (t.startTime != null) {
-        final hour = int.tryParse(t.startTime!.split(':')[0]) ?? 0;
-        return hour >= 5 && hour < 9;
-      }
-      return t.category == 'routine' && (t.title.toLowerCase().contains('wake') || t.title.toLowerCase().contains('gym'));
-    }).toList();
+    final morningTasks = <TaskModel>[];
+    final daytimeTasks = <TaskModel>[];
+    final eveningTasks = <TaskModel>[];
+    final nightTasks = <TaskModel>[];
+    final unclassified = <TaskModel>[];
 
-    final daytimeTasks = tasks.where((t) {
-      if (t.startTime != null) {
-        final hour = int.tryParse(t.startTime!.split(':')[0]) ?? 0;
-        return hour >= 9 && hour < 18;
-      }
-      return t.category == 'health' || t.category == 'fitness' || t.category == 'study';
-    }).toList();
+    for (final t in tasks) {
+      final titleLower = t.title.toLowerCase();
+      final startTime = t.startTime;
+      final hour = startTime != null && startTime.isNotEmpty
+          ? int.tryParse(startTime.split(':')[0])
+          : null;
 
-    final eveningTasks = tasks.where((t) {
-      if (t.startTime != null) {
-        final hour = int.tryParse(t.startTime!.split(':')[0]) ?? 0;
-        return hour >= 18 && hour < 21;
+      // Phase 1: Morning Awakening (06:00 - 08:30 & Daily Health/Fitness Fundamentals)
+      if ((hour != null && hour >= 5 && hour < 9) ||
+          titleLower.contains('wake') ||
+          titleLower.contains('gym') ||
+          t.autoMetric == 'gym_workout' ||
+          t.autoMetric == 'water_4l' ||
+          t.autoMetric == 'sleep_7h' ||
+          t.autoMetric == 'steps_10k' ||
+          titleLower.contains('hydration') ||
+          titleLower.contains('10,000 steps') ||
+          titleLower.contains('sleep recovery')) {
+        morningTasks.add(t);
       }
-      return t.category == 'career' || t.title.toLowerCase().contains('dsa') || t.title.toLowerCase().contains('fresh');
-    }).toList();
-
-    final nightTasks = tasks.where((t) {
-      if (t.startTime != null) {
-        final hour = int.tryParse(t.startTime!.split(':')[0]) ?? 0;
-        return hour >= 21 || hour < 5;
+      // Phase 2: Daytime Attributes & Discipline (09:00 - 18:00)
+      else if ((hour != null && hour >= 9 && hour < 18) ||
+          titleLower.contains('office') ||
+          titleLower.contains('self-study') ||
+          titleLower.contains('revision') ||
+          t.category == 'study') {
+        daytimeTasks.add(t);
       }
-      return t.title.toLowerCase().contains('night') || t.title.toLowerCase().contains('sleep');
-    }).toList();
-
-    // Fallback for custom tasks
-    final unclassified = tasks.where((t) =>
-        !morningTasks.contains(t) &&
-        !daytimeTasks.contains(t) &&
-        !eveningTasks.contains(t) &&
-        !nightTasks.contains(t)).toList();
+      // Phase 3: Evening Placement & Skill Dungeon (18:30 - 21:30)
+      else if ((hour != null && hour >= 18 && hour < 21) ||
+          titleLower.contains('dsa') ||
+          titleLower.contains('placement') ||
+          titleLower.contains('japanese') ||
+          titleLower.contains('project') ||
+          titleLower.contains('fresh up') ||
+          t.category == 'career') {
+        eveningTasks.add(t);
+      }
+      // Phase 4: Night Protocol & Recovery (21:30 - 23:00)
+      else if ((hour != null && (hour >= 21 || hour < 5)) ||
+          titleLower.contains('night') ||
+          titleLower.contains('sleep by')) {
+        nightTasks.add(t);
+      } else {
+        unclassified.add(t);
+      }
+    }
 
     return Column(
       children: [

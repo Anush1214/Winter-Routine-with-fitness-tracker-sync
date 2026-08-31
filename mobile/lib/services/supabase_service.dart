@@ -30,6 +30,7 @@ class SupabaseService extends ChangeNotifier {
 
   SupabaseService() {
     _selectedDate = TimelineUtils.formatDateKey(DateTime.now());
+    _useLocalDefaultTasks(_selectedDate);
     AuthService().authStateChanges.listen((user) {
       loadDateData(_selectedDate);
     });
